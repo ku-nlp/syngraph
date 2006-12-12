@@ -1,0 +1,156 @@
+
+        SYNGRAPHによる用例検索
+                                        大西 貴士
+
+
+
+##########################################################
+目次
+##########################################################
+
+0. コンパイル
+1. アライメント (palign.pl)
+2. sthead.pl
+3. 翻訳 (trans.pl)
+
+
+
+##########################################################
+0. コンパイル
+##########################################################
+
+   # 類義表現を変換
+   conv_syndb.pl --synonym=synonym.txt --definition=definition.txt --relation=relation.txt --convert_file=syndb.convert
+
+   # Juman & KNP
+   juman -e2 -B -i '#' < syndb.convert | knp -tab > syndb.parse
+
+   # コンパイル
+   compile.pl --knp_result=syndb.parse
+
+   # synhead.mldbmのソート
+   sort_synhead.pl
+   mv synhead_sort.mldbm synhead.mldbm
+
+   [3つのMLDBMファイルが出来る]
+      syndata.mldbm : 類義表現DBのSYNGRAPH
+      synhead.mldbm : ヘッドのノードについて、ID => 文ID のハッシュ
+      parent.mldbm  : 下位SYNID => 上位SYNID のハッシュ
+
+
+
+##########################################################
+1. アライメント (palign.pl)
+##########################################################
+
+   用例をSYNGRAPHに変換(仮想的に)
+
+   1. 準備
+      
+      SYNGRAPHの実体は tm_sg.mldbm に保存
+      用例(部分木)データは st_data.mldbm に保存
+
+      my $sgh = new SynGraph;
+      $sgh->db_set({type => 'mldbm', name => 'tm_sg.mldbm'});
+      my $st_data = new SynGraph;
+      $st_data->db_set({type => 'mldbm', name => 'st_data.mldbm'});
+
+
+   2. 類義表現DBを読み込む
+
+      $sgh->tie_syndb("$opt{syndb}/syndata.mldbm",
+                      "$opt{syndb}/synhead.mldbm",
+                      "$opt{syndb}/synparent.mldbm");
+
+   3. DB接続(mldbmを新規作成)
+
+      $sgh->db_connect(1);
+      $st_data->db_connect(1);
+
+
+   foreach 対訳 {
+
+   4. SYNGRAPH作成
+
+      これは文単位
+
+      $sgh->make_sg($i_dtree, $tree_ref, $tmid);
+
+   5. SYNGRAPH保存
+
+      $sgh->db_register($tree_ref, $tmid) if ($tree_ref->{$tmid});
+
+
+   foreach 用例 {
+
+   6. 用例情報
+
+      $stid : 用例ID
+      $tmid : (対訳)文ID
+      $st_root : 用例(部分木)のヘッド
+      addr : bitext_m.xmlのアドレス
+
+      $subtree->{$stid} = {tmid => $tmid, body => $i_body_list, head => $st_root, addr => $tm2addr{$tmid}};
+      $st_data->db_register($subtree, $stid);
+
+   7. ヘッド情報を記録
+
+      my %body;
+      map {$body{$_} = 1} @i_body;
+      foreach my $node (@{$tree_ref->{$tmid}->[$st_root]}) {
+          next unless (&SynGraph::st_check($node, \%body));
+          push(@{$st_head->{$node->{id}}}, $stid);
+      }
+
+   }
+   }
+
+
+   8. DB切断
+
+      $sgh->db_disconnect;
+      $st_data->db_disconnect;
+
+   9. ヘッド情報保存
+
+      &SynGraph::store_mldbm('st_head.mldbm', $st_head);
+
+
+##########################################################
+3. 翻訳 (trans.pl)
+##########################################################
+
+   1. 準備
+
+      my $sgh = new SynGraph;
+      $sgh->db_set({type => 'mldbm', name => "$JETM_STEM_NAME/tm_sg.mldbm"});
+      $sgh->db_connect();
+      &SynGraph::tie_mldbm("$JETM_STEM_NAME/st_head.mldbm", $sgh->{st_head});
+      &SynGraph::tie_mldbm("$JETM_STEM_NAME/st_data.mldbm", $sgh->{st_data});
+      $sgh->tie_syndb("$opt{syndb}/syndata.mldbm",
+                      "$opt{syndb}/synhead.mldbm",
+                      "$opt{syndb}/synparent.mldbm");
+
+   2. 入力文のSYNGRAPHを作成
+
+      $sgh->make_sg($s_dtree, $tree_ref, $sid);
+
+
+   3. 入力文のSYNGRAPHに用例IDを付与
+
+      if ($tree_ref->{$sid}) {
+          # 入力文の各タグ単位をヘッドとする部分と用例とのマッチング
+          for (my $bp_num = 0; $bp_num < @{$tree_ref->{$sid}}; $bp_num++) {
+              $sgh->st_make_bp($tree_ref, $sid, $bp_num);
+          }
+      }
+
+   4. 用例の選択へ、、、
+
+      foreach my $bp (@{$tree_ref->{$sid}}) {
+          foreach my $node (@$bp) {
+              if ($sgh->{st_data}->{$node->{id}}) {
+
+                  my $addr = $sgh->{st_data}->{$node->{id}}->{addr};
+                  seek(TM_TXT, $addr, 0);
+                  ...

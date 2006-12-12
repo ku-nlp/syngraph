@@ -1,0 +1,47 @@
+
+
+[ファイルリスト]
+
+README		このファイル
+
+perl/ : Perlモジュール
+
+  SynGraph.pm       	SYNGRAPHを扱うモジュール
+  Search.pm         	検索するためのモジュール
+
+dic/ : 同義表現辞書
+
+  synonym.txt        	同義グループデータ
+  definition.txt        定義文データ
+  relation.txt          シソーラスデータ
+  antonym.txt		反義語データベース
+
+scripts/ : スクリプト
+
+  build.sh        	コンパイル(+テスト用)のスクリプト
+  irex_build.sh  	IREX用のスクリプト
+  irex_build2.sh        IREX用のスクリプト(インデックスファイルを2つに分けるタイプ)
+  conv_syndb.pl  	コンパイルの前処理
+  compile.pl     	コンパイル(類義表現DBのSYNGRAPH化)
+  sort_synhead.pl	類義表現DBのヘッドハッシュをソート
+  make_sg.pl     	検索対象のSYNGRAPH化
+  cal_df.pl      	df，文書長を数える
+  indexing.pl    	インデックスファイルを作成
+  merge_db.pl    	インデックスファイルをマージ
+  irex_search.pl 	IREXの検索
+  print_hash.pl  	各種データベース内容の表示
+  search.pl      	検索
+  syndb.parse	
+  syndb.convert
+
+syndb : 同義表現データベース
+
+  synhead.mldbm
+  syndata.mldbm
+  synparent.mldbm		
+  synantonym.mldbm		
+
+sql : SQL文
+  syngraph.sql         	mysqlの定義SQL
+  merge.sql            	マージデータベースの作成のためのSQL
+
