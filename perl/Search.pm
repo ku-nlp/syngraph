@@ -360,24 +360,26 @@ sub matching {
 			$m_score = $tm_result->{$tmid}->{match_weight}->{match};
 		    }
 
- 		    #格の不一致によるペナルティ（要改定）
- 		    if ($qid->{case}){
-			foreach my $qcase (keys %{$qid->{case}}){
-			    my $case_kakari_match;
-			    if ($tmid->{case}->{$qcase}){ #同じ格があったときは係先が一致することをチェック
-				foreach my $qcase_qbp (keys %{$qid->{case}->{$qcase}}){
-				    foreach my $qcase_tmbp (keys %{$tmid->{case}->{$qcase}}){    
-					foreach my $qcase_qnode (@{$this->{ref}->{$qsid}->[$qcase_qbp]}){
-					    foreach my $qcase_tmnode (@{$this->{ref}->{$tsid}->[$qcase_tmbp]}){
-						$case_kakari_match = 1 if ($qcase_qnode->{id} eq $qcase_tmnode->{id});
-					    }
-					}				    
+ 		    # 格の不一致によるペナルティ
+		    # 同じノードにかかっていたとき、同じ格でかかっていなければペナルティ
+ 		    if ($qid->{case} && $tmid->{case}){	
+			# 同じノードにかかっているかをチェック
+			foreach my $q_kakari_bp (keys %{$qid->{case}}){
+			    foreach my $tm_kakari_bp (keys %{$tmid->{case}}){
+				my $lastflag;			
+				last if ($lastflag == 1);
+				foreach my $q_kakari_node (@{$this->{ref}->{$qsid}->[$q_kakari_bp]}){
+				    last if ($lastflag == 1);
+				    if (grep($q_kakari_node->{id} eq $_->{id}, @{$this->{ref}->{$tsid}->[$tm_kakari_bp]})) { 
+                                        # 同じかかり先がある。同じ格でかかっているかチェック
+					unless ($qid->{case}->{$q_kakari_bp} eq $tmid->{case}->{$tm_kakari_bp}){
+					    $tm_result->{$tmid}->{match_weight}->{unmatch} *= $case_penalty;
+					    $tm_result->{$tmid}->{case_unmatch} = 1;
+					}
+					$lastflag = 1;
+					last;
 				    }
 				}
-			    }
-			    unless ($case_kakari_match){
-				$tm_result->{$tmid}->{match_weight}->{unmatch} *= $case_penalty;
-		                $tm_result->{$tmid}->{case_unmatch} += 1;
 			    }
 			}
 		    }
