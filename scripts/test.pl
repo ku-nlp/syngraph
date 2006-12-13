@@ -17,7 +17,12 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'debug', 'print_match', 'case', 'postprocess');
 
- my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
+# my $zenbun = <STDIN>;
+# chomp $zenbun;
+# my $query = <STDIN>;
+# chomp $query;
+
+# my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
 
 my $calcsim = new CalcSimWithSynGraph;
 my $option;
