@@ -322,14 +322,14 @@ sub _get_keywords {
         # 子供 child->{親のid}->{子のid}
         $child->{$tag->{parent}->{id}}->{$tag->{id}} = 1 if ($tag->{parent});
 
-	# 格 case->{自分のid}->{'〜格'}->{係り先のid}
+	# 格 case->{自分のid}->{係り先のid} = '〜格'
 	# <格解析結果:書く/かく:動1:ガ/C/彼/0/0/?;ヲ/N/本/2/0/?;ニ/U/-/-/-/-;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;マデ/U/-/-/-/-;φ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;ニツク/U/-/-/-/->
 	if($tag->{fstring} =~ /<格解析結果:(.+?):(.+?):([^\s\">]+)/) {
 	    next if($tag->{fstring} =~ /<係:文節内>/); # 複合名詞は一番最後の形態素の格解析結果のみ採用
 	    push (my @case_result, split(/;/, $3));
 	    foreach my $node_case_result (@case_result){
 		push (my @node_case_result_feature, split(/\//, $node_case_result));
-		$case->{$node_case_result_feature[3]}->{$node_case_result_feature[0]}->{$tag->{id}} = 1 unless ($node_case_result_feature[3] =~ /-/);
+		$case->{$node_case_result_feature[3]}->{$tag->{id}} = $node_case_result_feature[0] unless ($node_case_result_feature[3] =~ /-/);
 	    }
 	}
 
