@@ -492,7 +492,7 @@ sub _read_xml {
     my $child = {};
     my $bp_table = {};
     foreach my $phrase (@{$sen->{phrase}}) {
-        my $nodename;
+        my @nodename;
         my $numid;
         my $fuzoku;
         my $negation;
@@ -532,12 +532,12 @@ sub _read_xml {
                    $word->{pos} eq '名詞:形式名詞') {
                 # 活用させずにそのまま
 		if (defined $word->{kanou_norm}) {
-		    push (@{$nodename->[$wnum]}, $word->{kanou_norm});
+		    push (@{$nodename[$wnum]}, $word->{kanou_norm});
 		}
 		elsif (defined $word->{sonkei_norm}) {
-		    push (@{$nodename->[$wnum]}, split(/:/, $word->{sonkei_norm}));
+		    push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
 		} else {
-		    push (@{$nodename->[$wnum]}, $word->{lem});
+		    push (@{$nodename[$wnum]}, $word->{lem});
 		}
 		$numid .= $word->{lem} if ($numid);
                 # 数字の汎化
@@ -553,12 +553,12 @@ sub _read_xml {
                 if ($word->{pos} =~ /^接尾辞:名詞性(名詞|特殊)/ or
                     ($word->{pos} eq '接尾辞:名詞性述語接尾辞' and $word->{read} eq 'かた')) {
 		    if (defined $word->{kanou_norm}) {
-			push (@{$nodename->[$wnum]}, $word->{kanou_norm});
+			push (@{$nodename[$wnum]}, $word->{kanou_norm});
 		    }
 		    elsif (defined $word->{sonkei_norm}) {
-			push (@{$nodename->[$wnum]}, split(/:/, $word->{sonkei_norm}));
+			push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
 		    } else {
-			push (@{$nodename->[$wnum]}, $word->{lem});
+			push (@{$nodename[$wnum]}, $word->{lem});
 		    }
                     $numid .= $word->{lem} if ($numid);
                 }
@@ -593,11 +593,11 @@ sub _read_xml {
 
 	my @nodename_list;
 	push (@nodename_list, "");
-	for (my $i = 0; $i < @{$nodename}; $i++) {
+	for (my $i = 0; $i < @nodename; $i++) {
 	    my @tmp;
-	    for (my $j = 0; $j < @{$nodename->[$i]}; $j++) {
+	    for (my $j = 0; $j < @{$nodename[$i]}; $j++) {
 		foreach my $str (@nodename_list) {
-		    push (@tmp, "$str@{$nodename->[$i]}[$j]");
+		    push (@tmp, "$str$nodename[$i][$j]");
 		}
 	    }
 	    @nodename_list = @tmp;
