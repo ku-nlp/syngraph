@@ -15,7 +15,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'print_match', 'case', 'postprocess');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess');
 
 # my $zenbun = <STDIN>;
 # chomp $zenbun;
@@ -33,7 +33,7 @@ $option->{postprocess} = 1 if $opt{postprocess};
 my $result = $calcsim->Match(1, $zenbun, $query, $option);
 
 printf "類似度:%1.2f\n",$result->{score};
-if ($opt{print_match}) {
+if ($opt{match_print}){
     printf "マッチング:\n";
     foreach my $qmatch (keys %{$result->{matchbp}}){ 
 	printf "$qmatch <=> $result->{matchbp}->{$qmatch}->{match_node}   <$result->{matchbp}->{$qmatch}->{match_type}>\n";
