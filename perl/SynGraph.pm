@@ -205,7 +205,6 @@ sub make_bp {
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
         next if ($node->{weight} == 0);
 
-	#ノードのIDに
         if ($node->{id} and $this->{synhead}->{$node->{id}}) {
             foreach my $mid (@{$this->{synhead}->{$node->{id}}}) {
                 # SYNIDが同じものは調べない
@@ -242,11 +241,12 @@ sub make_bp {
 # BPにIDを付与する (部分木用)
 #
 sub st_make_bp {
-    my ($this, $ref, $sid, $bp) = @_;
+    my ($this, $ref, $sid, $bp, $max_tm_num) = @_;
 
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
         next if ($node->{weight} == 0);
 
+	my %count_pattern;
         if ($node->{id} and $this->{st_head}->{$node->{id}}) {
             foreach my $stid (@{$this->{st_head}->{$node->{id}}}) {
                 my $headbp = $this->{st_data}->{$stid}->{head};
@@ -261,6 +261,16 @@ sub st_make_bp {
                 
                 my $result = $this->_match('MT', $ref, $sid, $bp, $tmid, $headbp, \%body, $headbp);
                 if ($result) {
+
+		    # 入力の文節番号集合
+		    my @s_body;
+		    foreach my $i (@{$result->{match}}) {
+			push(@s_body, @{$i->{s}});
+		    }
+		    my $s_pattern = join(" ", sort(@s_body));
+		    next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
+		    $count_pattern{$s_pattern}++;
+		    
                     my $newid =
                         $this->_regnode({ref      => $ref,
                                          sid      => $sid,
@@ -272,8 +282,7 @@ sub st_make_bp {
 					 kanou    => $result->{kanou},
 					 sonnkei  => $result->{sonnkei},
 					 ukemi    => $result->{ukemi},
-					 #negation => 0, #(odani9/26)
-					 negation => $result->{negation}, #(odani9/26)
+					 negation => $result->{negation}, 
 					 level    => $result->{level}, 
                                          score    => $result->{score},
                                          weight   => $result->{weight}});
@@ -438,6 +447,7 @@ sub _get_keywords {
                 $tmp2{name}     = $alt_key;
                 $tmp2{fuzoku}   = $fuzoku;
                 $tmp2{kanou}    = $kanou if ($kanou);
+		$tmp2{sonnkei}  = $sonnkei if ($sonnkei);
 		$tmp2{ukemi}    = $ukemi if ($ukemi);
 		$tmp2{negation} = $negation if ($negation);                
 		$tmp2{level}    = $level if ($level);
@@ -484,6 +494,7 @@ sub _read_xml {
         my $numid;
         my $fuzoku;
         my $negation;
+	my $wnum = 0;
         $org_num++;
 
         # 元の文のフレーズ番号
@@ -517,21 +528,36 @@ sub _read_xml {
             # 自立語
             elsif ($word->{content_p} != 0 or
                    $word->{pos} eq '名詞:形式名詞') {
+                # 活用させずにそのまま
+		if (defined $word->{kanou_norm}) {
+		    push (@{$nodename[$wnum]}, $word->{kanou_norm});
+		}
+		elsif (defined $word->{sonkei_norm}) {
+		    push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
+		} else {
+		    push (@{$nodename[$wnum]}, $word->{lem});
+		}
+		$numid .= $word->{lem} if ($numid);
                 # 数字の汎化
                 if ($word->{pos} eq '名詞:数詞' and
                     $word->{lem} ne '何' and
                     $word->{lem} ne '幾') {
                     $numid .= '<num>';
                 }
-                # 活用させずにそのまま
-                $nodename .= $word->{lem};
             }
             # その他、付属語
             else {
                 # キーワード扱い
                 if ($word->{pos} =~ /^接尾辞:名詞性(名詞|特殊)/ or
                     ($word->{pos} eq '接尾辞:名詞性述語接尾辞' and $word->{read} eq 'かた')) {
-                    $nodename .= $word->{lem};
+		    if (defined $word->{kanou_norm}) {
+			push (@{$nodename[$wnum]}, $word->{kanou_norm});
+		    }
+		    elsif (defined $word->{sonkei_norm}) {
+			push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
+		    } else {
+			push (@{$nodename[$wnum]}, $word->{lem});
+		    }
                     $numid .= $word->{lem} if ($numid);
                 }
                 # 否定表現
@@ -544,6 +570,7 @@ sub _read_xml {
                     $fuzoku .= $word->{lem} if ($phrase->{dpnd} != -1);
                 }
             }
+	    $wnum++;
         }
 
 #         # チェック用
@@ -562,18 +589,33 @@ sub _read_xml {
             }
         }
 
-        # ID登録
-        $this->_regnode({ref      => $tree_ref,
-                         sid      => $tmid,
-                         bp       => $key_num,
-                         id       => $nodename,
-                         fuzoku   => $fuzoku,
-                         negation => $negation,   ### 要修正
-                         childbp  => $childbp,
-                         origbp   => $org_pnum,
-                         negation => 0,           ### 要修正
-                         score    => 1,
-                         weight   => 1});
+	my @nodename_list;
+	push (@nodename_list, "");
+	for (my $i = 0; $i < @nodename; $i++) {
+	    my @tmp;
+	    for (my $j = 0; $j < @{$nodename[$i]}; $j++) {
+		foreach my $str (@nodename_list) {
+		    push (@tmp, "$str$nodename[$i][$j]");
+		}
+	    }
+	    @nodename_list = @tmp;
+	}
+
+	# ID登録
+        foreach my $str (@nodename_list) {
+	    $this->_regnode({ref      => $tree_ref,
+			     sid      => $tmid,
+			     bp       => $key_num,
+			     id       => $str,
+			     fuzoku   => $fuzoku,
+			     negation => $negation,
+			     childbp  => $childbp,
+			     origbp   => $org_pnum,
+			     negation => 0,
+			     score    => 1,
+			     weight   => 1,
+			     wnum     => $phrase->{word}[0]{wnum}});
+	}
 
         $this->_regnode({ref      => $tree_ref,
                          sid      => $tmid,
@@ -585,7 +627,8 @@ sub _read_xml {
                          origbp   => $org_pnum,
                          negation => 0,           ### 要修正
                          score    => 1,
-                         weight   => 1}) if ($numid);
+			 weight   => 1,
+			 wnum     => $phrase->{word}[0]{wnum}}) if ($numid);
 
         $key_num++;
     }
@@ -614,6 +657,7 @@ sub _regnode {
     my $weight                = $args_hash->{weight};
     my $relation              = $args_hash->{relation};
     my $antonym               = $args_hash->{antonym};
+    my $wnum                  = $args_hash->{wnum};
 
     # コンパイルでは完全に一致する部分にはIDを付与しない
     return if ($this->{mode} eq 'repeat' and $bp == @{$ref->{$sid}} - 1 and !$childbp);
@@ -663,6 +707,7 @@ sub _regnode {
         $newid->{score}    = $score;
         $newid->{weight}   = $weight;
         $newid->{relation} = $relation if ($relation);
+        $newid->{wnum}     = $wnum;
         $newid->{antonym}  = $antonym if ($antonym);
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
@@ -852,13 +897,13 @@ sub _match {
 	    @bchildbp = keys %{$bmatchnode->{childbp}};
 	}
 	else {
-	    @bchildbp = grep($body_hash->{$_}, keys %{$bmatchnode->{childbp}});
+	    @bchildbp = grep($body_hash->{$_}, sort keys %{$bmatchnode->{childbp}});
 	}
     }
     if (@bchildbp > 0) {
 	# Aに子BPがあるかどうか
 	if ($amatchnode->{childbp}) {
-	    my @achildbp = keys %{$amatchnode->{childbp}};
+	    my @achildbp = sort keys %{$amatchnode->{childbp}};
 	    my %ac_check;
 
 	    # bの各子供にマッチするaの子供を見つける
@@ -1308,9 +1353,9 @@ sub retrieve_syndb {
 sub tie_syndb {
     my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
     $syndata = 'syndata.mldbm' unless ($syndata);
-    $synhead = 'syndb/synhead.mldbm' unless ($synhead);
-    $synparent = 'syndb/synparent.mldbm' unless ($synparent);
-    $synantonym = 'syndb/synantonym.mldbm' unless ($synantonym);
+    $synhead = 'synhead.mldbm' unless ($synhead);
+    $synparent = 'synparent.mldbm' unless ($synparent);
+    $synantonym = 'synantonym.mldbm' unless ($synantonym);
 
     &tie_mldbm($syndata, $this->{syndata});
     &tie_mldbm($synhead, $this->{synhead});
