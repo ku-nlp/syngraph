@@ -26,9 +26,12 @@ sub new {
 sub Match {
     my ($this, $id, $str1, $str2, $option) = @_;
 
-    my $knp_option;
+    my $knp_option; 
+    my $regnode_option;
     $knp_option->{case} = 1 if $option->{case};
     $knp_option->{postprocess} = 1 if $option->{postprocess};
+    $regnode_option->{relation} = 1 if $option->{relation};
+    $regnode_option->{antonym} = 1 if $option->{antonym};
 
     my $search = new Search(undef, undef, $knp_option);
 
@@ -37,8 +40,8 @@ sub Match {
 
     # SYNGRAPHを作成
 
-    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1);
-    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2);
+    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option);
+    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 
     # 転置ハッシュを作る

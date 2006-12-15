@@ -15,7 +15,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relation', 'antonym');
 
 # my $zenbun = <STDIN>;
 # chomp $zenbun;
@@ -29,6 +29,8 @@ my $option;
 $option->{debug} = 1 if $opt{debug};
 $option->{case} = 1 if $opt{case};
 $option->{postprocess} = 1 if $opt{postprocess};
+$option->{relation} = 1 if $opt{relation};
+$option->{antonym} = 1 if $opt{antonym};
 
 my $result = $calcsim->Match(1, $zenbun, $query, $option);
 

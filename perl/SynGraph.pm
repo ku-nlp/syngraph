@@ -124,7 +124,7 @@ sub new {
 # SYNGRAPHを作成
 #
 sub make_sg {
-    my ($this, $input, $ref, $sid, $option) = @_;
+    my ($this, $input, $ref, $sid, $regnode_option) = @_;
 
     # 入力がKNP結果の場合
     if (ref $input eq 'KNP::Result') {
@@ -148,7 +148,7 @@ sub make_sg {
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
     if ($ref->{$sid}) {
         for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-            $this->make_bp($ref, $sid, $bp_num); 
+            $this->make_bp($ref, $sid, $bp_num, $regnode_option); 
 	}
     }
 }
@@ -174,7 +174,7 @@ sub make_tree {
             $weight = 0 if (grep($key eq $_, @stop_words));
         }
         foreach my $node (@{$keywords[$bp_num]}) {
-            # 基本ノード登録
+            # 基本ノード登録（ここではregnode_optionは関係ない）
             $this->_regnode({ref      => $tree_ref,
                              sid      => $sid,
                              bp       => $bp_num,
@@ -199,7 +199,7 @@ sub make_tree {
 # BPにSYNノードを付与する
 #
 sub make_bp {
-    my ($this, $ref, $sid, $bp) = @_;
+    my ($this, $ref, $sid, $bp, $regnode_option) = @_;
 
     #このbpについている基本ノード、SYNノードについて調べる
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
@@ -215,21 +215,22 @@ sub make_bp {
                 my $lastbp = @{$this->{syndata}->{$mid}} - 1;
                 my $result = $this->_match('SYN', $ref, $sid, $bp, $mid, $lastbp); #$synid2が本当にsynノードになれるかチェック
                 if ($result) {
-                    $this->_regnode({ref      => $ref,
-                                     sid      => $sid,
-                                     bp       => $bp,
-                                     id       => $synid2,
-                                     fuzoku   => $result->{fuzoku},
-                                     matchbp  => $result->{matchbp},
-                                     childbp  => $result->{childbp},
-                                     case     => $result->{case},
-                                     kanou    => $result->{kanou},
-				     sonnkei  => $result->{sonnkei},
-				     ukemi    => $result->{ukemi},
-                                     negation => $result->{negation},
-                                     level    => $result->{level}, 
-                                     score    => $result->{score} * $synonym_penalty,
-                                     weight   => $result->{weight}});
+                    $this->_regnode({ref            => $ref,
+                                     sid            => $sid,
+                                     bp             => $bp,
+                                     id             => $synid2,
+                                     fuzoku         => $result->{fuzoku},
+                                     matchbp        => $result->{matchbp},
+                                     childbp        => $result->{childbp},
+                                     case           => $result->{case},
+                                     kanou          => $result->{kanou},
+				     sonnkei        => $result->{sonnkei},
+				     ukemi          => $result->{ukemi},
+                                     negation       => $result->{negation},
+                                     level          => $result->{level}, 
+                                     score          => $result->{score} * $synonym_penalty,
+                                     weight         => $result->{weight},
+				     regnode_option => $regnode_option});
                 }
             }
         }
@@ -272,6 +273,7 @@ sub st_make_bp {
 		    $count_pattern{$s_pattern}++;
 		    
                     my $newid =
+			#$regnode_optionが入力に必要かも(odani)
                         $this->_regnode({ref      => $ref,
                                          sid      => $sid,
                                          bp       => $bp,
@@ -530,12 +532,12 @@ sub _read_xml {
                    $word->{pos} eq '名詞:形式名詞') {
                 # 活用させずにそのまま
 		if (defined $word->{kanou_norm}) {
-		    push (@{$nodename[$wnum]}, $word->{kanou_norm});
+		    push (@{$nodename->[$wnum]}, $word->{kanou_norm});
 		}
 		elsif (defined $word->{sonkei_norm}) {
-		    push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
+		    push (@{$nodename->[$wnum]}, split(/:/, $word->{sonkei_norm}));
 		} else {
-		    push (@{$nodename[$wnum]}, $word->{lem});
+		    push (@{$nodename->[$wnum]}, $word->{lem});
 		}
 		$numid .= $word->{lem} if ($numid);
                 # 数字の汎化
@@ -551,12 +553,12 @@ sub _read_xml {
                 if ($word->{pos} =~ /^接尾辞:名詞性(名詞|特殊)/ or
                     ($word->{pos} eq '接尾辞:名詞性述語接尾辞' and $word->{read} eq 'かた')) {
 		    if (defined $word->{kanou_norm}) {
-			push (@{$nodename[$wnum]}, $word->{kanou_norm});
+			push (@{$nodename->[$wnum]}, $word->{kanou_norm});
 		    }
 		    elsif (defined $word->{sonkei_norm}) {
-			push (@{$nodename[$wnum]}, split(/:/, $word->{sonkei_norm}));
+			push (@{$nodename->[$wnum]}, split(/:/, $word->{sonkei_norm}));
 		    } else {
-			push (@{$nodename[$wnum]}, $word->{lem});
+			push (@{$nodename->[$wnum]}, $word->{lem});
 		    }
                     $numid .= $word->{lem} if ($numid);
                 }
@@ -591,11 +593,11 @@ sub _read_xml {
 
 	my @nodename_list;
 	push (@nodename_list, "");
-	for (my $i = 0; $i < @nodename; $i++) {
+	for (my $i = 0; $i < @{$nodename}; $i++) {
 	    my @tmp;
-	    for (my $j = 0; $j < @{$nodename[$i]}; $j++) {
+	    for (my $j = 0; $j < @{$nodename->[$i]}; $j++) {
 		foreach my $str (@nodename_list) {
-		    push (@tmp, "$str$nodename[$i][$j]");
+		    push (@tmp, "$str@{$nodename->[$i]}[$j]");
 		}
 	    }
 	    @nodename_list = @tmp;
@@ -603,6 +605,7 @@ sub _read_xml {
 
 	# ID登録
         foreach my $str (@nodename_list) {
+	    #regnode_optionが入力に必要かも(odani)
 	    $this->_regnode({ref      => $tree_ref,
 			     sid      => $tmid,
 			     bp       => $key_num,
@@ -617,6 +620,7 @@ sub _read_xml {
 			     wnum     => $phrase->{word}[0]{wnum}});
 	}
 
+	#regnode_optionが入力に必要かも(odani)
         $this->_regnode({ref      => $tree_ref,
                          sid      => $tmid,
                          bp       => $key_num,
@@ -658,6 +662,7 @@ sub _regnode {
     my $relation              = $args_hash->{relation};
     my $antonym               = $args_hash->{antonym};
     my $wnum                  = $args_hash->{wnum};
+    my $regnode_option        = $args_hash->{regnode_option};
 
     # コンパイルでは完全に一致する部分にはIDを付与しない
     return if ($this->{mode} eq 'repeat' and $bp == @{$ref->{$sid}} - 1 and !$childbp);
@@ -711,50 +716,55 @@ sub _regnode {
         $newid->{antonym}  = $antonym if ($antonym);
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
-        # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）
-        if ($this->{mode} ne 'compile' and $this->{synparent}->{$id} and $relation != 1 and $antonym != 1) {
-            foreach my $pid (keys %{$this->{synparent}->{$id}}) {
-                $this->_regnode({ref      => $ref,
-                                 sid      => $sid,
-                                 bp       => $bp,
-                                 id       => $pid,
-                                 fuzoku   => $fuzoku,
-                                 matchbp  => $matchbp,
-                                 childbp  => $childbp,
-				 case     => $case,
-				 kanou    => $kanou,
-				 kanou    => $kanou,
-				 ukemi    => $ukemi,
-                                 negation => $negation,
-                                 level    => $level,
-                                 score    => $score * $relation_penalty,
-                                 weight   => $weight,
-                                 relation => 1});
-            }
-        }
+	if ($regnode_option->{relation}){
+	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
+	    if ($this->{mode} ne 'compile' and $this->{synparent}->{$id} and $relation != 1 and $antonym != 1) {
+		foreach my $pid (keys %{$this->{synparent}->{$id}}) {
+		    $this->_regnode({ref            => $ref,
+				     sid            => $sid,
+				     bp             => $bp,
+				     id             => $pid,
+				     fuzoku         => $fuzoku,
+				     matchbp        => $matchbp,
+				     childbp        => $childbp,
+				     case           => $case,
+				     kanou          => $kanou,
+				     kanou          => $kanou,
+				     ukemi          => $ukemi,
+				     negation       => $negation,
+				     level          => $level,
+				     score          => $score * $relation_penalty,
+				     weight         => $weight,
+				     regnode_option => $regnode_option,
+				     relation       => 1});
+		}
+	    }
+	}
 
-        # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
-        if ($this->{mode} ne 'compile' and $this->{synantonym}->{$id} and $antonym != 1 and $relation != 1) {
-            foreach my $pid (keys %{$this->{synantonym}->{$id}}) {
-                $this->_regnode({ref      => $ref,
-                                 sid      => $sid,
-                                 bp       => $bp,
-                                 id       => $pid,
-                                 fuzoku   => $fuzoku,
-                                 matchbp  => $matchbp,
-                                 childbp  => $childbp,
-				 case     => $case,
-				 kanou    => $kanou,
-                                 kanou    => $kanou,
-				 ukemi    => $ukemi,
-				 negation => $negation,
-                                 level    => $level,
-                                 score    => $score * $antonym_penalty,
-                                 weight   => $weight,
-                                 antonym => 1,
-				 });
-            }
-        }
+	if ($regnode_option->{antonym}){
+	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
+	    if ($this->{mode} ne 'compile' and $this->{synantonym}->{$id} and $antonym != 1 and $relation != 1) {
+		foreach my $pid (keys %{$this->{synantonym}->{$id}}) {
+		    $this->_regnode({ref            => $ref,
+				     sid            => $sid,
+				     bp             => $bp,
+				     id             => $pid,
+				     fuzoku         => $fuzoku,
+				     matchbp        => $matchbp,
+				     childbp        => $childbp,
+				     case           => $case,
+				     kanou          => $kanou,
+				     kanou          => $kanou,
+				     ukemi          => $ukemi,
+				     negation       => $negation,
+				     level          => $level,
+				     score          => $score * $antonym_penalty,
+				     weight         => $weight,
+				     regnode_option => $regnode_option,
+				     antonym        => 1});
+		}
+	    }
+	}
 
         # head登録
         if ($this->{mode} eq 'repeat' and
