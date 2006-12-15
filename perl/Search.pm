@@ -19,6 +19,8 @@ my $negation_antonym_penalty = 0.3;
 my $kakari_weight = 0.5;
 #可能表現の違いによるペナルティ
 my $kanou_penalty = 0.8;
+#尊敬表現の違いによるペナルティ
+my $sonnkei_penalty = 1;
 #受身表現の違いによるペナルティ
 my $ukemi_penalty = 0.3;
 #格の違いによるペナルティ
@@ -388,6 +390,12 @@ sub matching {
 		    if ($qid->{kanou} ne $tmid->{kanou}) {
 			$tm_result->{$tmid}->{match_weight}->{match}   *= $kanou_penalty;
 			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $kanou_penalty;
+		    }
+
+		    # 尊敬表現のフラグ不一致によるペナルティ（解消されることがない）
+		    if ($qid->{sonnkei} ne $tmid->{sonnkei}) {
+			$tm_result->{$tmid}->{match_weight}->{match}   *= $sonnkei_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $sonnkei_penalty;
 		    }
 
 		    # 受身表現のフラグ不一致によるペナルティ
