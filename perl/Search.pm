@@ -31,11 +31,11 @@ my $case_penalty = 0.3;
 # コンストラクタ
 #
 sub new {
-    my ($this, $db_hash, $index_ref) = @_;
+    my ($this, $db_hash, $index_ref, $knp_option) = @_;
 
     $this = {
         mode         => '',
-        sgh          => new SynGraph,
+        sgh          => new SynGraph($knp_option),
         index        => [],
         ref          => {},
         thash        => {},

@@ -78,7 +78,15 @@ my @stop_words;
 # コンストラクタ
 #
 sub new {
-    my ($this) = @_;
+    my ($this, $option) = @_;
+
+    # knp option
+    my @knpoptions = ('-tab');
+
+    push @knpoptions, '-case2' if $option->{case};
+    push @knpoptions, '-postprocess' if $option->{postprocess};
+
+    my $knpoption = join(' ', @knpoptions);
 
     $this = {
         mode       => '',
@@ -96,6 +104,7 @@ sub new {
         st_head    => {},
         st_data    => {},
         tm_sg      => {},
+	knp        => new KNP(-Option => $knpoption),
     };
     
     bless $this;
@@ -130,15 +139,7 @@ sub make_sg {
     else {
         # パースする
 #        my $knp = new KNP;
-	my @knpoptions = ('-tab');
-
-	push @knpoptions, '-case2' if $option->{case};
-	push @knpoptions, '-postprocess' if $option->{postprocess};
-
-	my $knpoption = join(' ', @knpoptions);
-
-        my $knp = new KNP(-Option => $knpoption);
-        my $knp_result = $knp->parse($input);
+        my $knp_result = $this->{knp}->parse($input);
         $knp_result->set_id($sid);
         # 木を作る
         $this->make_tree($knp_result, $ref);

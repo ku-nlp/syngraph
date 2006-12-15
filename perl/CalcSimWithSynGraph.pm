@@ -25,18 +25,20 @@ sub new {
 # 類似度計算
 sub Match {
     my ($this, $id, $str1, $str2, $option) = @_;
-    my $search = new Search;
+
+    my $knp_option;
+    $knp_option->{case} = 1 if $option->{case};
+    $knp_option->{postprocess} = 1 if $option->{postprocess};
+
+    my $search = new Search(undef, undef, $knp_option);
 
     my $sid1 = "$id-1";
     my $sid2 = "$id-2";
 
     # SYNGRAPHを作成
-    my $make_sg_option;
-    $make_sg_option->{case} = 1 if $option->{case};
-    $make_sg_option->{postprocess} = 1 if $option->{postprocess};
 
-    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $make_sg_option);
-    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $make_sg_option);
+    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1);
+    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 
     # 転置ハッシュを作る
