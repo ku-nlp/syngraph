@@ -183,6 +183,7 @@ sub make_tree {
 			     case     => $node->{case},
                              origbp   => $bp_num,
                              kanou    => $node->{kanou},
+			     sonnkei  => $node->{sonnkei},
                              ukemi    => $node->{ukemi},
 			     negation => $node->{negation},
 			     level    => $node->{level},
@@ -223,6 +224,7 @@ sub make_bp {
                                      childbp  => $result->{childbp},
                                      case     => $result->{case},
                                      kanou    => $result->{kanou},
+				     sonnkei  => $result->{sonnkei},
 				     ukemi    => $result->{ukemi},
                                      negation => $result->{negation},
                                      level    => $result->{level}, 
@@ -267,6 +269,7 @@ sub st_make_bp {
                                          matchbp  => $result->{matchbp},
                                          childbp  => $result->{childbp},
 					 kanou    => $result->{kanou},
+					 sonnkei  => $result->{sonnkei},
 					 ukemi    => $result->{ukemi},
 					 #negation => 0, #(odani9/26)
 					 negation => $result->{negation}, #(odani9/26)
@@ -317,6 +320,7 @@ sub _get_keywords {
         my $negation;
 	my $level;
 	my $kanou;
+	my $sonnkei;
 	my $ukemi;
 
         # 子供 child->{親のid}->{子のid}
@@ -336,6 +340,9 @@ sub _get_keywords {
         # 可能表現
         $kanou = 1 if ($tag->{fstring} =~ /<可能表現>/);
 
+        # 尊敬表現
+        $sonnkei = 1 if ($tag->{fstring} =~ /<敬語:尊敬表現>/);
+
         # 受身表現
 	$ukemi = 1 if ($tag->{fstring} =~ /<態:受動>/);
 
@@ -354,6 +361,10 @@ sub _get_keywords {
             if ($mrph->{fstring} =~ /<意味有>/) {
 		# 可能動詞であれば戻す
 		if ($mrph->{fstring} =~ /<可能動詞:([^\s\/\">]+)/) {
+		    $nodename .= $1;
+		}
+		# 尊敬動詞であれば戻す
+		if ($mrph->{fstring} =~ /<尊敬動詞:([^\s\/\">]+)/) {
 		    $nodename .= $1;
 		}
                 # 代表表記
@@ -409,6 +420,7 @@ sub _get_keywords {
         $tmp{name}     = $nodename;
         $tmp{fuzoku}   = $fuzoku;
         $tmp{kanou}    = $kanou if ($kanou);
+        $tmp{sonnkei}  = $sonnkei if ($sonnkei);
         $tmp{ukemi}    = $ukemi if ($ukemi);
         $tmp{negation} = $negation if ($negation);
         $tmp{level}    = $level if ($level);
@@ -593,6 +605,7 @@ sub _regnode {
     my $childbp               = $args_hash->{childbp};
     my $case                  = $args_hash->{case};
     my $kanou                 = $args_hash->{kanou};
+    my $sonnkei               = $args_hash->{sonnkei};
     my $ukemi                 = $args_hash->{ukemi};
     my $negation              = $args_hash->{negation};
     my $level                 = $args_hash->{level};
@@ -609,12 +622,13 @@ sub _regnode {
         # 既にそのIDが登録されていないかチェック
         if ($ref->{$sid}->[$bp]) {
             foreach my $i (@{$ref->{$sid}->[$bp]}) {
-                if ($i->{id} eq $id and
-                    $i->{kanou} == $kanou and
-                    $i->{ukemi} == $ukemi and
-                    $i->{negation} == $negation and
-                    $i->{level} == $level and
-                    $i->{weight} == $weight) {
+                if ($i->{id}        eq $id and
+                    $i->{kanou}     == $kanou and
+                    $i->{sonnkei}   == $sonnkei and
+		    $i->{ukemi}     == $ukemi and
+                    $i->{negation}  == $negation and
+                    $i->{level}     == $level and
+                    $i->{weight}    == $weight) {
                     if ($i->{score} < $score) {
                         $i->{score} = $score;
                     }
@@ -639,15 +653,16 @@ sub _regnode {
                 $newid->{matchbp}->{$m} = 1 if ($m != $bp);
             }
         }
-        $newid->{origbp} = $args_hash->{origbp} if (exists $args_hash->{origbp});
-        $newid->{kanou} = $kanou if ($kanou);
-        $newid->{ukemi} = $ukemi if ($ukemi);
+        $newid->{origbp}   = $args_hash->{origbp} if (exists $args_hash->{origbp});
+        $newid->{kanou}    = $kanou if ($kanou);
+        $newid->{sonnkei}  = $sonnkei if ($sonnkei);
+	$newid->{ukemi}    = $ukemi if ($ukemi);
 	$newid->{negation} = $negation if ($negation);
-        $newid->{level} = $level if ($level);
-        $newid->{score} = $score;
-        $newid->{weight} = $weight;
+        $newid->{level}    = $level if ($level);
+        $newid->{score}    = $score;
+        $newid->{weight}   = $weight;
         $newid->{relation} = $relation if ($relation);
-        $newid->{antonym} = $antonym if ($antonym);
+        $newid->{antonym}  = $antonym if ($antonym);
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
         # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）
@@ -661,6 +676,7 @@ sub _regnode {
                                  matchbp  => $matchbp,
                                  childbp  => $childbp,
 				 case     => $case,
+				 kanou    => $kanou,
 				 kanou    => $kanou,
 				 ukemi    => $ukemi,
                                  negation => $negation,
@@ -683,7 +699,8 @@ sub _regnode {
                                  childbp  => $childbp,
 				 case     => $case,
 				 kanou    => $kanou,
-                                 ukemi    => $ukemi,
+                                 kanou    => $kanou,
+				 ukemi    => $ukemi,
 				 negation => $negation,
                                  level    => $level,
                                  score    => $score * $antonym_penalty,
@@ -720,6 +737,7 @@ sub _match {
     my $bmatchnode;
     my $case = {};
     my $kanou;
+    my $sonnkei;
     my $ukemi;
     my $negation;
     my $level;
@@ -738,9 +756,10 @@ sub _match {
         foreach my $b (@{$bref->{$bsid}->[$bbp]}) {
             if (($mode eq 'SYN' or &st_check($b, $body_hash)) and
 		$a->{id} eq $b->{id} and !($a->{relation} and $b->{relation})) {
-                my $s = $a->{score} * $b->{score};
+                my $score = $a->{score} * $b->{score};
 		my $c = {};
 		my $k;
+		my $s;
 		my $u;
 		my $n;
 		my $l;
@@ -752,24 +771,19 @@ sub _match {
 		}
 
 		# 可能表現であるかを引き継ぐ 
-		if ($a->{kanou}) {
-		    $k = $a->{kanou};
-		}
-
+		$k = $a->{kanou} if ($a->{kanou});
+		
+                # 尊敬表現であるかを引き継ぐ 
+		$s = $a->{sonnkei} if ($a->{sonnkei});
+			
 		# 受身表現であるかを引き継ぐ 
-		if ($a->{ukemi}) {
-		    $u = $a->{ukemi};
-		}
+		$u = $a->{ukemi} if ($a->{ukemi});
 
 		#新しくつけるノードの否定を反転させる
-		if ($a->{negation}) {
-		    $n = $b->{negation} ^ $a->{negation};
-		}
+		$n = $b->{negation} ^ $a->{negation} if ($a->{negation});
 
                 # 節のレベルを引き継ぐ 
-		if ($a->{level}) {
-		    $l = $a->{level};
-		}
+		    $l = $a->{level} if ($a->{level});
 
                 # 付属語
                 if ($mode eq 'SYN' and @{$this->{syndata}->{$bsid}}-1 == $bbp) { # おしり
@@ -788,17 +802,20 @@ sub _match {
                 else {                                                           # それ以外
                     if ($mode eq 'SYN' or $headbp != $bbp) {   # MTの時はヘッドでの違いはみない
 			if ($a->{fuzoku} ne $b->{fuzoku}) {
-			    $s *= $fuzoku_penalty;
+			    $score *= $fuzoku_penalty;
 			}
                     }
                 }
 
-                if ($max < $s or ($max == $s and $amatchnode->{weight} < $a->{weight})) {
-                    $max = $s;
+                if ($max < $score or ($max == $score and $amatchnode->{weight} < $a->{weight})) {
+                    $max = $score;
                     $amatchnode = $a;
                     $bmatchnode = $b;
-		    $case       = $c;
+		    foreach (keys %{$c}){
+			$case->{$_} = $c->{$_};
+		    }
 		    $kanou      = $k;
+		    $sonnkei    = $s;
 		    $ukemi      = $u;
                     $negation   = $n;
 		    $level      = $l;
@@ -886,6 +903,7 @@ sub _match {
 	    }
 	    $result->{case}     = $case;
 	    $result->{kanou}    = $kanou;
+	    $result->{sonnkei}  = $sonnkei;
 	    $result->{ukemi}    = $ukemi;
 	    $result->{negation} = $negation;
 	    $result->{level}    = $level; 
@@ -908,6 +926,7 @@ sub _match {
 	}
 	$result->{case}     = $case;
 	$result->{kanou}    = $kanou;
+	$result->{sonnkei}  = $sonnkei;
 	$result->{ukemi}    = $ukemi;
 	$result->{negation} = $negation;
 	$result->{level}    = $level;
