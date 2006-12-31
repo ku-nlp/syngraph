@@ -13,18 +13,8 @@ use SynGraph;
 #
 
 
-#否定、反義語のフラグの違いによるペナルティ
-my $negation_antonym_penalty = 0.3;
 #係りの一致の重み（語の一致の重みは１）
 my $kakari_weight = 0.5;
-#可能表現の違いによるペナルティ
-my $kanou_penalty = 0.8;
-#尊敬表現の違いによるペナルティ
-my $sonnkei_penalty = 1;
-#受身表現の違いによるペナルティ
-my $ukemi_penalty = 0.3;
-#格の違いによるペナルティ
-my $case_penalty = 0.3;
 
 
 #
@@ -325,7 +315,7 @@ sub matching {
 		else {$matchtype = "同義語マッチング"};
                 $tm_result->{$tmid}->{matchbp}->{$qmatch}->{match_node} = $tmatch;
 		$tm_result->{$tmid}->{matchbp}->{$qmatch}->{match_type} = $matchtype;
-                $tm_result->{$tmid}->{origbp}->{$qorigbp}->{match_bp} = $torigbp;
+                $tm_result->{$tmid}->{origbp}->{$qorigbp}->{match_bp}   = $torigbp;
                 $tm_result->{$tmid}->{origbp}->{$qorigbp}->{match_type} = $matchtype;
 
                 # 兄弟はマッチさせない
@@ -363,50 +353,33 @@ sub matching {
 		    }
 
  		    # 格の不一致によるペナルティ
-		    # 同じノードにかかっていたとき、同じ格でかかっていなければペナルティ
- 		    if ($qid->{case} && $tmid->{case}){	
-			# 同じノードにかかっているかをチェック
-			foreach my $q_kakari_bp (keys %{$qid->{case}}){
-			    foreach my $tm_kakari_bp (keys %{$tmid->{case}}){
-				my $lastflag;			
-				last if ($lastflag == 1);
-				foreach my $q_kakari_node (@{$this->{ref}->{$qsid}->[$q_kakari_bp]}){
-				    last if ($lastflag == 1);
-				    if (grep($q_kakari_node->{id} eq $_->{id}, @{$this->{ref}->{$tsid}->[$tm_kakari_bp]})) { 
-                                        # 同じかかり先がある。同じ格でかかっているかチェック
-					unless ($qid->{case}->{$q_kakari_bp} eq $tmid->{case}->{$tm_kakari_bp}){
-					    $tm_result->{$tmid}->{match_weight}->{unmatch} *= $case_penalty;
-					    $tm_result->{$tmid}->{case_unmatch} = 1;
-					}
-					$lastflag = 1;
-					last;
-				    }
-				}
-			    }
+		    if ($qid->{case} && $tmid->{case}) {
+			if ($qid->{case} ne $tmid->{case}) {
+			    $tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::case_penalty;
+			    $tm_result->{$tmid}->{case_unmatch} = 1;
 			}
 		    }
-
 		    # 可能表現のフラグ不一致によるペナルティ（解消されることがない）
 		    if ($qid->{kanou} ne $tmid->{kanou}) {
-			$tm_result->{$tmid}->{match_weight}->{match}   *= $kanou_penalty;
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $kanou_penalty;
+			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::kanou_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::kanou_penalty;
 		    }
 
 		    # 尊敬表現のフラグ不一致によるペナルティ（解消されることがない）
 		    if ($qid->{sonnkei} ne $tmid->{sonnkei}) {
-			$tm_result->{$tmid}->{match_weight}->{match}   *= $sonnkei_penalty;
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $sonnkei_penalty;
+			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::sonnkei_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::sonnkei_penalty;
 		    }
 
 		    # 受身表現のフラグ不一致によるペナルティ
 		    if ($qid->{ukemi} ne $tmid->{ukemi}) {
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $ukemi_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::ukemi_penalty;
 			$tm_result->{$tmid}->{ukemi_unmatch} = 1;
 		    }
 
 		    # 否定、反義語のフラグ不一致によるペナルティ
 		    if ($qid->{negation} ^ $tmid->{negation} ^ $qid->{antonym} ^ $tmid->{antonym}) {
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $negation_antonym_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::negation_penalty;
 			$tm_result->{$tmid}->{node_reversal} = 1;
 			$tm_result->{$tmid}->{sentence_reversal} ^= 1;
 		    }
