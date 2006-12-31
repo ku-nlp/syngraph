@@ -61,10 +61,26 @@ my $synonym_penalty = 0.99;
 my $relation_penalty = 0.7;
 # 反義語のペナルティ
 my $antonym_penalty = 0.8;
+
+my $penalty = {};
 # 付属語の違いによるペナルティ
 our $fuzoku_penalty = 0.9;
+$penalty->{fuzoku} = 0.9;
+# 格の違いによるペナルティ
+our $case_penalty = 0.3;
+$penalty->{case} = 0.3;
+# 可能表現の違いによるペナルティ
+our $kanou_penalty = 0.8;
+$penalty->{kanou} = 0.8;
+# 尊敬表現の違いによるペナルティ
+our $sonnkei_penalty = 1;
+$penalty->{sonnkei} = 1;
+# 受身表現の違いによるペナルティ
+our $ukemi_penalty = 0.3;
+$penalty->{ukemi} = 0.3;
 # 否定・反義語のフラグの違いによるペナルティ
-my $negation_antonym_penalty = 0.3;
+our $negation_penalty = 0.3;
+$penalty->{negation} = 0.3;
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
 
@@ -212,26 +228,27 @@ sub make_bp {
                 my $synid2 = (split(/,/, $mid))[0];
                 next if ($synid1 eq $synid2);
 
-                my $lastbp = @{$this->{syndata}->{$mid}} - 1;
-                my $result = $this->_match('SYN', $ref, $sid, $bp, $mid, $lastbp); #$synid2が本当にsynノードになれるかチェック
-                if ($result) {
-                    $this->_regnode({ref            => $ref,
-                                     sid            => $sid,
-                                     bp             => $bp,
-                                     id             => $synid2,
-                                     fuzoku         => $result->{fuzoku},
-                                     matchbp        => $result->{matchbp},
-                                     childbp        => $result->{childbp},
-                                     case           => $result->{case},
-                                     kanou          => $result->{kanou},
-				     sonnkei        => $result->{sonnkei},
-				     ukemi          => $result->{ukemi},
-                                     negation       => $result->{negation},
-                                     level          => $result->{level}, 
-                                     score          => $result->{score} * $synonym_penalty,
-                                     weight         => $result->{weight},
-				     regnode_option => $regnode_option});
-                }
+                my $headbp = @{$this->{syndata}->{$mid}} - 1;
+                my $_match_check_result = $this->_match_check($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
+		next if ($_match_check_result eq 'unmatch');
+		my $result = $this->_fuzoku_check('SYN', $_match_check_result, $headbp, $headbp);
+		next if ($result eq 'unmatch');
+		$this->_regnode({ref            => $ref,
+				 sid            => $sid,
+				 bp             => $bp,
+				 id             => $synid2,
+				 fuzoku         => $result->{fuzoku},
+				 matchbp        => $result->{matchbp},
+				 childbp        => $result->{childbp},
+				 case           => $result->{case},
+				 kanou          => $result->{kanou},
+				 sonnkei        => $result->{sonnkei},
+				 ukemi          => $result->{ukemi},
+				 negation       => $result->{negation},
+				 level          => $result->{level}, 
+				 score          => $result->{score} * $synonym_penalty,
+				 weight         => $result->{weight},
+				 regnode_option => $regnode_option});
             }
         }
     }
@@ -260,38 +277,42 @@ sub st_make_bp {
                     $this->db_retrieve($this->{tm_sg}, [$tmid]);
                 }
                 
-                my $result = $this->_match('MT', $ref, $sid, $bp, $tmid, $headbp, \%body, $headbp);
-                if ($result) {
+                my $_match_check_result = $this->_match_check($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
+		next if ($_match_check_result eq 'unmatch');
+		my $result = $this->_fuzoku_check('MT', $_match_check_result, $headbp, $headbp);
+		next if ($result eq 'unmatch');
 
-		    # 入力の文節番号集合
-		    my @s_body;
-		    foreach my $i (@{$result->{match}}) {
-			push(@s_body, @{$i->{s}});
-		    }
-		    my $s_pattern = join(" ", sort(@s_body));
-		    next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
-		    $count_pattern{$s_pattern}++;
-		    
-                    my $newid =
-			#$regnode_optionが入力に必要かも(odani)
-                        $this->_regnode({ref      => $ref,
-                                         sid      => $sid,
-                                         bp       => $bp,
-                                         id       => $stid,
-                                         fuzoku   => $result->{fuzoku},
-                                         matchbp  => $result->{matchbp},
-                                         childbp  => $result->{childbp},
-					 kanou    => $result->{kanou},
-					 sonnkei  => $result->{sonnkei},
-					 ukemi    => $result->{ukemi},
-					 negation => $result->{negation}, 
-					 level    => $result->{level}, 
-                                         score    => $result->{score},
-                                         weight   => $result->{weight}});
-                    $newid->{match} = $result->{match} if ($newid);
-                }
-            }
-        }
+		# 入力の文節番号集合
+		my @s_body;
+		foreach my $i (@{$result->{match}}) {
+		    push(@s_body, @{$i->{s}});
+		}
+		my $s_pattern = join(" ", sort(@s_body));
+		next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
+		$count_pattern{$s_pattern}++;
+		
+		my $newid =
+		    # シソーラス、反義語データベースは使用しない
+		    $this->_regnode({ref            => $ref,
+				     sid            => $sid,
+				     bp             => $bp,
+				     id             => $stid,
+				     fuzoku         => $result->{fuzoku},
+				     matchbp        => $result->{matchbp},
+				     childbp        => $result->{childbp},
+				     case           => $result->{case},
+				     kanou          => $result->{kanou},
+				     sonnkei        => $result->{sonnkei},
+				     ukemi          => $result->{ukemi},
+				     negation       => $result->{negation},
+				     level          => $result->{level}, 
+				     score          => $result->{score} * $synonym_penalty,
+				     weight         => $result->{weight}
+				     # regnode_option => $regnode_option # 反義語、上位語を張り付けるかどうか
+				     });
+		$newid->{match} = $result->{match} if ($newid);
+	    }
+	}
     }
 }
 
@@ -338,10 +359,9 @@ sub _get_keywords {
         # 子供 child->{親のid}->{子のid}
         $child->{$tag->{parent}->{id}}->{$tag->{id}} = 1 if ($tag->{parent});
 
-	# 格 case->{自分のid}->{係り先のid} = '〜格'
+	# 格 case->{係り元のid}->{係り先のid} = '〜格'
 	# <格解析結果:書く/かく:動1:ガ/C/彼/0/0/?;ヲ/N/本/2/0/?;ニ/U/-/-/-/-;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;マデ/U/-/-/-/-;φ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;ニツク/U/-/-/-/->
 	if($tag->{fstring} =~ /<格解析結果:(.+?):(.+?):([^\s\">]+)/) {
-	    next if($tag->{fstring} =~ /<係:文節内>/); # 複合名詞は一番最後の形態素の格解析結果のみ採用
 	    push (my @case_result, split(/;/, $3));
 	    foreach my $node_case_result (@case_result){
 		push (my @node_case_result_feature, split(/\//, $node_case_result));
@@ -376,7 +396,7 @@ sub _get_keywords {
 		    $nodename .= $1;
 		}
 		# 尊敬動詞であれば戻す
-		if ($mrph->{fstring} =~ /<尊敬動詞:([^\s\/\">]+)/) {
+		elsif ($mrph->{fstring} =~ /<尊敬動詞:([^\s\/\">]+)/) {
 		    $nodename .= $1;
 		}
                 # 代表表記
@@ -437,6 +457,15 @@ sub _get_keywords {
         $tmp{negation} = $negation if ($negation);
         $tmp{level}    = $level if ($level);
         $tmp{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
+	if ($child->{$tag->{id}}) {
+	    foreach my $childbp (keys %{$child->{$tag->{id}}}) {
+		if ($case->{$childbp}->{$tag->{id}}) {
+		    foreach my $parentnode (@{$keywords[$childbp]}) {
+			$parentnode->{case} = $case->{$childbp}->{$tag->{id}};
+		    }
+		}
+	    }
+	}
         push(@{$keywords[$tag->{id}]}, \%tmp);
 
 	# ALTの処理(意味有が1形態素と仮定)
@@ -457,11 +486,6 @@ sub _get_keywords {
                 push(@{$keywords[$tag->{id}]}, \%tmp2);
             }
         }
-    }
-    foreach my $c (keys %{$case}) {
-	foreach my $node(@{$keywords[$c]}){
-	    $node->{case} = $case->{$c};
-	}
     }
 
     return @keywords;
@@ -695,9 +719,7 @@ sub _regnode {
         foreach my $c (keys %{$childbp}) {
             $newid->{childbp}->{$c} = 1;
         }
-        foreach my $c (keys %{$case}) {
-            $newid->{case}->{$c} = $case->{$c};
-        }
+	$newid->{case} = $case if ($case);
         if ($matchbp) {
             foreach my $m (keys %{$matchbp}) {
                 $newid->{matchbp}->{$m} = 1 if ($m != $bp);
@@ -712,7 +734,7 @@ sub _regnode {
         $newid->{score}    = $score;
         $newid->{weight}   = $weight;
         $newid->{relation} = $relation if ($relation);
-        $newid->{wnum}     = $wnum;
+        $newid->{wnum}     = $wnum if($wnum);
         $newid->{antonym}  = $antonym if ($antonym);
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
@@ -766,7 +788,7 @@ sub _regnode {
 	    }
 	}
 
-        # head登録
+        # head登録（末尾のノードのidが変わったときの対処、コンパイル用）
         if ($this->{mode} eq 'repeat' and
             $newid->{id} and
             $bp == @{$ref->{$sid}} - 1 and
@@ -779,224 +801,274 @@ sub _regnode {
     }
 }
 
-
 #
 # SYNGRAPHどうしのマッチング
-# (aが部分、bが全体)
+# (graph_1が部分、graph_2が全体)
 # BPのマッチを調べて、マッチすれば子供に対して再帰的に呼び出す
 #
-sub _match {
-    my ($this, $mode, $ref, $asid, $abp, $bsid, $bbp, $body_hash, $headbp) = @_;
+sub _match_check {
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $MT_headbp) = @_;
     my $result = {};
     my $max = 0;
-    my $amatchnode;
-    my $bmatchnode;
-    my $case = {};
-    my $kanou;
-    my $sonnkei;
-    my $ukemi;
-    my $negation;
-    my $level;
-    my $fuzoku;
-    my $bref;
-    if ($mode eq 'SYN') {
-	$bref = $this->{syndata};
-    }
-    else {
-	$bref = $this->{tm_sg};
-    }
+    my $matchnode_1;
+    my $matchnode_2;
+    my $case_unmatch;
+    my $kanou_unmatch;
+    my $ukemi_unmatch;
+    my $sonnkei_unmatch;
+    my $negation_unmatch;
+    my $level_unmatch;
+    my $fuzoku_unmatch;
 
     # BP内でマッチするノードを探す
-    foreach my $a (@{$ref->{$asid}->[$abp]}) {
-        next if ($a->{score} <= $max); #この$aとのスコアをもとめても前の$aのスコアより小さくなるだけだから考慮する必要がない。
-        foreach my $b (@{$bref->{$bsid}->[$bbp]}) {
-            if (($mode eq 'SYN' or &st_check($b, $body_hash)) and
-		$a->{id} eq $b->{id} and !($a->{relation} and $b->{relation})) {
-                my $score = $a->{score} * $b->{score};
-		my $c = {};
-		my $k;
-		my $s;
-		my $u;
-		my $n;
-		my $l;
-                my $f;
+    foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
+        next if ($node_1->{score} <= $max); #この$node_1とのスコアをもとめても前の$node_1のスコアより小さくなるだけだから考慮する必要がない。
+        foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
+            if ((!defined $body_hash or &st_check($node_2, $body_hash)) and
+		$node_1->{id} eq $node_2->{id} and !($node_1->{relation} and $node_2->{relation})) {
+                my $score = $node_1->{score} * $node_2->{score};	     
 
-		# 格情報を引き継ぐ 
-		if ($a->{case}) {
-		    $c = $a->{case};
-		}
-
-		# 可能表現であるかを引き継ぐ 
-		$k = $a->{kanou} if ($a->{kanou});
-		
-                # 尊敬表現であるかを引き継ぐ 
-		$s = $a->{sonnkei} if ($a->{sonnkei});
-			
-		# 受身表現であるかを引き継ぐ 
-		$u = $a->{ukemi} if ($a->{ukemi});
-
-		#新しくつけるノードの否定を反転させる
-		$n = $b->{negation} ^ $a->{negation} if ($a->{negation});
-
-                # 節のレベルを引き継ぐ 
-		    $l = $a->{level} if ($a->{level});
-
-                # 付属語
-                if ($mode eq 'SYN' and @{$this->{syndata}->{$bsid}}-1 == $bbp) { # おしり
-                    if ($b->{fuzoku}) {
-                        if ($a->{fuzoku} ne $b->{fuzoku}) {
-                            return;
-                        }
-                    }
-                    # 元の付属語を継承
-                    else {
-                        if ($a->{fuzoku}) {
-                            $f = $a->{fuzoku};
-                        }
-                    }
-                }
-                else {                                                           # それ以外
-                    if ($mode eq 'SYN' or $headbp != $bbp) {   # MTの時はヘッドでの違いはみない
-			if ($a->{fuzoku} ne $b->{fuzoku}) {
-			    $score *= $fuzoku_penalty;
-			}
-                    }
-                }
-
-                if ($max < $score or ($max == $score and $amatchnode->{weight} < $a->{weight})) {
+                if ($max < $score or ($max == $score and $matchnode_1->{weight} < $node_1->{weight})) {
                     $max = $score;
-                    $amatchnode = $a;
-                    $bmatchnode = $b;
-		    foreach (keys %{$c}){
-			$case->{$_} = $c->{$_};
+                    $matchnode_1 = $node_1;
+                    $matchnode_2 = $node_2;
+
+		    # 付属語、要素の違いのチェック
+
+		    # 格情報
+		    if ($node_1->{case} ne $node_2->{case}) {
+			if (!$node_2->{case}){
+			    $case_unmatch = $node_1->{case};
+			}
+			else {
+			    $case_unmatch = 'unmatch';
+			}
 		    }
-		    $kanou      = $k;
-		    $sonnkei    = $s;
-		    $ukemi      = $u;
-                    $negation   = $n;
-		    $level      = $l;
-		    $fuzoku     = $f;
-                }
-            }
+		    
+		    # 可能表現
+		    if ($node_1->{kanou} != $node_2->{kanou}) {		
+			if (!$node_2->{kanou}) {
+			    $kanou_unmatch = $node_1->{kanou};
+			}
+			else {
+			    $kanou_unmatch = 'unmatch';
+			}
+		    }
+		    
+		    # 受身表現
+		    if ($node_1->{ukemi} != $node_2->{ukemi}) {
+			if (!$node_2->{ukemi}) {
+			    $ukemi_unmatch = $node_1->{ukemi};
+			}
+			else {
+			    $ukemi_unmatch = 'unmatch';
+			}
+		    }
+
+		    # 尊敬表現
+		    if ($node_1->{sonnkei} != $node_2->{sonnkei}) {	
+			if (!$node_2->{sonnkei}) {
+			    $sonnkei_unmatch = $node_1->{sonnkei};
+			}
+			else {
+			    $sonnkei_unmatch = 'unmatch';
+			}
+		    }
+
+		    # 否定表現
+		    if ($node_1->{negation} != $node_2->{negation}) {
+			$negation_unmatch = 1;
+		    }
+
+#		    # レベル
+#		    if ($node_1->{level} ne $node_2->{level}) {
+#			if ($node_1->{level}) {
+#			    $level_unmatch = $node_1->{level};
+#			}
+#		    }
+
+		    # 付属語
+		    if ($node_1->{fuzoku} ne $node_2->{fuzoku}) {
+			if (!$node_2->{fuzoku}) {
+			    $fuzoku_unmatch = $node_1->{fuzoku};
+			}
+			else {
+			    $fuzoku_unmatch = 'unmatch';
+			}
+		    }
+		}
+	    }
         }
     }
-
+    
     # BPがマッチしない
-    return if ($max == 0);
+    return 'unmatch' if ($max == 0);
 
     # BPがマッチした
-    $result->{score} = $max;
-    $result->{weight} = $amatchnode->{weight};
+    $result->{score}->[$nodebp_2] = $max;
+    $result->{weight}->[$nodebp_2] = $matchnode_1->{weight};
 
-    if ($amatchnode->{matchbp}) {
-	foreach my $m (keys %{$amatchnode->{matchbp}}) {
+    if ($matchnode_1->{matchbp}) {
+	foreach my $m (keys %{$matchnode_1->{matchbp}}) {
 	    $result->{matchbp}->{$m} = 1;
 	}
     }
-    $result->{matchbp}->{$abp} = 1;  # 自分もいれておく
+    $result->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
 
     # マッチの対応
     my @smatch = sort keys %{$result->{matchbp}};
-    my @imatch = sort (keys %{$bmatchnode->{matchbp}}, $bbp);
+    my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
     push(@{$result->{match}}, {s => \@smatch, i => \@imatch});
 
-    # Bに子BPがあるかどうか
-    my @bchildbp;
-    if ($bmatchnode->{childbp}) {
-	if ($mode eq 'SYN') {
-	    @bchildbp = keys %{$bmatchnode->{childbp}};
+    # $graph_2に子BPがあるかどうか
+    my @childbp_2;
+    if ($matchnode_2->{childbp}) {
+	if (defined $body_hash) {
+	    @childbp_2 = grep($body_hash->{$_}, sort keys %{$matchnode_2->{childbp}});
 	}
 	else {
-	    @bchildbp = grep($body_hash->{$_}, sort keys %{$bmatchnode->{childbp}});
+	    @childbp_2 = keys %{$matchnode_2->{childbp}};
 	}
     }
-    if (@bchildbp > 0) {
-	# Aに子BPがあるかどうか
-	if ($amatchnode->{childbp}) {
-	    my @achildbp = sort keys %{$amatchnode->{childbp}};
-	    my %ac_check;
+    if (@childbp_2 > 0) {
+	# $graph_1に子BPがあるかどうか
+	if ($matchnode_1->{childbp}) {
+	    my @childbp_1 = keys %{$matchnode_1->{childbp}};
+	    my %child_1_check;
 
 	    # bの各子供にマッチするaの子供を見つける
-	    return if (@achildbp < @bchildbp);
+	    return 'unmatch' if (@childbp_1 < @childbp_2);
 
-	    foreach my $bc (@bchildbp) {
+	    foreach my $child_2 (@childbp_2) {
 		my $match_flag = 0;
-		foreach my $ac (@achildbp) {
-		    next if ($ac_check{$ac});
+		foreach my $child_1 (@childbp_1) {
+		    next if ($child_1_check{$child_1});
 
-		    my $res = $this->_match($mode, $ref, $asid, $ac, $bsid, $bc, $body_hash, $headbp);
-		    if ($res) {
-			$result->{score} =
-			    ($result->{score}*$result->{weight} + $res->{score}*$res->{weight})
-			    / ($result->{weight} + $res->{weight});
-			$result->{weight} += $res->{weight};
-			if ($res->{matchbp}) {
-			    foreach my $m (keys %{$res->{matchbp}}) {
-				$result->{matchbp}->{$m} = 1;
-			    }
+		    my $res = $this->_match_check($graph_1, $child_1, $graph_2, $child_2, $body_hash);
+		    next if ($res eq 'unmatch');
+		    if ($res->{score}) {
+			my $bp = 0;
+			foreach my $s (@{$res->{score}}) {				
+			    $result->{score}->[$bp] = $s if (defined $s);
+			    $bp++;
 			}
-			if ($res->{childbp}) {
-			    foreach my $c (keys %{$res->{childbp}}) {
-				$result->{childbp}->{$c} = 1;
-			    }
-			}
-			if ($res->{match}) {
-			    @{$result->{match}} = (@{$result->{match}}, @{$res->{match}});
-			}
-
-			$ac_check{$ac} = 1;
-			$match_flag = 1;
-			last;
 		    }
+		    if ($res->{weight}) {
+			my $bp = 0;
+			foreach my $w (@{$res->{weight}}) {
+			    $result->{weight}->[$bp] = $w if (defined $w);
+			    $bp++;
+			}
+		    }
+		    if ($res->{matchbp}) {
+			foreach my $m (keys %{$res->{matchbp}}) {
+			    $result->{matchbp}->{$m} = 1;
+			}
+		    }
+		    if ($res->{childbp}) {
+			foreach my $c (keys %{$res->{childbp}}) {
+			    $result->{childbp}->{$c} = 1;
+			}
+		    }
+		    if ($res->{match}) {
+			@{$result->{match}} = (@{$result->{match}}, @{$res->{match}});
+		    }
+		    
+		    $child_1_check{$child_1} = 1;
+		    $match_flag = 1;
+		    last;		    
 		}
 
 		unless ($match_flag) {
-		    return;
+		    return 'unmatch';
 		}
 	    }
-	    foreach my $ac (@achildbp) {
-		$result->{childbp}->{$ac} = 1 unless ($ac_check{$ac});
+	    foreach my $child_1 (@childbp_1) {
+		$result->{childbp}->{$child_1} = 1 unless ($child_1_check{$child_1});
 	    }
-	    $result->{case}     = $case;
-	    $result->{kanou}    = $kanou;
-	    $result->{sonnkei}  = $sonnkei;
-	    $result->{ukemi}    = $ukemi;
-	    $result->{negation} = $negation;
-	    $result->{level}    = $level; 
-	    $result->{fuzoku}   = $fuzoku;
+	    $result->{unmatch}->[$nodebp_2]->{case}     = $case_unmatch if (defined $case_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{kanou}    = $kanou_unmatch if (defined $kanou_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{ukemi}    = $ukemi_unmatch if (defined $ukemi_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{sonnkei}  = $sonnkei_unmatch if (defined $sonnkei_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{negation} = $negation_unmatch if (defined $negation_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if (defined $level_unmatch);
+	    $result->{unmatch}->[$nodebp_2]->{fuzoku}   = $fuzoku_unmatch if (defined $fuzoku_unmatch);
 
 	    return $result;
 	}
 	# Aに子BPがない
 	else {
-	    return;
+	    return 'unmatch';
 	}
     }
     # Bに子BPがない
     else {
 	# Aに子BPがある
-	if ($amatchnode->{childbp}) {
-	    foreach my $c (keys %{$amatchnode->{childbp}}) {
+	if ($matchnode_1->{childbp}) {
+	    foreach my $c (keys %{$matchnode_1->{childbp}}) {
 		$result->{childbp}->{$c} = 1;
 	    }
 	}
-	$result->{case}     = $case;
-	$result->{kanou}    = $kanou;
-	$result->{sonnkei}  = $sonnkei;
-	$result->{ukemi}    = $ukemi;
-	$result->{negation} = $negation;
-	$result->{level}    = $level;
-	$result->{fuzoku}   = $fuzoku;
+	$result->{unmatch}->[$nodebp_2]->{case}     = $case_unmatch if (defined $case_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{kanou}    = $kanou_unmatch if (defined $kanou_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{ukemi}    = $ukemi_unmatch if (defined $ukemi_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{sonnkei}  = $sonnkei_unmatch if (defined $sonnkei_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{negation} = $negation_unmatch if (defined $negation_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch  if (defined $level_unmatch);
+	$result->{unmatch}->[$nodebp_2]->{fuzoku}   = $fuzoku_unmatch if (defined $fuzoku_unmatch);
 
 	return $result;
     }
 }
 
+sub _fuzoku_check {
+    my ($this, $mode, $_match_check_result, $bp, $headbp) = @_;
 
+    my $result = {};
+    $result->{score} = $_match_check_result->{score}->[$bp];
+    $result->{weight} = $_match_check_result->{weight}->[$bp];
+    
+    if (defined $_match_check_result->{unmatch}->[$bp]){
+	foreach my $unmatch_type (keys %{$_match_check_result->{unmatch}->[$bp]}) {
+	    if ($bp == $headbp) {
+		if ($mode eq 'SYN') {
+		    if ($_match_check_result->{unmatch}->[$bp]->{$unmatch_type} ne 'unmatch'){
+			# 引き継ぎ
+			$result->{$unmatch_type} =$_match_check_result->{unmatch}->[$bp]->{$unmatch_type};
+		    }
+		    else {
+			return 'unmatch';
+		    }
+		}
+		if ($mode eq 'MT') { # MTではheadの違いはみない。
+		    last;
+		}
+	    }
+	    else {
+		$result->{score} *= $penalty->{$unmatch_type};
+	    }
+	}
+    }
+
+    unless ($bp < 1) {
+	my $res = $this->_fuzoku_check($mode, $_match_check_result, $bp-1, $headbp);
+	$result->{score} =
+	    ($result->{score}*$result->{weight} + $res->{score}*$res->{weight})
+	    / ($result->{weight} + $res->{weight});
+	$result->{weight} += $res->{weight};
+    }
+
+    $result->{childbp} = $_match_check_result->{childbp};
+    $result->{matchbp} = $_match_check_result->{matchbp};
+    $result->{match} = $_match_check_result->{match};
+    
+    return $result;
+}
+	    
 
 ################################################################################
 #                                                                              #
-#                            KNP結果の読み込み 関係                            #
+#                            KNP結果の読み込み 関係                               #
 #                                                                              #
 ################################################################################
 
