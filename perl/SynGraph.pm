@@ -807,7 +807,7 @@ sub _regnode {
 # BPのマッチを調べて、マッチすれば子供に対して再帰的に呼び出す
 #
 sub _match_check {
-    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $MT_headbp) = @_;
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash) = @_;
     my $result = {};
     my $max = 0;
     my $matchnode_1;
@@ -919,6 +919,17 @@ sub _match_check {
     my @smatch = sort keys %{$result->{matchbp}};
     my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
     push(@{$result->{match}}, {s => \@smatch, i => \@imatch});
+    my $smatchnode;
+    my $imatchnode;
+    foreach my $smatchbp (@smatch) {
+	$smatchnode .= $graph_1->[$smatchbp]->[0]->{id};
+	$smatchnode .= $graph_1->[$smatchbp]->[0]->{fuzoku};
+    }
+    foreach my $imatchbp (@imatch) {
+	$imatchnode .= $graph_2->[$imatchbp]->[0]->{id};
+	$imatchnode .= $graph_2->[$imatchbp]->[0]->{fuzoku};
+    }
+    push(@{$result->{matchpair}}, {s => $smatchnode, i => $imatchnode});
 
     # $graph_2に子BPがあるかどうか
     my @childbp_2;
@@ -972,6 +983,9 @@ sub _match_check {
 		    }
 		    if ($res->{match}) {
 			@{$result->{match}} = (@{$result->{match}}, @{$res->{match}});
+		    }
+		    if ($res->{matchpair}) {
+			@{$result->{matchpair}} = (@{$result->{matchpair}}, @{$res->{matchpair}});
 		    }
 		    
 		    $child_1_check{$child_1} = 1;
@@ -1058,9 +1072,10 @@ sub _fuzoku_check {
 	$result->{weight} += $res->{weight};
     }
 
-    $result->{childbp} = $_match_check_result->{childbp};
-    $result->{matchbp} = $_match_check_result->{matchbp};
-    $result->{match} = $_match_check_result->{match};
+    $result->{childbp}   = $_match_check_result->{childbp};
+    $result->{matchbp}   = $_match_check_result->{matchbp};
+    $result->{match}     = $_match_check_result->{match};
+    $result->{matchpair} = $_match_check_result->{matchpair};
     
     return $result;
 }
