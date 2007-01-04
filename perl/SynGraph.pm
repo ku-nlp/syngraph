@@ -916,6 +916,7 @@ sub _match_check {
     $result->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
 
     # マッチの対応
+    push(@{$result->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});
     my @smatch = sort keys %{$result->{matchbp}};
     my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
     push(@{$result->{match}}, {s => \@smatch, i => \@imatch});
@@ -930,7 +931,7 @@ sub _match_check {
 	$imatchnode .= $graph_2->[$imatchbp]->[0]->{fuzoku};
     }
     push(@{$result->{matchpair}}, {s => $smatchnode, i => $imatchnode});
-
+    
     # $graph_2に子BPがあるかどうか
     my @childbp_2;
     if ($matchnode_2->{childbp}) {
@@ -1041,7 +1042,7 @@ sub _fuzoku_check {
     my $result = {};
     $result->{score} = $_match_check_result->{score}->[$bp];
     $result->{weight} = $_match_check_result->{weight}->[$bp];
-    
+
     if (defined $_match_check_result->{unmatch}->[$bp]){
 	foreach my $unmatch_type (keys %{$_match_check_result->{unmatch}->[$bp]}) {
 	    if ($bp == $headbp) {
@@ -1074,8 +1075,18 @@ sub _fuzoku_check {
 
     $result->{childbp}   = $_match_check_result->{childbp};
     $result->{matchbp}   = $_match_check_result->{matchbp};
+    $result->{matchid} = $_match_check_result->{matchid};
     $result->{match}     = $_match_check_result->{match};
     $result->{matchpair} = $_match_check_result->{matchpair};
+    
+    if ($mode ne 'SYN') {
+	print "matchpair\n";
+	for (my $num=0; $num<@{$result->{match}}; $num++) {
+	    print "$num\n";
+	    printf "graph_1: %s (bp = %s, id = %s)\n", $result->{matchpair}->[$num]->{s}, join(',', @{$result->{match}->[$num]->{s}}), $result->{matchid}->[$num]->{s};
+	    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{matchpair}->[$num]->{i}, join(',', @{$result->{match}->[$num]->{i}}), $result->{matchid}->[$num]->{i};
+	}
+    }
     
     return $result;
 }
