@@ -1,6 +1,7 @@
 2007-01-04  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:完全マッチにlog出力を加えた。
+	* perl/SynGraoh.pm:log出力修正
 
 2006-12-31  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
