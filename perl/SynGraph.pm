@@ -90,6 +90,7 @@ my @stop_words;
 @stop_words = qw(記事 関する 述べる 含める 探す 場合 含む 報道 言及 関連 議論 つく 具体 的だ 良い もの 物);
 
 
+
 #
 # コンストラクタ
 #
@@ -751,7 +752,7 @@ sub _regnode {
 				     childbp        => $childbp,
 				     case           => $case,
 				     kanou          => $kanou,
-				     kanou          => $kanou,
+				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     negation       => $negation,
 				     level          => $level,
@@ -776,7 +777,7 @@ sub _regnode {
 				     childbp        => $childbp,
 				     case           => $case,
 				     kanou          => $kanou,
-				     kanou          => $kanou,
+				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     negation       => $negation,
 				     level          => $level,
@@ -812,13 +813,8 @@ sub _match_check {
     my $max = 0;
     my $matchnode_1;
     my $matchnode_2;
-    my $case_unmatch;
-    my $kanou_unmatch;
-    my $ukemi_unmatch;
-    my $sonnkei_unmatch;
-    my $negation_unmatch;
-    my $level_unmatch;
-    my $fuzoku_unmatch;
+    my $unmatch;
+    my @types = qw(fuzoku case kanou sonnkei ukemi negation);
 
     # BP内でマッチするノードを探す
     foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
@@ -834,50 +830,19 @@ sub _match_check {
                     $matchnode_2 = $node_2;
 
 		    # 付属語、要素の違いのチェック
-
-		    # 格情報
-		    if ($node_1->{case} ne $node_2->{case}) {
-			if (!$node_2->{case}){
-			    $case_unmatch = $node_1->{case};
+		    foreach my $type (@types) {
+			if ($node_1->{$type} ne $node_2->{$type}) {
+			    
+			    if ($type eq 'negation') {
+				$unmatch->{negation} = $node_1->{$type};				
+			    }
+			    elsif (!$node_2->{$type}) {
+				$unmatch->{$type} = $node_1->{$type};
+			    }
+			    else {
+				$unmatch->{$type} = 'unmatch';
+			    }
 			}
-			else {
-			    $case_unmatch = 'unmatch';
-			}
-		    }
-		    
-		    # 可能表現
-		    if ($node_1->{kanou} != $node_2->{kanou}) {		
-			if (!$node_2->{kanou}) {
-			    $kanou_unmatch = $node_1->{kanou};
-			}
-			else {
-			    $kanou_unmatch = 'unmatch';
-			}
-		    }
-		    
-		    # 受身表現
-		    if ($node_1->{ukemi} != $node_2->{ukemi}) {
-			if (!$node_2->{ukemi}) {
-			    $ukemi_unmatch = $node_1->{ukemi};
-			}
-			else {
-			    $ukemi_unmatch = 'unmatch';
-			}
-		    }
-
-		    # 尊敬表現
-		    if ($node_1->{sonnkei} != $node_2->{sonnkei}) {	
-			if (!$node_2->{sonnkei}) {
-			    $sonnkei_unmatch = $node_1->{sonnkei};
-			}
-			else {
-			    $sonnkei_unmatch = 'unmatch';
-			}
-		    }
-
-		    # 否定表現
-		    if ($node_1->{negation} != $node_2->{negation}) {
-			$negation_unmatch = 1;
 		    }
 
 #		    # レベル
@@ -887,15 +852,6 @@ sub _match_check {
 #			}
 #		    }
 
-		    # 付属語
-		    if ($node_1->{fuzoku} ne $node_2->{fuzoku}) {
-			if (!$node_2->{fuzoku}) {
-			    $fuzoku_unmatch = $node_1->{fuzoku};
-			}
-			else {
-			    $fuzoku_unmatch = 'unmatch';
-			}
-		    }
 		}
 	    }
         }
@@ -982,6 +938,9 @@ sub _match_check {
 			    $result->{childbp}->{$c} = 1;
 			}
 		    }
+		    if ($res->{matchid}) {
+			@{$result->{matchid}} = (@{$result->{matchid}}, @{$res->{matchid}});
+		    }
 		    if ($res->{match}) {
 			@{$result->{match}} = (@{$result->{match}}, @{$res->{match}});
 		    }
@@ -1001,13 +960,12 @@ sub _match_check {
 	    foreach my $child_1 (@childbp_1) {
 		$result->{childbp}->{$child_1} = 1 unless ($child_1_check{$child_1});
 	    }
-	    $result->{unmatch}->[$nodebp_2]->{case}     = $case_unmatch if (defined $case_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{kanou}    = $kanou_unmatch if (defined $kanou_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{ukemi}    = $ukemi_unmatch if (defined $ukemi_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{sonnkei}  = $sonnkei_unmatch if (defined $sonnkei_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{negation} = $negation_unmatch if (defined $negation_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if (defined $level_unmatch);
-	    $result->{unmatch}->[$nodebp_2]->{fuzoku}   = $fuzoku_unmatch if (defined $fuzoku_unmatch);
+
+	    foreach my $type (@types) {
+		$result->{unmatch}->[$nodebp_2]->{$type} = $unmatch->{$type} if (!$unmatch->{$type});
+	    }
+	    
+	    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
 
 	    return $result;
 	}
@@ -1024,13 +982,11 @@ sub _match_check {
 		$result->{childbp}->{$c} = 1;
 	    }
 	}
-	$result->{unmatch}->[$nodebp_2]->{case}     = $case_unmatch if (defined $case_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{kanou}    = $kanou_unmatch if (defined $kanou_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{ukemi}    = $ukemi_unmatch if (defined $ukemi_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{sonnkei}  = $sonnkei_unmatch if (defined $sonnkei_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{negation} = $negation_unmatch if (defined $negation_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch  if (defined $level_unmatch);
-	$result->{unmatch}->[$nodebp_2]->{fuzoku}   = $fuzoku_unmatch if (defined $fuzoku_unmatch);
+
+	foreach my $type (@types) {
+	    $result->{unmatch}->[$nodebp_2]->{$type} = $unmatch->{$type} if (defined $unmatch->{$type}); # $unmatch->{$type}は0,1,文字列,undef
+ 	}	
+	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
 
 	return $result;
     }
@@ -1043,13 +999,13 @@ sub _fuzoku_check {
     $result->{score} = $_match_check_result->{score}->[$bp];
     $result->{weight} = $_match_check_result->{weight}->[$bp];
 
-    if (defined $_match_check_result->{unmatch}->[$bp]){
+    if ($_match_check_result->{unmatch}->[$bp]){
 	foreach my $unmatch_type (keys %{$_match_check_result->{unmatch}->[$bp]}) {
 	    if ($bp == $headbp) {
 		if ($mode eq 'SYN') {
 		    if ($_match_check_result->{unmatch}->[$bp]->{$unmatch_type} ne 'unmatch'){
 			# 引き継ぎ
-			$result->{$unmatch_type} =$_match_check_result->{unmatch}->[$bp]->{$unmatch_type};
+			$result->{$unmatch_type} = $_match_check_result->{unmatch}->[$bp]->{$unmatch_type};
 		    }
 		    else {
 			return 'unmatch';
@@ -1075,7 +1031,7 @@ sub _fuzoku_check {
 
     $result->{childbp}   = $_match_check_result->{childbp};
     $result->{matchbp}   = $_match_check_result->{matchbp};
-    $result->{matchid} = $_match_check_result->{matchid};
+    $result->{matchid}   = $_match_check_result->{matchid};
     $result->{match}     = $_match_check_result->{match};
     $result->{matchpair} = $_match_check_result->{matchpair};
     
