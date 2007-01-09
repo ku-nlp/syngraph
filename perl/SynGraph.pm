@@ -238,17 +238,17 @@ sub make_bp {
 				 sid            => $sid,
 				 bp             => $bp,
 				 id             => $synid2,
-				 fuzoku         => $result->{fuzoku},
-				 matchbp        => $result->{matchbp},
-				 childbp        => $result->{childbp},
-				 case           => $result->{case},
-				 kanou          => $result->{kanou},
-				 sonnkei        => $result->{sonnkei},
-				 ukemi          => $result->{ukemi},
-				 negation       => $result->{negation},
-				 level          => $result->{level}, 
+				 fuzoku         => $result->{SYN}->{fuzoku},
+				 matchbp        => $result->{SYN}->{matchbp},
+				 childbp        => $result->{SYN}->{childbp},
+				 case           => $result->{SYN}->{case},
+				 kanou          => $result->{SYN}->{kanou},
+				 sonnkei        => $result->{SYN}->{sonnkei},
+				 ukemi          => $result->{SYN}->{ukemi},
+				 negation       => $result->{SYN}->{negation},
+				 level          => $result->{SYN}->{level}, 
 				 score          => $result->{score} * $synonym_penalty,
-				 weight         => $result->{weight},
+				 weight         => $result->{SYN}->{weight},
 				 regnode_option => $regnode_option});
             }
         }
@@ -280,7 +280,7 @@ sub st_make_bp {
                 
                 my $_match_check_result = $this->_match_check($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
 		next if ($_match_check_result eq 'unmatch');
-		my $result = $this->_fuzoku_check('MT', $_match_check_result, $headbp, $headbp);
+		my $result = $this->_fuzoku_check('Matching', $_match_check_result, $headbp, $headbp);
 		next if ($result eq 'unmatch');
 
 		# 入力の文節番号集合
@@ -298,17 +298,17 @@ sub st_make_bp {
 				     sid            => $sid,
 				     bp             => $bp,
 				     id             => $stid,
-				     fuzoku         => $result->{fuzoku},
-				     matchbp        => $result->{matchbp},
-				     childbp        => $result->{childbp},
-				     case           => $result->{case},
-				     kanou          => $result->{kanou},
-				     sonnkei        => $result->{sonnkei},
-				     ukemi          => $result->{ukemi},
-				     negation       => $result->{negation},
-				     level          => $result->{level}, 
+				     fuzoku         => $result->{SYN}->{fuzoku},
+				     matchbp        => $result->{SYN}->{matchbp},
+				     childbp        => $result->{SYN}->{childbp},
+				     case           => $result->{SYN}->{case},
+				     kanou          => $result->{SYN}->{kanou},
+				     sonnkei        => $result->{SYN}->{sonnkei},
+				     ukemi          => $result->{SYN}->{ukemi},
+				     negation       => $result->{SYN}->{negation},
+				     level          => $result->{SYN}->{level}, 
 				     score          => $result->{score} * $synonym_penalty,
-				     weight         => $result->{weight}
+				     weight         => $result->{SYN}->{weight}
 				     # regnode_option => $regnode_option # 反義語、上位語を張り付けるかどうか
 				     });
 		$newid->{match} = $result->{match} if ($newid);
@@ -834,17 +834,16 @@ sub _match_check {
 			if ($node_1->{$type} ne $node_2->{$type}) {
 			    
 			    if ($type eq 'negation') {
-				$unmatch->{negation} = $node_1->{$type};				
+				$unmatch->{$matchnode_2}->{negation} = $node_1->{$type};				
 			    }
-			    elsif (!$node_2->{$type}) {
-				$unmatch->{$type} = $node_1->{$type};
+			    if (!$node_2->{$type}) {
+				$unmatch->{$matchnode_2}->{$type} = $node_1->{$type};
 			    }
 			    else {
-				$unmatch->{$type} = 'unmatch';
+				$unmatch->{$matchnode_2}->{$type} = 'unmatch';
 			    }
 			}
 		    }
-
 #		    # レベル
 #		    if ($node_1->{level} ne $node_2->{level}) {
 #			if ($node_1->{level}) {
@@ -861,21 +860,30 @@ sub _match_check {
     return 'unmatch' if ($max == 0);
 
     # BPがマッチした
-    $result->{score}->[$nodebp_2] = $max;
-    $result->{weight}->[$nodebp_2] = $matchnode_1->{weight};
-
+    $result->{node}->{$nodebp_2}->{score} = $max;
+    $result->{node}->{$nodebp_2}->{weight} = $matchnode_2->{weight};
+    foreach my $c (keys %{$matchnode_2->{childbp}}){
+	$result->{node}->{$nodebp_2}->{childbp}->{$c} = 1;
+    }
+    foreach my $type (@types) {
+	# $unmatch->{$type}は0,1,文字列,undef
+	$result->{node}->{$nodebp_2}->{unmatch}->{$type} = $unmatch->{$matchnode_2}->{$type} if (defined $unmatch->{$matchnode_2}->{$type});
+    }
+#	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
+    
+    $result->{SYN}->{weight} = $matchnode_1->{weight};
     if ($matchnode_1->{matchbp}) {
 	foreach my $m (keys %{$matchnode_1->{matchbp}}) {
-	    $result->{matchbp}->{$m} = 1;
+	    $result->{SYN}->{matchbp}->{$m} = 1;
 	}
     }
-    $result->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
+    $result->{SYN}->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
 
     # マッチの対応
-    push(@{$result->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});
-    my @smatch = sort keys %{$result->{matchbp}};
+    push(@{$result->{SYN}->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});
+    my @smatch = sort keys %{$result->{SYN}->{matchbp}};
     my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
-    push(@{$result->{match}}, {s => \@smatch, i => \@imatch});
+    push(@{$result->{SYN}->{match}}, {s => \@smatch, i => \@imatch});
     my $smatchnode;
     my $imatchnode;
     foreach my $smatchbp (@smatch) {
@@ -886,7 +894,7 @@ sub _match_check {
 	$imatchnode .= $graph_2->[$imatchbp]->[0]->{id};
 	$imatchnode .= $graph_2->[$imatchbp]->[0]->{fuzoku};
     }
-    push(@{$result->{matchpair}}, {s => $smatchnode, i => $imatchnode});
+    push(@{$result->{SYN}->{matchpair}}, {s => $smatchnode, i => $imatchnode});
     
     # $graph_2に子BPがあるかどうか
     my @childbp_2;
@@ -914,39 +922,34 @@ sub _match_check {
 
 		    my $res = $this->_match_check($graph_1, $child_1, $graph_2, $child_2, $body_hash);
 		    next if ($res eq 'unmatch');
-		    if ($res->{score}) {
-			my $bp = 0;
-			foreach my $s (@{$res->{score}}) {				
-			    $result->{score}->[$bp] = $s if (defined $s);
-			    $bp++;
+
+		    if ($res->{node}) {
+			foreach my $nodebp (keys %{$res->{node}}) {
+			    $result->{node}->{$nodebp}->{score} = $res->{node}->{$nodebp}->{score};
+			    $result->{node}->{$nodebp}->{weight} = $res->{node}->{$nodebp}->{weight};
+			    foreach my $resc (keys %{$res->{node}->{$nodebp}->{childbp}}) {
+				$result->{node}->{$child_2}->{childbp}->{$resc} = 1;
+			    }
+			    foreach my $restype (keys %{$res->{node}->{$nodebp}->{unmatch}}){
+				$result->{node}->{$nodebp}->{unmatch}->{$restype} = $res->{node}->{$nodebp}->{unmatch}->{$restype}
+			    }
 			}
 		    }
-		    if ($res->{weight}) {
-			my $bp = 0;
-			foreach my $w (@{$res->{weight}}) {
-			    $result->{weight}->[$bp] = $w if (defined $w);
-			    $bp++;
+		    $result->{SYN}->{weight} += $res->{SYN}->{weight} if ($res->{SYN}->{weight});
+		    if ($res->{SYN}->{matchbp}) {
+			foreach my $m (keys %{$res->{SYN}->{matchbp}}) {
+			    $result->{SYN}->{matchbp}->{$m} = 1;
 			}
 		    }
-		    if ($res->{matchbp}) {
-			foreach my $m (keys %{$res->{matchbp}}) {
-			    $result->{matchbp}->{$m} = 1;
+		    if ($res->{SYN}->{childbp}) {
+			foreach my $c (keys %{$res->{SYN}->{childbp}}) {
+			    $result->{SYN}->{childbp}->{$c} = 1;
 			}
 		    }
-		    if ($res->{childbp}) {
-			foreach my $c (keys %{$res->{childbp}}) {
-			    $result->{childbp}->{$c} = 1;
-			}
-		    }
-		    if ($res->{matchid}) {
-			@{$result->{matchid}} = (@{$result->{matchid}}, @{$res->{matchid}});
-		    }
-		    if ($res->{match}) {
-			@{$result->{match}} = (@{$result->{match}}, @{$res->{match}});
-		    }
-		    if ($res->{matchpair}) {
-			@{$result->{matchpair}} = (@{$result->{matchpair}}, @{$res->{matchpair}});
-		    }
+
+		    push(@{$result->{SYN}->{matchid}}, @{$res->{SYN}->{matchid}}) if ($res->{SYN}->{matchid});
+		    push(@{$result->{SYN}->{match}}, @{$res->{SYN}->{match}}) if ($res->{SYN}->{match});
+		    push(@{$result->{SYN}->{matchpair}}, @{$res->{SYN}->{matchpair}}) if ($res->{SYN}->{matchpair});
 		    
 		    $child_1_check{$child_1} = 1;
 		    $match_flag = 1;
@@ -958,14 +961,8 @@ sub _match_check {
 		}
 	    }
 	    foreach my $child_1 (@childbp_1) {
-		$result->{childbp}->{$child_1} = 1 unless ($child_1_check{$child_1});
+		$result->{SYN}->{childbp}->{$child_1} = 1 unless ($child_1_check{$child_1});
 	    }
-
-	    foreach my $type (@types) {
-		$result->{unmatch}->[$nodebp_2]->{$type} = $unmatch->{$type} if (!$unmatch->{$type});
-	    }
-	    
-	    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
 
 	    return $result;
 	}
@@ -979,14 +976,9 @@ sub _match_check {
 	# Aに子BPがある
 	if ($matchnode_1->{childbp}) {
 	    foreach my $c (keys %{$matchnode_1->{childbp}}) {
-		$result->{childbp}->{$c} = 1;
+		$result->{SYN}->{childbp}->{$c} = 1;
 	    }
 	}
-
-	foreach my $type (@types) {
-	    $result->{unmatch}->[$nodebp_2]->{$type} = $unmatch->{$type} if (defined $unmatch->{$type}); # $unmatch->{$type}は0,1,文字列,undef
- 	}	
-	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
 
 	return $result;
     }
@@ -996,51 +988,57 @@ sub _fuzoku_check {
     my ($this, $mode, $_match_check_result, $bp, $headbp) = @_;
 
     my $result = {};
-    $result->{score} = $_match_check_result->{score}->[$bp];
-    $result->{weight} = $_match_check_result->{weight}->[$bp];
+    $result->{score} = $_match_check_result->{node}->{$bp}->{score};
+    $result->{weight} = $_match_check_result->{node}->{$bp}->{weight};
+    $result->{score} = $result->{score} / $result->{weight};
 
-    if ($_match_check_result->{unmatch}->[$bp]){
-	foreach my $unmatch_type (keys %{$_match_check_result->{unmatch}->[$bp]}) {
-	    if ($bp == $headbp) {
-		if ($mode eq 'SYN') {
-		    if ($_match_check_result->{unmatch}->[$bp]->{$unmatch_type} ne 'unmatch'){
-			# 引き継ぎ
-			$result->{$unmatch_type} = $_match_check_result->{unmatch}->[$bp]->{$unmatch_type};
+    # 子供がいる
+    if ($_match_check_result->{node}->{$bp}->{childbp}) {
+	foreach my $cbp (keys %{$_match_check_result->{node}->{$bp}->{childbp}}){
+	    my $res = $this->_fuzoku_check($mode, $_match_check_result, $cbp, $headbp);
+	    $result->{score} =
+		($result->{score}*$result->{weight} + $res->{score}*$res->{weight})
+		/ ($result->{weight} + $res->{weight});
+	    $result->{weight} += $res->{weight};
+	}
+    }
+    else {
+	if ($_match_check_result->{node}->{$bp}->{unmatch}){
+	    foreach my $unmatch_type (keys %{$_match_check_result->{node}->{$bp}->{unmatch}}) {
+		if ($bp == $headbp) {
+		    if ($mode eq 'SYN') {
+			if ($_match_check_result->{node}->{$bp}->{unmatch}->{$unmatch_type} ne 'unmatch'){
+			    # 引き継ぎ
+			    $result->{SYN}->{$unmatch_type} = $_match_check_result->{node}->{$bp}->{unmatch}->{$unmatch_type};
+			}
+			else {
+			    return 'unmatch';
+			}
 		    }
-		    else {
-			return 'unmatch';
+		    if ($mode eq 'Matching') { # MTでアライメントをとるときはheadの違いはみない。
+			last;
 		    }
 		}
-		if ($mode eq 'MT') { # MTではheadの違いはみない。
-		    last;
+		else {
+		    $result->{score} *= $penalty->{$unmatch_type};
 		}
-	    }
-	    else {
-		$result->{score} *= $penalty->{$unmatch_type};
 	    }
 	}
     }
 
-    unless ($bp < 1) {
-	my $res = $this->_fuzoku_check($mode, $_match_check_result, $bp-1, $headbp);
-	$result->{score} =
-	    ($result->{score}*$result->{weight} + $res->{score}*$res->{weight})
-	    / ($result->{weight} + $res->{weight});
-	$result->{weight} += $res->{weight};
-    }
-
-    $result->{childbp}   = $_match_check_result->{childbp};
-    $result->{matchbp}   = $_match_check_result->{matchbp};
-    $result->{matchid}   = $_match_check_result->{matchid};
-    $result->{match}     = $_match_check_result->{match};
-    $result->{matchpair} = $_match_check_result->{matchpair};
+    $result->{SYN}->{weight}    = $_match_check_result->{SYN}->{weight};
+    $result->{SYN}->{childbp}   = $_match_check_result->{SYN}->{childbp};
+    $result->{SYN}->{matchbp}   = $_match_check_result->{SYN}->{matchbp};
+    $result->{SYN}->{matchid}   = $_match_check_result->{SYN}->{matchid};
+    $result->{SYN}->{match}     = $_match_check_result->{SYN}->{match};
+    $result->{SYN}->{matchpair} = $_match_check_result->{SYN}->{matchpair};
     
-    if ($mode ne 'SYN') {
+    if ($mode eq 'Matching') {
 	print "matchpair\n";
-	for (my $num=0; $num<@{$result->{match}}; $num++) {
+	for (my $num=0; $num<@{$result->{SYN}->{match}}; $num++) {
 	    print "$num\n";
-	    printf "graph_1: %s (bp = %s, id = %s)\n", $result->{matchpair}->[$num]->{s}, join(',', @{$result->{match}->[$num]->{s}}), $result->{matchid}->[$num]->{s};
-	    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{matchpair}->[$num]->{i}, join(',', @{$result->{match}->[$num]->{i}}), $result->{matchid}->[$num]->{i};
+	    printf "graph_1: %s (bp = %s, id = %s)\n", $result->{SYN}->{matchpair}->[$num]->{s}, join(',', @{$result->{SYN}->{match}->[$num]->{s}}), $result->{SYN}->{matchid}->[$num]->{s};
+	    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{SYN}->{matchpair}->[$num]->{i}, join(',', @{$result->{SYN}->{match}->[$num]->{i}}), $result->{SYN}->{matchid}->[$num]->{i};
 	}
     }
     
