@@ -28,10 +28,12 @@ sub Match {
 
     my $knp_option; 
     my $regnode_option;
+    my $matching_option;
     $knp_option->{case} = 1 if $option->{case};
     $knp_option->{postprocess} = 1 if $option->{postprocess};
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
+    $matching_option->{MT_ver} = 1 if $option->{MT_ver};    
 
     my $search = new Search(undef, undef, $knp_option);
 
@@ -44,28 +46,43 @@ sub Match {
     $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 
-    # 転置ハッシュを作る
-    $search->{thash} = {};
-    foreach my $sid (keys %{$search->{ref}}) {
-	for (my $tagnum = 0; $tagnum < @{$search->{ref}->{$sid}}; $tagnum++) {
-	    my $tag = $search->{ref}->{$sid}->[$tagnum];
-	    foreach my $id (@$tag) {
-#		$id->{tag} = $tagnum;       # 対応付けのために必要
-		$id->{node} = $tagnum;       # 対応付けのために必要
-#		push(@{$search->{thash}->{$sid}->{$id->{idname}}}, $id);
-		push(@{$search->{thash}->{$sid}->{$id->{id}}}, $id);
+    if (!$matching_option->{MT_ver}) {
+	# 転置ハッシュを作る
+	$search->{thash} = {};
+	foreach my $sid (keys %{$search->{ref}}) {
+	    for (my $tagnum = 0; $tagnum < @{$search->{ref}->{$sid}}; $tagnum++) {
+		my $tag = $search->{ref}->{$sid}->[$tagnum];
+		foreach my $id (@$tag) {
+#		    $id->{tag} = $tagnum;       # 対応付けのために必要
+		    $id->{node} = $tagnum;       # 対応付けのために必要
+#		    push(@{$search->{thash}->{$sid}->{$id->{idname}}}, $id);
+		    push(@{$search->{thash}->{$sid}->{$id->{id}}}, $id);
+		}
 	    }
 	}
+#	print STDERR "thash\n";
+#	Dumpvalue->new->dumpValue($search->{thash});
+
+	# 類似度計算
+	$search->{matching_tmp} = {};
+	my $result = $search->matching($sid2, @{$search->{ref}->{$sid2}}-1, $sid1, 0, -1);
+	Dumpvalue->new->dumpValue($result) if $option->{debug};
+	
+	return $result;
     }
-#    print STDERR "thash\n";
-#    Dumpvalue->new->dumpValue($search->{thash});
 
-    # 類似度計算
-    $search->{matching_tmp} = {};
-    my $result = $search->matching($sid2, @{$search->{ref}->{$sid2}}-1, $sid1, 0, -1);
-    Dumpvalue->new->dumpValue($result) if $option->{debug};
-    
-    return $result;
+    else {
+	my $graph_1 = $search->{ref}->{$sid1};
+	my $headbp_1 = @{$search->{ref}->{$sid1}}-1;
+	my $graph_2 = $search->{ref}->{$sid2};   
+	my $headbp_2 = @{$search->{ref}->{$sid2}}-1;
+	my $_match_check_result = $search->{sgh}->_match_check($graph_1, $headbp_1, $graph_2, $headbp_2);
+	return 'unmatch' if ($_match_check_result eq 'unmatch');
+	Dumpvalue->new->dumpValue($_match_check_result) if $option->{debug};
+	my $result = $search->{sgh}->_fuzoku_check('Matching', $_match_check_result, $headbp_2, $headbp_2);
+	return 'unmatch' if ($result eq 'unmatch');
+	
+	return $result;
+    }
 }
-
 1;
