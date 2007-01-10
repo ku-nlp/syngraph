@@ -1,3 +1,9 @@
+2007-01-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm, perl/CalcSimWithSynGraph.pm
+	_match_checkをpmatch、_fuzoku_checkをcalc_simに改名。
+	* perl/SynGraph.pm:出力のデータ構造を変更。
+
 2007-01-09  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:_match_check,_fuzoku_checkの出力のデータ構造を整理
