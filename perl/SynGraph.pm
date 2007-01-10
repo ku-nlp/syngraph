@@ -65,7 +65,7 @@ my $antonym_penalty = 0.8;
 my $penalty = {};
 # 付属語の違いによるペナルティ
 our $fuzoku_penalty = 0.9;
-$penalty->{fuzoku} = 0.9;
+$penalty->{fuzoku} = 1.0;
 # 格の違いによるペナルティ
 our $case_penalty = 0.3;
 $penalty->{case} = 0.3;
@@ -230,9 +230,9 @@ sub make_bp {
                 next if ($synid1 eq $synid2);
 
                 my $headbp = @{$this->{syndata}->{$mid}} - 1;
-                my $_match_check_result = $this->_match_check($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
-		next if ($_match_check_result eq 'unmatch');
-		my $result = $this->_fuzoku_check('SYN', $_match_check_result, $headbp, $headbp);
+                my $pmatch_result = $this->pmatch($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
+		next if ($pmatch_result eq 'unmatch');
+		my $result = $this->calc_sim('SYN', $pmatch_result, $headbp, $headbp);
 		next if ($result eq 'unmatch');
 		$this->_regnode({ref            => $ref,
 				 sid            => $sid,
@@ -278,9 +278,9 @@ sub st_make_bp {
                     $this->db_retrieve($this->{tm_sg}, [$tmid]);
                 }
                 
-                my $_match_check_result = $this->_match_check($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
-		next if ($_match_check_result eq 'unmatch');
-		my $result = $this->_fuzoku_check('Matching', $_match_check_result, $headbp, $headbp);
+                my $pmatch_result = $this->pmatch($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
+		next if ($pmatch_result eq 'unmatch');
+		my $result = $this->calc_sim('Matching', $pmatch_result, $headbp, $headbp);
 		next if ($result eq 'unmatch');
 
 		# 入力の文節番号集合
@@ -311,7 +311,7 @@ sub st_make_bp {
 				     weight         => $result->{SYN}->{weight}
 				     # regnode_option => $regnode_option # 反義語、上位語を張り付けるかどうか
 				     });
-		$newid->{match} = $result->{match} if ($newid);
+		$newid->{match} = $result->{MATCH}->{match} if ($newid);
 	    }
 	}
     }
@@ -807,7 +807,7 @@ sub _regnode {
 # (graph_1が部分、graph_2が全体)
 # BPのマッチを調べて、マッチすれば子供に対して再帰的に呼び出す
 #
-sub _match_check {
+sub pmatch {
     my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash) = @_;
     my $result = {};
     my $max = 0;
@@ -822,26 +822,17 @@ sub _match_check {
         foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
             if ((!defined $body_hash or &st_check($node_2, $body_hash)) and
 		$node_1->{id} eq $node_2->{id} and !($node_1->{relation} and $node_2->{relation})) {
-                my $score = $node_1->{score} * $node_2->{score};	     
+                my $match_weight = $node_1->{score} * $node_2->{score};	     
 
-                if ($max < $score or ($max == $score and $matchnode_1->{weight} < $node_1->{weight})) {
-                    $max = $score;
+                if ($max < $match_weight or ($max == $match_weight and $matchnode_1->{weight} < $node_1->{weight})) {
+                    $max = $match_weight;
                     $matchnode_1 = $node_1;
                     $matchnode_2 = $node_2;
 
 		    # 付属語、要素の違いのチェック
 		    foreach my $type (@types) {
 			if ($node_1->{$type} ne $node_2->{$type}) {
-			    
-			    if ($type eq 'negation') {
-				$unmatch->{$matchnode_2}->{negation} = $node_1->{$type};				
-			    }
-			    if (!$node_2->{$type}) {
-				$unmatch->{$matchnode_2}->{$type} = $node_1->{$type};
-			    }
-			    else {
-				$unmatch->{$matchnode_2}->{$type} = 'unmatch';
-			    }
+			    $unmatch->{$matchnode_2}->{$type} = {s =>$node_1->{$type}, i =>$node_2->{$type}};
 			}
 		    }
 #		    # レベル
@@ -860,14 +851,14 @@ sub _match_check {
     return 'unmatch' if ($max == 0);
 
     # BPがマッチした
-    $result->{node}->{$nodebp_2}->{score} = $max;
-    $result->{node}->{$nodebp_2}->{weight} = $matchnode_2->{weight};
+    $result->{NODE}->{$nodebp_2}->{match_weight} = $max;
+    $result->{NODE}->{$nodebp_2}->{weight} = $matchnode_2->{weight};
+    $result->{NODE}->{$nodebp_2}->{matchid} = $matchnode_2->{id};
     foreach my $c (keys %{$matchnode_2->{childbp}}){
-	$result->{node}->{$nodebp_2}->{childbp}->{$c} = 1;
+	$result->{NODE}->{$nodebp_2}->{childbp}->{$c} = 1;
     }
     foreach my $type (@types) {
-	# $unmatch->{$type}は0,1,文字列,undef
-	$result->{node}->{$nodebp_2}->{unmatch}->{$type} = $unmatch->{$matchnode_2}->{$type} if (defined $unmatch->{$matchnode_2}->{$type});
+	$result->{NODE}->{$nodebp_2}->{unmatch}->{$type} = $unmatch->{$matchnode_2}->{$type} if (defined $unmatch->{$matchnode_2}->{$type});
     }
 #	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
     
@@ -880,10 +871,9 @@ sub _match_check {
     $result->{SYN}->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
 
     # マッチの対応
-    push(@{$result->{SYN}->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});
     my @smatch = sort keys %{$result->{SYN}->{matchbp}};
     my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
-    push(@{$result->{SYN}->{match}}, {s => \@smatch, i => \@imatch});
+    push(@{$result->{MATCH}->{match}}, {s => \@smatch, i => \@imatch});
     my $smatchnode;
     my $imatchnode;
     foreach my $smatchbp (@smatch) {
@@ -894,8 +884,9 @@ sub _match_check {
 	$imatchnode .= $graph_2->[$imatchbp]->[0]->{id};
 	$imatchnode .= $graph_2->[$imatchbp]->[0]->{fuzoku};
     }
-    push(@{$result->{SYN}->{matchpair}}, {s => $smatchnode, i => $imatchnode});
-    
+    push(@{$result->{MATCH}->{matchpair}}, {s => $smatchnode, i => $imatchnode});
+    push(@{$result->{MATCH}->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});    
+
     # $graph_2に子BPがあるかどうか
     my @childbp_2;
     if ($matchnode_2->{childbp}) {
@@ -920,36 +911,32 @@ sub _match_check {
 		foreach my $child_1 (@childbp_1) {
 		    next if ($child_1_check{$child_1});
 
-		    my $res = $this->_match_check($graph_1, $child_1, $graph_2, $child_2, $body_hash);
+		    my $res = $this->pmatch($graph_1, $child_1, $graph_2, $child_2, $body_hash);
 		    next if ($res eq 'unmatch');
 
-		    if ($res->{node}) {
-			foreach my $nodebp (keys %{$res->{node}}) {
-			    $result->{node}->{$nodebp}->{score} = $res->{node}->{$nodebp}->{score};
-			    $result->{node}->{$nodebp}->{weight} = $res->{node}->{$nodebp}->{weight};
-			    foreach my $resc (keys %{$res->{node}->{$nodebp}->{childbp}}) {
-				$result->{node}->{$child_2}->{childbp}->{$resc} = 1;
-			    }
-			    foreach my $restype (keys %{$res->{node}->{$nodebp}->{unmatch}}){
-				$result->{node}->{$nodebp}->{unmatch}->{$restype} = $res->{node}->{$nodebp}->{unmatch}->{$restype}
-			    }
+		    foreach my $nodebp (keys %{$res->{NODE}}) {
+			$result->{NODE}->{$nodebp}->{match_weight} = $res->{NODE}->{$nodebp}->{match_weight};
+			$result->{NODE}->{$nodebp}->{weight} = $res->{NODE}->{$nodebp}->{weight};
+			$result->{NODE}->{$nodebp}->{matchid} = $res->{NODE}->{$nodebp}->{matchbp};
+			foreach my $resc (keys %{$res->{NODE}->{$nodebp}->{childbp}}) {
+			    $result->{NODE}->{$child_2}->{childbp}->{$resc} = 1;
+			}
+			foreach my $restype (keys %{$res->{NODE}->{$nodebp}->{unmatch}}){
+			    $result->{NODE}->{$nodebp}->{unmatch}->{$restype} = $res->{NODE}->{$nodebp}->{unmatch}->{$restype}
 			}
 		    }
-		    $result->{SYN}->{weight} += $res->{SYN}->{weight} if ($res->{SYN}->{weight});
-		    if ($res->{SYN}->{matchbp}) {
-			foreach my $m (keys %{$res->{SYN}->{matchbp}}) {
-			    $result->{SYN}->{matchbp}->{$m} = 1;
-			}
+		    
+		    $result->{SYN}->{weight} += $res->{SYN}->{weight};
+		    foreach my $m (keys %{$res->{SYN}->{matchbp}}) {
+			$result->{SYN}->{matchbp}->{$m} = 1;
 		    }
-		    if ($res->{SYN}->{childbp}) {
-			foreach my $c (keys %{$res->{SYN}->{childbp}}) {
-			    $result->{SYN}->{childbp}->{$c} = 1;
-			}
+		    foreach my $c (keys %{$res->{SYN}->{childbp}}) {
+			$result->{SYN}->{childbp}->{$c} = 1;
 		    }
 
-		    push(@{$result->{SYN}->{matchid}}, @{$res->{SYN}->{matchid}}) if ($res->{SYN}->{matchid});
-		    push(@{$result->{SYN}->{match}}, @{$res->{SYN}->{match}}) if ($res->{SYN}->{match});
-		    push(@{$result->{SYN}->{matchpair}}, @{$res->{SYN}->{matchpair}}) if ($res->{SYN}->{matchpair});
+		    push(@{$result->{MATCH}->{matchid}}, @{$res->{MATCH}->{matchid}});
+		    push(@{$result->{MATCH}->{match}}, @{$res->{MATCH}->{match}});
+		    push(@{$result->{MATCH}->{matchpair}}, @{$res->{MATCH}->{matchpair}});
 		    
 		    $child_1_check{$child_1} = 1;
 		    $match_flag = 1;
@@ -984,61 +971,65 @@ sub _match_check {
     }
 }
 
-sub _fuzoku_check {
-    my ($this, $mode, $_match_check_result, $bp, $headbp) = @_;
+sub calc_sim {
+    my ($this, $mode, $pmatch_result, $bp, $headbp) = @_;
 
     my $result = {};
-    $result->{score} = $_match_check_result->{node}->{$bp}->{score};
-    $result->{weight} = $_match_check_result->{node}->{$bp}->{weight};
-    $result->{score} = $result->{score} / $result->{weight};
+    $result->{match_weight} = $pmatch_result->{NODE}->{$bp}->{match_weight};
+    $result->{weight} = $pmatch_result->{NODE}->{$bp}->{weight};
 
-    # 子供がいる
-    if ($_match_check_result->{node}->{$bp}->{childbp}) {
-	foreach my $cbp (keys %{$_match_check_result->{node}->{$bp}->{childbp}}){
-	    my $res = $this->_fuzoku_check($mode, $_match_check_result, $cbp, $headbp);
-	    $result->{score} =
-		($result->{score}*$result->{weight} + $res->{score}*$res->{weight})
-		/ ($result->{weight} + $res->{weight});
-	    $result->{weight} += $res->{weight};
-	}
-    }
-    else {
-	if ($_match_check_result->{node}->{$bp}->{unmatch}){
-	    foreach my $unmatch_type (keys %{$_match_check_result->{node}->{$bp}->{unmatch}}) {
-		if ($bp == $headbp) {
-		    if ($mode eq 'SYN') {
-			if ($_match_check_result->{node}->{$bp}->{unmatch}->{$unmatch_type} ne 'unmatch'){
-			    # 引き継ぎ
-			    $result->{SYN}->{$unmatch_type} = $_match_check_result->{node}->{$bp}->{unmatch}->{$unmatch_type};
-			}
-			else {
-			    return 'unmatch';
-			}
+    if ($pmatch_result->{NODE}->{$bp}->{unmatch}){
+	foreach my $unmatch_type (keys %{$pmatch_result->{NODE}->{$bp}->{unmatch}}) {
+	    if ($bp == $headbp) {
+		if ($mode eq 'SYN') {
+		    if (!defined $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{i}){
+			# 要素引き継ぎ
+			$result->{SYN}->{$unmatch_type} = $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{s};
 		    }
-		    if ($mode eq 'Matching') { # MTでアライメントをとるときはheadの違いはみない。
-			last;
+		    else {
+			return 'unmatch';
 		    }
 		}
-		else {
-		    $result->{score} *= $penalty->{$unmatch_type};
+		if ($mode eq 'Matching') { # MTでアライメントをとるときはheadの違いはみない。
+		    last;
 		}
+	    }
+	    else {
+		if ($unmatch_type eq 'case'){
+		    next if (!$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{s} or !$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{i});
+		}
+		$result->{match_weight} *= $penalty->{$unmatch_type};
 	    }
 	}
     }
+    $result->{score} = $result->{match_weight} / $result->{weight};
 
-    $result->{SYN}->{weight}    = $_match_check_result->{SYN}->{weight};
-    $result->{SYN}->{childbp}   = $_match_check_result->{SYN}->{childbp};
-    $result->{SYN}->{matchbp}   = $_match_check_result->{SYN}->{matchbp};
-    $result->{SYN}->{matchid}   = $_match_check_result->{SYN}->{matchid};
-    $result->{SYN}->{match}     = $_match_check_result->{SYN}->{match};
-    $result->{SYN}->{matchpair} = $_match_check_result->{SYN}->{matchpair};
+    # 子供がいる
+    if ($pmatch_result->{NODE}->{$bp}->{childbp}) {
+	foreach my $cbp (keys %{$pmatch_result->{NODE}->{$bp}->{childbp}}){
+	    my $res = $this->calc_sim($mode, $pmatch_result, $cbp, $headbp);
+	    $result->{match_weight} += $res->{match_weight};	
+	    $result->{weight} += $res->{weight};	
+	    $result->{score} =$result->{match_weight} / $result->{weight};
+	}
+    }
+
+
+    $result->{SYN}->{weight}    = $pmatch_result->{SYN}->{weight};
+    $result->{SYN}->{childbp}   = $pmatch_result->{SYN}->{childbp};
+    $result->{SYN}->{matchbp}   = $pmatch_result->{SYN}->{matchbp};
+    $result->{MATCH}->{matchid}   = $pmatch_result->{MATCH}->{matchid};
+    $result->{MATCH}->{match}     = $pmatch_result->{MATCH}->{match};
+    $result->{MATCH}->{matchpair} = $pmatch_result->{MATCH}->{matchpair};
     
     if ($mode eq 'Matching') {
-	print "matchpair\n";
-	for (my $num=0; $num<@{$result->{SYN}->{match}}; $num++) {
-	    print "$num\n";
-	    printf "graph_1: %s (bp = %s, id = %s)\n", $result->{SYN}->{matchpair}->[$num]->{s}, join(',', @{$result->{SYN}->{match}->[$num]->{s}}), $result->{SYN}->{matchid}->[$num]->{s};
-	    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{SYN}->{matchpair}->[$num]->{i}, join(',', @{$result->{SYN}->{match}->[$num]->{i}}), $result->{SYN}->{matchid}->[$num]->{i};
+	if ($bp == $headbp) {
+	    print "matchpair\n";
+	    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
+		print "$num\n";
+		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
+	    }
 	}
     }
     
