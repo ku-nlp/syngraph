@@ -76,11 +76,10 @@ sub Match {
 	my $headbp_1 = @{$search->{ref}->{$sid1}}-1;
 	my $graph_2 = $search->{ref}->{$sid2};   
 	my $headbp_2 = @{$search->{ref}->{$sid2}}-1;
-	my $_match_check_result = $search->{sgh}->_match_check($graph_1, $headbp_1, $graph_2, $headbp_2);
-	return 'unmatch' if ($_match_check_result eq 'unmatch');
-	Dumpvalue->new->dumpValue($_match_check_result) if $option->{debug};
-	my $result = $search->{sgh}->_fuzoku_check('Matching', $_match_check_result, $headbp_2, $headbp_2);
-	return 'unmatch' if ($result eq 'unmatch');
+	my $pmatch_result = $search->{sgh}->pmatch($graph_1, $headbp_1, $graph_2, $headbp_2);
+	return 'unmatch' if ($pmatch_result eq 'unmatch');
+	Dumpvalue->new->dumpValue($pmatch_result) if $option->{debug};
+	my $result = $search->{sgh}->calc_sim('Matching', $pmatch_result, $headbp_2, $headbp_2);
 	
 	return $result;
     }
