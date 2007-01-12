@@ -78,6 +78,9 @@ $penalty->{sonnkei} = 1;
 # 受身表現の違いによるペナルティ
 our $ukemi_penalty = 0.3;
 $penalty->{ukemi} = 0.3;
+# 使役表現の違いによるペナルティ
+our $shieki_penalty = 0.3;
+$penalty->{shieki} = 0.3;
 # 否定・反義語のフラグの違いによるペナルティ
 our $negation_penalty = 0.3;
 $penalty->{negation} = 0.3;
@@ -197,12 +200,14 @@ sub make_tree {
                              bp       => $bp_num,
                              id       => $node->{name},
                              fuzoku   => $node->{fuzoku},
+			     midasi   => $node->{midasi},
                              childbp  => $node->{child},
 			     case     => $node->{case},
                              origbp   => $bp_num,
                              kanou    => $node->{kanou},
 			     sonnkei  => $node->{sonnkei},
                              ukemi    => $node->{ukemi},
+			     shieki   => $node->{shieki},
 			     negation => $node->{negation},
 			     level    => $node->{level},
                              score    => 1,
@@ -239,12 +244,14 @@ sub make_bp {
 				 bp             => $bp,
 				 id             => $synid2,
 				 fuzoku         => $result->{SYN}->{fuzoku},
+				 midasi         => $result->{SYN}->{midasi},
 				 matchbp        => $result->{SYN}->{matchbp},
 				 childbp        => $result->{SYN}->{childbp},
 				 case           => $result->{SYN}->{case},
 				 kanou          => $result->{SYN}->{kanou},
 				 sonnkei        => $result->{SYN}->{sonnkei},
 				 ukemi          => $result->{SYN}->{ukemi},
+				 shieki         => $result->{SYN}->{shieki},
 				 negation       => $result->{SYN}->{negation},
 				 level          => $result->{SYN}->{level}, 
 				 score          => $result->{score} * $synonym_penalty,
@@ -299,12 +306,14 @@ sub st_make_bp {
 				     bp             => $bp,
 				     id             => $stid,
 				     fuzoku         => $result->{SYN}->{fuzoku},
+				     midasi         => $result->{SYN}->{midasi},
 				     matchbp        => $result->{SYN}->{matchbp},
 				     childbp        => $result->{SYN}->{childbp},
 				     case           => $result->{SYN}->{case},
 				     kanou          => $result->{SYN}->{kanou},
 				     sonnkei        => $result->{SYN}->{sonnkei},
 				     ukemi          => $result->{SYN}->{ukemi},
+				     shieki         => $result->{SYN}->{shieki},
 				     negation       => $result->{SYN}->{negation},
 				     level          => $result->{SYN}->{level}, 
 				     score          => $result->{score} * $synonym_penalty,
@@ -351,11 +360,13 @@ sub _get_keywords {
         my @alt;
         my $nodename;
         my $fuzoku;
+	my $midasi;
         my $negation;
 	my $level;
 	my $kanou;
 	my $sonnkei;
 	my $ukemi;
+	my $shieki;
 
         # 子供 child->{親のid}->{子のid}
         $child->{$tag->{parent}->{id}}->{$tag->{id}} = 1 if ($tag->{parent});
@@ -378,6 +389,9 @@ sub _get_keywords {
 
         # 受身表現
 	$ukemi = 1 if ($tag->{fstring} =~ /<態:受動>/);
+
+        # 使役表現
+	$shieki = 1 if ($tag->{fstring} =~ /<態:使役>/);
 
         # 否定表現
         $negation = 1 if ($tag->{fstring} =~ /<否定表現>/);
@@ -437,6 +451,10 @@ sub _get_keywords {
                     $fuzoku .= $mrph->{genkei};
                 }
             }
+
+	    if ($mrph->{midasi}){
+		$midasi .= $mrph->{midasi};
+	    }
         }
 
 #         # チェック用
@@ -452,9 +470,11 @@ sub _get_keywords {
         my %tmp;
         $tmp{name}     = $nodename;
         $tmp{fuzoku}   = $fuzoku;
+	$tmp{midasi}   = $midasi;
         $tmp{kanou}    = $kanou if ($kanou);
         $tmp{sonnkei}  = $sonnkei if ($sonnkei);
         $tmp{ukemi}    = $ukemi if ($ukemi);
+        $tmp{shieki}   = $shieki if ($shieki);
         $tmp{negation} = $negation if ($negation);
         $tmp{level}    = $level if ($level);
         $tmp{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
@@ -674,12 +694,14 @@ sub _regnode {
     my $bp                    = $args_hash->{bp};
     my $id                    = $args_hash->{id};
     my $fuzoku                = $args_hash->{fuzoku};
+    my $midasi                = $args_hash->{midasi};
     my $matchbp               = $args_hash->{matchbp};
     my $childbp               = $args_hash->{childbp};
     my $case                  = $args_hash->{case};
     my $kanou                 = $args_hash->{kanou};
     my $sonnkei               = $args_hash->{sonnkei};
     my $ukemi                 = $args_hash->{ukemi};
+    my $shieki                = $args_hash->{shieki};
     my $negation              = $args_hash->{negation};
     my $level                 = $args_hash->{level};
     my $score                 = $args_hash->{score};
@@ -701,6 +723,7 @@ sub _regnode {
                     $i->{kanou}     == $kanou and
                     $i->{sonnkei}   == $sonnkei and
 		    $i->{ukemi}     == $ukemi and
+		    $i->{shieki}    == $shieki and
                     $i->{negation}  == $negation and
                     $i->{level}     == $level and
                     $i->{weight}    == $weight) {
@@ -717,6 +740,7 @@ sub _regnode {
         my $newid = {};
         $newid->{id} = $id;
         $newid->{fuzoku} = $fuzoku if ($fuzoku);
+	$newid->{midasi} = $midasi if ($midasi);
         foreach my $c (keys %{$childbp}) {
             $newid->{childbp}->{$c} = 1;
         }
@@ -730,6 +754,7 @@ sub _regnode {
         $newid->{kanou}    = $kanou if ($kanou);
         $newid->{sonnkei}  = $sonnkei if ($sonnkei);
 	$newid->{ukemi}    = $ukemi if ($ukemi);
+	$newid->{shieki}   = $shieki if ($shieki);
 	$newid->{negation} = $negation if ($negation);
         $newid->{level}    = $level if ($level);
         $newid->{score}    = $score;
@@ -754,6 +779,7 @@ sub _regnode {
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
+				     shieki         => $shieki,
 				     negation       => $negation,
 				     level          => $level,
 				     score          => $score * $relation_penalty,
@@ -779,6 +805,7 @@ sub _regnode {
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
+				     shieki         => $shieki,
 				     negation       => $negation,
 				     level          => $level,
 				     score          => $score * $antonym_penalty,
@@ -814,7 +841,7 @@ sub pmatch {
     my $matchnode_1;
     my $matchnode_2;
     my $unmatch;
-    my @types = qw(fuzoku case kanou sonnkei ukemi negation);
+    my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
 
     # BP内でマッチするノードを探す
     foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
@@ -863,6 +890,7 @@ sub pmatch {
 #	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
     
     $result->{SYN}->{weight} = $matchnode_1->{weight};
+    $result->{SYN}->{midasi} = $matchnode_1->{midasi};
     if ($matchnode_1->{matchbp}) {
 	foreach my $m (keys %{$matchnode_1->{matchbp}}) {
 	    $result->{SYN}->{matchbp}->{$m} = 1;
@@ -877,12 +905,10 @@ sub pmatch {
     my $smatchnode;
     my $imatchnode;
     foreach my $smatchbp (@smatch) {
-	$smatchnode .= $graph_1->[$smatchbp]->[0]->{id};
-	$smatchnode .= $graph_1->[$smatchbp]->[0]->{fuzoku};
+	$smatchnode .= $graph_1->[$smatchbp]->[0]->{midasi};
     }
     foreach my $imatchbp (@imatch) {
-	$imatchnode .= $graph_2->[$imatchbp]->[0]->{id};
-	$imatchnode .= $graph_2->[$imatchbp]->[0]->{fuzoku};
+	$imatchnode .= $graph_2->[$imatchbp]->[0]->{midasi};
     }
     push(@{$result->{MATCH}->{matchpair}}, {s => $smatchnode, i => $imatchnode});
     push(@{$result->{MATCH}->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});    
@@ -927,6 +953,7 @@ sub pmatch {
 		    }
 		    
 		    $result->{SYN}->{weight} += $res->{SYN}->{weight};
+		    $result->{SYN}->{midasi} = $res->{SYN}->{midasi} + $result->{SYN}->{midasi};
 		    foreach my $m (keys %{$res->{SYN}->{matchbp}}) {
 			$result->{SYN}->{matchbp}->{$m} = 1;
 		    }
@@ -990,8 +1017,13 @@ sub calc_sim {
 			return 'unmatch';
 		    }
 		}
-		if ($mode eq 'Matching') { # MTでアライメントをとるときはheadの違いはみない。
-		    last;
+		if ($mode eq 'Matching') { # MTでアライメントをとるときはheadでの{fuzoku,case}の違いはみない。
+		    if ($unmatch_type eq 'case' or $unmatch_type eq 'fuzoku'){
+			next;
+		    }
+		    else {
+			$result->{match_weight} *= $penalty->{$unmatch_type};
+		    }
 		}
 	    }
 	    else {
@@ -1015,9 +1047,10 @@ sub calc_sim {
     }
 
 
-    $result->{SYN}->{weight}    = $pmatch_result->{SYN}->{weight};
-    $result->{SYN}->{childbp}   = $pmatch_result->{SYN}->{childbp};
-    $result->{SYN}->{matchbp}   = $pmatch_result->{SYN}->{matchbp};
+    $result->{SYN}->{weight}      = $pmatch_result->{SYN}->{weight};
+    $result->{SYN}->{midasi}      = $pmatch_result->{SYN}->{midasi};
+    $result->{SYN}->{childbp}     = $pmatch_result->{SYN}->{childbp};
+    $result->{SYN}->{matchbp}     = $pmatch_result->{SYN}->{matchbp};
     $result->{MATCH}->{matchid}   = $pmatch_result->{MATCH}->{matchid};
     $result->{MATCH}->{match}     = $pmatch_result->{MATCH}->{match};
     $result->{MATCH}->{matchpair} = $pmatch_result->{MATCH}->{matchpair};
