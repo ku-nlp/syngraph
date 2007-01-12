@@ -1,3 +1,9 @@
+2007-01-13  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	使役表現を扱うようにした。
+	ノードの{midasi}にもとの文を格納。
+
 2007-01-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm, perl/CalcSimWithSynGraph.pm
