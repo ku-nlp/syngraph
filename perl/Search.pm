@@ -377,6 +377,12 @@ sub matching {
 			$tm_result->{$tmid}->{ukemi_unmatch} = 1;
 		    }
 
+		    # 使役表現のフラグ不一致によるペナルティ
+		    if ($qid->{shieki} ne $tmid->{shieki}) {
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::shieki_penalty;
+			$tm_result->{$tmid}->{shieki_unmatch} = 1;
+		    }
+
 		    # 否定、反義語のフラグ不一致によるペナルティ
 		    if ($qid->{negation} ^ $tmid->{negation} ^ $qid->{antonym} ^ $tmid->{antonym}) {
 			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::negation_penalty;
@@ -445,16 +451,23 @@ sub matching {
 		    # 比較表現の主語と比較対象の反転をチェック
 		    # 子供の格の不一致が２つ以上あったときは自身のnode_reversal解消、sentence_reversalの値も変更する
 		    if ($tm_result->{$tmid}->{case_unmatch} == 2 && $tm_result->{$tmid}->{node_reversal}){
-			$tm_result->{$tmid}->{case_unmatch}  = 0;
-			$tm_result->{$tmid}->{node_reversal} = 0;
+			$tm_result->{$tmid}->{case_unmatch} -=2 ;
+			$tm_result->{$tmid}->{node_reversal}  = 0;
 			$tm_result->{$tmid}->{sentence_reversal} ^= 1;
 		    }
 		    
 		    # 受身表現による違いの吸収
 		    # 子供の格の不一致が２つ以上あったときは自身のukemi_unmatch解消
 		    if ($tm_result->{$tmid}->{case_unmatch} == 2 && $tm_result->{$tmid}->{ukemi_unmatch}){
-			$tm_result->{$tmid}->{case_unmatch} = 0;
+			$tm_result->{$tmid}->{case_unmatch} -= 2;
 			$tm_result->{$tmid}->{ukemi_unmatch} = 0;
+		    }
+
+		    # 使役表現による違いの吸収
+		    # 子供の格の不一致が１つ以上あったときは自身のshieki_unmatch解消
+		    if ($tm_result->{$tmid}->{case_unmatch} == 1 && $tm_result->{$tmid}->{shieki_unmatch}){
+			$tm_result->{$tmid}->{case_unmatch} -= 1;
+			$tm_result->{$tmid}->{shieki_unmatch} = 0;
 		    }
                 }
                 # スコア計算
