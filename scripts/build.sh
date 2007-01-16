@@ -57,10 +57,13 @@ juman -e2 -B -i '#' < syndb.convert | knp -tab > syndb.parse
 # コンパイル
 perl -I$PERL_DIR compile.pl --knp_result=syndb.parse --syndbdir=$SYNDB_DIR
 # synhead.mldbmのソート
-perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
+# syndataをtieできない(odani0116)
+#perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
 
-mv $SYNDB_DIR/synhead_sort.mldbm $SYNDB_DIR/synhead.mldbm
+#mv $SYNDB_DIR/synhead_sort.mldbm $SYNDB_DIR/synhead.mldbm
 echo "STEP1 end\t`date`"
+
+exit
 
 ########################################################
 echo "STEP2 start\t`date`"

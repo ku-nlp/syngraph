@@ -17,10 +17,8 @@ my $sgh = new SynGraph;
 # synhead_sort.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
-print $dir . "\n";
-
 # 類義表現DBの読み込み
-$sgh->retrieve_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syndb/synparent.mldbm', '../syndb/synantonym.mldbm');
+$sgh->retrieve_syndb('$dir/syndata.mldbm', '$dir/synhead.mldbm', '$dir/synparent.mldbm', '$dir/synantonym.mldbm');
 
 # 小さい順にソート
 foreach my $node (keys %{$sgh->{synhead}}) {

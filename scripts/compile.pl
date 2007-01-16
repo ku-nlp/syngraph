@@ -17,7 +17,6 @@ my $sgh = new SynGraph;
 # synparent.mldbm、synantonym.mldbmがある場所(そこに出来た類義表現DBも出力する)
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
-
 # 上位・下位関係の読み込み
 &SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
 
@@ -60,12 +59,12 @@ while (keys %{$sgh->{syndata}}) {
         # 1キーワードのものはコンパイルする必要なし
         if (@{$sgh->{syndata}->{$sid}} > 1) {
             for (my $bp_num = 0; $bp_num < @{$sgh->{syndata}->{$sid}}; $bp_num++) {
+		# 上位ID、反義語は張り付けない
                 $sgh->make_bp($sgh->{syndata}, $sid, $bp_num);
             }
         }
     }
 }
-
 
 # コンパイルした類義表現DBの保存
 COMPILE_END:
