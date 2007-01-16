@@ -62,27 +62,20 @@ my $relation_penalty = 0.7;
 # 反義語のペナルティ
 my $antonym_penalty = 0.8;
 
-my $penalty = {};
+our $penalty = {};
 # 付属語の違いによるペナルティ
-our $fuzoku_penalty = 0.9;
 $penalty->{fuzoku} = 1.0;
 # 格の違いによるペナルティ
-our $case_penalty = 0.3;
 $penalty->{case} = 0.3;
 # 可能表現の違いによるペナルティ
-our $kanou_penalty = 0.8;
 $penalty->{kanou} = 0.8;
 # 尊敬表現の違いによるペナルティ
-our $sonnkei_penalty = 1;
 $penalty->{sonnkei} = 1;
 # 受身表現の違いによるペナルティ
-our $ukemi_penalty = 0.3;
 $penalty->{ukemi} = 0.3;
 # 使役表現の違いによるペナルティ
-our $shieki_penalty = 0.3;
 $penalty->{shieki} = 0.3;
 # 否定・反義語のフラグの違いによるペナルティ
-our $negation_penalty = 0.3;
 $penalty->{negation} = 0.3;
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
@@ -166,11 +159,11 @@ sub make_sg {
     }
 
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
-    if ($ref->{$sid}) {
-        for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-            $this->make_bp($ref, $sid, $bp_num, $regnode_option); 
+   if ($ref->{$sid}) {
+       for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
+           $this->make_bp($ref, $sid, $bp_num, $regnode_option); 
 	}
-    }
+   }
 }
 
 
@@ -358,6 +351,7 @@ sub _get_keywords {
 
     foreach my $tag ($knp_result->tag) {
         my @alt;
+	my @state;
         my $nodename;
         my $fuzoku;
 	my $midasi;
@@ -374,10 +368,9 @@ sub _get_keywords {
 	# 格 case->{係り元のid}->{係り先のid} = '〜格'
 	# <格解析結果:書く/かく:動1:ガ/C/彼/0/0/?;ヲ/N/本/2/0/?;ニ/U/-/-/-/-;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;マデ/U/-/-/-/-;φ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;ニツク/U/-/-/-/->
 	if($tag->{fstring} =~ /<格解析結果:(.+?):(.+?):([^\s\">]+)/) {
-	    push (my @case_result, split(/;/, $3));
-	    foreach my $node_case_result (@case_result){
-		push (my @node_case_result_feature, split(/\//, $node_case_result));
-		$case->{$node_case_result_feature[3]}->{$tag->{id}} = $node_case_result_feature[0] unless ($node_case_result_feature[3] =~ /-/);
+	    foreach my $node_case (split(/;/, $3)){
+		push (my @node_case_feature, split(/\//, $node_case));
+		$case->{$node_case_feature[3]}->{$tag->{id}} = $node_case_feature[0] unless ($node_case_feature[3] =~ /-/);
 	    }
 	}
 
@@ -387,15 +380,27 @@ sub _get_keywords {
         # 尊敬表現
         $sonnkei = 1 if ($tag->{fstring} =~ /<敬語:尊敬表現>/);
 
-        # 受身表現
-	$ukemi = 1 if ($tag->{fstring} =~ /<態:受動>/);
-
-        # 使役表現
-	$shieki = 1 if ($tag->{fstring} =~ /<態:使役>/);
-
         # 否定表現
         $negation = 1 if ($tag->{fstring} =~ /<否定表現>/);
 
+	# 態
+	if ($tag->{fstring} =~ /<態:([^\s\/\">]+)/) {
+	    foreach (split(/\|/,$1)) {
+		my $tmp = {};
+#		$tmp->{kanou}   = 1 if ($_ =~ /可能/);
+#		$tmp->{sonnkei} = 1 if ($_ =~ /尊敬/);
+#		$tmp->{shieki}  = 1 if ($_ =~ /使役/);
+#		$tmp->{ukemi}   = 1 if ($_ =~ /受身/);
+
+		$kanou   = 1 if ($_ =~ /可能/);
+		$sonnkei = 1 if ($_ =~ /尊敬/);
+		$shieki  = 1 if ($_ =~ /使役/);
+		$ukemi   = 1 if ($_ =~ /受身/);
+		
+		push (@state, $tmp);
+	    }
+	}
+	
 	# 節のレベル
 	if ($tag->{fstring} =~ /<レベル:([^\s\/\">]+)/) {
 	    $level .= $1;
@@ -425,7 +430,16 @@ sub _get_keywords {
                 # ALT
                 if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
 		    foreach (@tmp){
-			if ($_ =~ /代表表記:([^\s\/\">]+)/) {
+			# 可能動詞であれば戻す
+			if ($_ =~ /可能動詞:([^\s\/\">]+)/) {
+			    push(@alt,$1);
+			}
+			# 尊敬動詞であれば戻す
+			elsif ($_ =~ /尊敬動詞:([^\s\/\">]+)/) {
+			    push(@alt,$1);
+			}
+			# 代表表記
+			elsif ($_ =~ /代表表記:([^\s\/\">]+)/){
 			    push(@alt,$1);
 			}
 		    }
@@ -465,19 +479,19 @@ sub _get_keywords {
 #             Dumpvalue->new->dumpValue(\@keywords);
 #             print "--------\n";
 #         }
-
+	
         # 登録
-        my %tmp;
-        $tmp{name}     = $nodename;
-        $tmp{fuzoku}   = $fuzoku;
+	my %tmp;
+	$tmp{name}     = $nodename;
+	$tmp{fuzoku}   = $fuzoku;
 	$tmp{midasi}   = $midasi;
-        $tmp{kanou}    = $kanou if ($kanou);
-        $tmp{sonnkei}  = $sonnkei if ($sonnkei);
-        $tmp{ukemi}    = $ukemi if ($ukemi);
-        $tmp{shieki}   = $shieki if ($shieki);
-        $tmp{negation} = $negation if ($negation);
-        $tmp{level}    = $level if ($level);
-        $tmp{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
+	$tmp{kanou}    = $kanou if ($kanou);
+	$tmp{sonnkei}  = $sonnkei if ($sonnkei);
+	$tmp{ukemi}    = $ukemi if ($ukemi);
+	$tmp{shieki}   = $shieki if ($shieki);
+	$tmp{negation} = $negation if ($negation);
+	$tmp{level}    = $level if ($level);
+	$tmp{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	if ($child->{$tag->{id}}) {
 	    foreach my $childbp (keys %{$child->{$tag->{id}}}) {
 		if ($case->{$childbp}->{$tag->{id}}) {
@@ -487,28 +501,31 @@ sub _get_keywords {
 		}
 	    }
 	}
-        push(@{$keywords[$tag->{id}]}, \%tmp);
-
+	push(@{$keywords[$tag->{id}]}, \%tmp);
+	
 	# ALTの処理(意味有が1形態素と仮定)
-        if (@alt) {
-            foreach my $alt_key (@alt) {
-                # 表記が同じものは無視
-                next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
-                # 登録
-                my %tmp2;
-                $tmp2{name}     = $alt_key;
-                $tmp2{fuzoku}   = $fuzoku;
-                $tmp2{kanou}    = $kanou if ($kanou);
-		$tmp2{sonnkei}  = $sonnkei if ($sonnkei);
-		$tmp2{ukemi}    = $ukemi if ($ukemi);
-		$tmp2{negation} = $negation if ($negation);                
-		$tmp2{level}    = $level if ($level);
-                $tmp2{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
-                push(@{$keywords[$tag->{id}]}, \%tmp2);
-            }
-        }
+	if (@alt) {
+	    foreach my $alt_key (@alt) {
+		# 表記が同じものは無視
+		next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
+		# 登録
+		my %tmp2;
+		$tmp2{name}     = $alt_key;
+		$tmp2{fuzoku}   = $tmp{fuzoku};
+		$tmp2{midasi}   = $tmp{midasi};
+		$tmp2{kanou}    = $tmp{kanou} if ($tmp{kanou});
+		$tmp2{sonnkei}  = $tmp{sonnkei} if ($tmp{sonnkei});
+		$tmp2{ukemi}    = $tmp{ukemi} if ($tmp{ukemi});
+		$tmp2{shieki}   = $tmp{shieki} if ($tmp{shieki});
+		$tmp2{negation} = $tmp{negation} if ($tmp{negation});                
+		$tmp2{level}    = $tmp{level} if ($tmp{level});
+		$tmp2{child}    = $tmp{child} if ($tmp{shild});
+		$tmp2{case}     = $tmp{case} if ($tmp{case});
+		push(@{$keywords[$tag->{id}]}, \%tmp2);
+	    }
+	}
     }
-
+    
     return @keywords;
 }
 

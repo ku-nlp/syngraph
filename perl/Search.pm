@@ -355,44 +355,44 @@ sub matching {
  		    # 格の不一致によるペナルティ
 		    if ($qid->{case} && $tmid->{case}) {
 			if ($qid->{case} ne $tmid->{case}) {
-			    $tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::case_penalty;
+			    $tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{case};
 			    $tm_result->{$tmid}->{case_unmatch} = 1;
 			}
 		    }
 		    # 可能表現のフラグ不一致によるペナルティ（解消されることがない）
 		    if ($qid->{kanou} ne $tmid->{kanou}) {
-			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::kanou_penalty;
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::kanou_penalty;
+			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::penalty->{kanou};
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{kanou};
 		    }
 
 		    # 尊敬表現のフラグ不一致によるペナルティ（解消されることがない）
 		    if ($qid->{sonnkei} ne $tmid->{sonnkei}) {
-			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::sonnkei_penalty;
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::sonnkei_penalty;
+			$tm_result->{$tmid}->{match_weight}->{match}   *= $SynGraph::penalty->{sonnkei};
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{sonnkei};
 		    }
 
 		    # 受身表現のフラグ不一致によるペナルティ
 		    if ($qid->{ukemi} ne $tmid->{ukemi}) {
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::ukemi_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{ukemi};
 			$tm_result->{$tmid}->{ukemi_unmatch} = 1;
 		    }
 
 		    # 使役表現のフラグ不一致によるペナルティ
 		    if ($qid->{shieki} ne $tmid->{shieki}) {
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::shieki_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{shieki};
 			$tm_result->{$tmid}->{shieki_unmatch} = 1;
 		    }
 
 		    # 否定、反義語のフラグ不一致によるペナルティ
 		    if ($qid->{negation} ^ $tmid->{negation} ^ $qid->{antonym} ^ $tmid->{antonym}) {
-			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::negation_penalty;
+			$tm_result->{$tmid}->{match_weight}->{unmatch} *= $SynGraph::penalty->{negation};
 			$tm_result->{$tmid}->{node_reversal} = 1;
 			$tm_result->{$tmid}->{sentence_reversal} ^= 1;
 		    }
 		    
 #		    # 付属語
 #                     if ($qid->{fuzoku} ne $tmid->{fuzoku}) {
-#                         $tm_result->{$tmid}->{match_weight} *= $SynGraph::fuzoku_penalty;
+#                         $tm_result->{$tmid}->{match_weight} *= $SynGraph::penalty->{fuzoku};
 #                     }
 		    
 		    # マッチしたノードtmidがqidの親のマッチしたtmidの子供であるかチェック
