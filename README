@@ -1,20 +1,25 @@
 
 
+
 [ファイルリスト]
 
+
 README		このファイル
+
 
 perl/ : Perlモジュール
 
   SynGraph.pm       	SYNGRAPHを扱うモジュール
   Search.pm         	検索するためのモジュール
 
+
 dic/ : 同義表現辞書
 
   synonym.txt        	同義グループデータ
   definition.txt        定義文データ
   relation.txt          シソーラスデータ
-  antonym.txt		反義語データベース
+  antonym.txt		反義語データ
+
 
 scripts/ : スクリプト
 
@@ -30,18 +35,34 @@ scripts/ : スクリプト
   merge_db.pl    	インデックスファイルをマージ
   irex_search.pl 	IREXの検索
   print_hash.pl  	各種データベース内容の表示
+  teat.pl     		類似度計算のテストプログラム
   search.pl      	検索
-  syndb.parse	
-  syndb.convert
+  syndb.convert		辞書データを作る際の中間ファイル
+  syndb.parse		辞書データを作る際の中間ファイル
+
 
 syndb : 同義表現データベース
 
-  synhead.mldbm
-  syndata.mldbm
-  synparent.mldbm		
-  synantonym.mldbm		
+  synhead.mldbm		
+  syndata.mldbm		
+  synparent.mldbm	シソーラスデータベース	
+  synantonym.mldbm	反義語データベース	
+
 
 sql : SQL文
   syngraph.sql         	mysqlの定義SQL
   merge.sql            	マージデータベースの作成のためのSQL
 
+
+
+[類似度計算のテストプログラムscript/test.plの使い方]
+
+入力した２文の類似度を計算する。
+
+オプション
+  -debug  		デバッグ
+  -match_print		文内のマッチしたペアとそのマッチの種類を表示
+  -case			KNPの格解析結果を利用
+  -postprocess		KNPのpostprocessを利用
+  -relation		シソーラスデータを使用する
+  -antonym		反義語データを使用する
