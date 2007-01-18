@@ -1051,7 +1051,13 @@ sub calc_sim {
 	    }
 	}
     }
-    $result->{score} = $result->{match_weight} / $result->{weight};
+    if (defined $result->{weight}) {
+	$result->{score} = $result->{match_weight} / $result->{weight};
+    }
+    else {
+	print "error!!\n";
+	$result->{score} = 0;
+    }
 
     # 子供がいる
     if ($pmatch_result->{NODE}->{$bp}->{childbp}) {
