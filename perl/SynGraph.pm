@@ -866,9 +866,9 @@ sub pmatch {
         foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
             if ((!defined $body_hash or &st_check($node_2, $body_hash)) and
 		$node_1->{id} eq $node_2->{id} and !($node_1->{relation} and $node_2->{relation})) {
-                my $match_weight = $node_1->{score} * $node_2->{score};	     
+                my $match_weight = $node_1->{score} * $node_2->{score} * $node_2->{weight};	     
 
-                if ($max < $match_weight or ($max == $match_weight and $matchnode_1->{weight} < $node_1->{weight})) {
+                if ($max < $match_weight or ($max == $match_weight and ($matchnode_1->{weight} < $node_1->{weight}))) {
                     $max = $match_weight;
                     $matchnode_1 = $node_1;
                     $matchnode_2 = $node_2;
@@ -960,7 +960,7 @@ sub pmatch {
 		    foreach my $nodebp (keys %{$res->{NODE}}) {
 			$result->{NODE}->{$nodebp}->{match_weight} = $res->{NODE}->{$nodebp}->{match_weight};
 			$result->{NODE}->{$nodebp}->{weight} = $res->{NODE}->{$nodebp}->{weight};
-			$result->{NODE}->{$nodebp}->{matchid} = $res->{NODE}->{$nodebp}->{matchbp};
+			$result->{NODE}->{$nodebp}->{matchid} = $res->{NODE}->{$nodebp}->{matchid};
 			foreach my $resc (keys %{$res->{NODE}->{$nodebp}->{childbp}}) {
 			    $result->{NODE}->{$child_2}->{childbp}->{$resc} = 1;
 			}
