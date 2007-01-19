@@ -260,7 +260,7 @@ sub make_bp {
 # BPにIDを付与する (部分木用)
 #
 sub st_make_bp {
-    my ($this, $ref, $sid, $bp, $max_tm_num) = @_;
+    my ($this, $ref, $sid, $bp, $max_tm_num, $option) = @_;
 
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
         next if ($node->{weight} == 0);
@@ -292,6 +292,16 @@ sub st_make_bp {
 		next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
 		$count_pattern{$s_pattern}++;
 		
+		# マッチペアの出力
+		if ($option->{debug}) {
+		    print "matchpair\n";
+		    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
+			print "$num\n";
+			printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
+		    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
+		    }
+		}
+		
 		my $newid =
 		    # シソーラス、反義語データベースは使用しない
 		    $this->_regnode({ref            => $ref,
@@ -313,7 +323,12 @@ sub st_make_bp {
 				     weight         => $result->{SYN}->{weight}
 				     # regnode_option => $regnode_option # 反義語、上位語を張り付けるかどうか
 				     });
+
 		$newid->{match} = $result->{MATCH}->{match} if ($newid);
+		$newid->{matchid}   = $result->{MATCH}->{matchid} if ($newid);
+		$newid->{match}     = $result->{MATCH}->{match} if ($newid);
+		$newid->{matchpair} = $result->{MATCH}->{matchpair} if ($newid);
+
 	    }
 	}
     }
@@ -1077,18 +1092,7 @@ sub calc_sim {
     $result->{MATCH}->{matchid}   = $pmatch_result->{MATCH}->{matchid};
     $result->{MATCH}->{match}     = $pmatch_result->{MATCH}->{match};
     $result->{MATCH}->{matchpair} = $pmatch_result->{MATCH}->{matchpair};
-    
-    if ($mode eq 'Matching') {
-	if ($bp == $headbp) {
-	    print "matchpair\n";
-	    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
-		print "$num\n";
-		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
-		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
-	    }
-	}
-    }
-    
+        
     return $result;
 }
 	    

@@ -76,10 +76,29 @@ sub Match {
 	my $headbp_1 = @{$search->{ref}->{$sid1}}-1;
 	my $graph_2 = $search->{ref}->{$sid2};   
 	my $headbp_2 = @{$search->{ref}->{$sid2}}-1;
+
+	# garaph_1は部分、graph_2は完全マッチング
 	my $pmatch_result = $search->{sgh}->pmatch($graph_1, $headbp_1, $graph_2, $headbp_2);
 	return 'unmatch' if ($pmatch_result eq 'unmatch');
-	Dumpvalue->new->dumpValue($pmatch_result) if $option->{debug};
+ 	if $option->{debug}{
+	    print "pmatch結果\n";
+	    Dumpvalue->new->dumpValue($pmatch_result);
+	}
 	my $result = $search->{sgh}->calc_sim('Matching', $pmatch_result, $headbp_2, $headbp_2);
+	if $option->{debug}{
+	    print "calc_sim結果\n";
+	    Dumpvalue->new->dumpValue($result);
+	} 
+
+	# マッチペア出力
+	if ($option->{debug}) {
+	    print "matchpair\n";
+	    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
+		print "$num\n";
+		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
+	    }
+	}
 	
 	return $result;
     }
