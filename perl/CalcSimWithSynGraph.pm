@@ -10,7 +10,7 @@ use SynGraph;
 use Search;
 
 #
-# ¥³¥ó¥¹¥È¥é¥¯¥¿
+# ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 #
 sub new {
     my ($this) = @_;
@@ -22,7 +22,7 @@ sub new {
     return $this;
 }
 
-# Îà»÷ÅÙ·×»»
+# é¡žä¼¼åº¦è¨ˆç®—
 sub Match {
     my ($this, $id, $str1, $str2, $option) = @_;
 
@@ -40,21 +40,21 @@ sub Match {
     my $sid1 = "$id-1";
     my $sid2 = "$id-2";
 
-    # SYNGRAPH¤òºîÀ®
+    # SYNGRAPHã‚’ä½œæˆ
 
     $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option);
     $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 
     if (!$matching_option->{MT_ver}) {
-	# Å¾ÃÖ¥Ï¥Ã¥·¥å¤òºî¤ë
+	# è»¢ç½®ãƒãƒƒã‚·ãƒ¥ã‚’ä½œã‚‹
 	$search->{thash} = {};
 	foreach my $sid (keys %{$search->{ref}}) {
 	    for (my $tagnum = 0; $tagnum < @{$search->{ref}->{$sid}}; $tagnum++) {
 		my $tag = $search->{ref}->{$sid}->[$tagnum];
 		foreach my $id (@$tag) {
-#		    $id->{tag} = $tagnum;       # ÂÐ±þÉÕ¤±¤Î¤¿¤á¤ËÉ¬Í×
-		    $id->{node} = $tagnum;       # ÂÐ±þÉÕ¤±¤Î¤¿¤á¤ËÉ¬Í×
+#		    $id->{tag} = $tagnum;       # å¯¾å¿œä»˜ã‘ã®ãŸã‚ã«å¿…è¦
+		    $id->{node} = $tagnum;       # å¯¾å¿œä»˜ã‘ã®ãŸã‚ã«å¿…è¦
 #		    push(@{$search->{thash}->{$sid}->{$id->{idname}}}, $id);
 		    push(@{$search->{thash}->{$sid}->{$id->{id}}}, $id);
 		}
@@ -63,7 +63,7 @@ sub Match {
 #	print STDERR "thash\n";
 #	Dumpvalue->new->dumpValue($search->{thash});
 
-	# Îà»÷ÅÙ·×»»
+	# é¡žä¼¼åº¦è¨ˆç®—
 	$search->{matching_tmp} = {};
 	my $result = $search->matching($sid2, @{$search->{ref}->{$sid2}}-1, $sid1, 0, -1);
 	Dumpvalue->new->dumpValue($result) if $option->{debug};
@@ -77,26 +77,26 @@ sub Match {
 	my $graph_2 = $search->{ref}->{$sid2};   
 	my $headbp_2 = @{$search->{ref}->{$sid2}}-1;
 
-	# garaph_1¤ÏÉôÊ¬¡¢graph_2¤Ï´°Á´¥Þ¥Ã¥Á¥ó¥°
+	# garaph_1ã¯éƒ¨åˆ†ã€graph_2ã¯å®Œå…¨ãƒžãƒƒãƒãƒ³ã‚°
 	my $pmatch_result = $search->{sgh}->pmatch($graph_1, $headbp_1, $graph_2, $headbp_2);
 	return 'unmatch' if ($pmatch_result eq 'unmatch');
- 	if $option->{debug}{
-	    print "pmatch·ë²Ì\n";
+ 	if ($option->{debug}) {
+	    print "pmatchçµæžœ\n";
 	    Dumpvalue->new->dumpValue($pmatch_result);
 	}
 	my $result = $search->{sgh}->calc_sim('Matching', $pmatch_result, $headbp_2, $headbp_2);
-	if $option->{debug}{
-	    print "calc_sim·ë²Ì\n";
+	if ($option->{debug}) {
+	    print "calc_simçµæžœ\n";
 	    Dumpvalue->new->dumpValue($result);
 	} 
 
-	# ¥Þ¥Ã¥Á¥Ú¥¢½ÐÎÏ
+	# ãƒžãƒƒãƒãƒšã‚¢å‡ºåŠ›
 	if ($option->{debug}) {
 	    print "matchpair\n";
 	    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
 		print "$num\n";
-		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
-		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
+		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_1}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_1}}), $result->{MATCH}->{matchid}->[$num]->{graph_1};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_2}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_2}}), $result->{MATCH}->{matchid}->[$num]->{graph_2};
 	    }
 	}
 	

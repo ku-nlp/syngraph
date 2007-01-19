@@ -285,8 +285,8 @@ sub st_make_bp {
 
 		# 入力の文節番号集合
 		my @s_body;
-		foreach my $i (@{$result->{match}}) {
-		    push(@s_body, @{$i->{s}});
+		foreach my $i (@{$result->{MATCH}->{match}}) {
+		    push(@s_body, @{$i->{graph_1}});
 		}
 		my $s_pattern = join(" ", sort(@s_body));
 		next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
@@ -297,8 +297,8 @@ sub st_make_bp {
 		    print "matchpair\n";
 		    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
 			print "$num\n";
-			printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{s}, join(',', @{$result->{MATCH}->{match}->[$num]->{s}}), $result->{MATCH}->{matchid}->[$num]->{s};
-		    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{i}, join(',', @{$result->{MATCH}->{match}->[$num]->{i}}), $result->{MATCH}->{matchid}->[$num]->{i};
+			printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_1}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_1}}), $result->{MATCH}->{matchid}->[$num]->{graph_1};
+		    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_2}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_2}}), $result->{MATCH}->{matchid}->[$num]->{graph_2};
 		    }
 		}
 		
@@ -324,7 +324,6 @@ sub st_make_bp {
 				     # regnode_option => $regnode_option # 反義語、上位語を張り付けるかどうか
 				     });
 
-		$newid->{match} = $result->{MATCH}->{match} if ($newid);
 		$newid->{matchid}   = $result->{MATCH}->{matchid} if ($newid);
 		$newid->{match}     = $result->{MATCH}->{match} if ($newid);
 		$newid->{matchpair} = $result->{MATCH}->{matchpair} if ($newid);
@@ -891,7 +890,7 @@ sub pmatch {
 		    # 付属語、要素の違いのチェック
 		    foreach my $type (@types) {
 			if ($node_1->{$type} ne $node_2->{$type}) {
-			    $unmatch->{$matchnode_2}->{$type} = {s =>$node_1->{$type}, i =>$node_2->{$type}};
+			    $unmatch->{$matchnode_2}->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
 			}
 		    }
 #		    # レベル
@@ -931,19 +930,19 @@ sub pmatch {
     $result->{SYN}->{matchbp}->{$nodebp_1} = 1;  # 自分もいれておく
 
     # マッチの対応
-    my @smatch = sort keys %{$result->{SYN}->{matchbp}};
-    my @imatch = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
-    push(@{$result->{MATCH}->{match}}, {s => \@smatch, i => \@imatch});
-    my $smatchnode;
-    my $imatchnode;
-    foreach my $smatchbp (@smatch) {
-	$smatchnode .= $graph_1->[$smatchbp]->[0]->{midasi};
+    my @match_1 = sort keys %{$result->{SYN}->{matchbp}};
+    my @match_2 = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
+    push(@{$result->{MATCH}->{match}}, {graph_1 => \@match_1, graph_2 => \@match_2});
+    my $matchmidasi_1;
+    my $matchmidasi_2;
+    foreach my $matchbp_1 (@match_1) {
+	$matchmidasi_1 .= $graph_1->[$matchbp_1]->[0]->{midasi};
     }
-    foreach my $imatchbp (@imatch) {
-	$imatchnode .= $graph_2->[$imatchbp]->[0]->{midasi};
+    foreach my $matchbp_2 (@match_2) {
+	$matchmidasi_2 .= $graph_2->[$matchbp_2]->[0]->{midasi};
     }
-    push(@{$result->{MATCH}->{matchpair}}, {s => $smatchnode, i => $imatchnode});
-    push(@{$result->{MATCH}->{matchid}}, {s => $matchnode_1->{id}, i => $matchnode_2->{id}});    
+    push(@{$result->{MATCH}->{matchpair}}, {graph_1 => $matchmidasi_1, graph_2 => $matchmidasi_2});
+    push(@{$result->{MATCH}->{matchid}}, {graph_1 => $matchnode_1->{id}, graph_2 => $matchnode_2->{id}});    
 
     # $graph_2に子BPがあるかどうか
     my @childbp_2;
@@ -1041,9 +1040,9 @@ sub calc_sim {
 	foreach my $unmatch_type (keys %{$pmatch_result->{NODE}->{$bp}->{unmatch}}) {
 	    if ($bp == $headbp) {
 		if ($mode eq 'SYN') {
-		    if (!defined $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{i}){
+		    if (!defined $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_2}){
 			# 要素引き継ぎ
-			$result->{SYN}->{$unmatch_type} = $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{s};
+			$result->{SYN}->{$unmatch_type} = $pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_1};
 		    }
 		    else {
 			return 'unmatch';
@@ -1060,7 +1059,7 @@ sub calc_sim {
 	    }
 	    else {
 		if ($unmatch_type eq 'case'){
-		    next if (!$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{s} or !$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{i});
+		    next if (!$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_1} or !$pmatch_result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_2});
 		}
 		$result->{match_weight} *= $penalty->{$unmatch_type};
 	    }
