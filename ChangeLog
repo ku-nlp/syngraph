@@ -1,3 +1,18 @@
+2007-01-19  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/CalSimWithSynGraph, perl/SynGraph.pm:完全マッチの出力をオプション化
+
+2007-01-16  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* script/build.sh, script/conv_syndb.pl, sort_synhead.pl, dic/antonym.txt, dic/definision.txt, dic/relation.txt, dic/synonym.txt, dic/README, syndb/synantonym.mldbm, syndb/syndata.mldbm, syndb/synhead.mldbm, syndb/synparent.mldbm
+	辞書整備
+
+	* perl/SynGraph.pm, perl/Search.pm:ALTの処理
+
+2007-01-13  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/Search.pm:使役表現の述語項構造における違いを吸収（AにBを捕まえさせる＝AがBを捕まえる）
+
 2007-01-13  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
