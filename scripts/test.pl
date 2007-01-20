@@ -15,15 +15,16 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relation', 'antonym', 'MT_ver');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relation', 'antonym', 'jyutugokou_kaisyou', 'MT_ver');
 
 # my $zenbun = <STDIN>;
 # chomp $zenbun;
 # my $query = <STDIN>;
 # chomp $query;
 
- my ($zenbun, $query) = ('一番京都に近い駅', '京都の最寄りの駅');
-# my ($zenbun, $query) = ('会える日', '会う日');
+ my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
+# my ($zenbun, $query) = ('最寄り駅', '一番近い駅');
+
 
 my $calcsim = new CalcSimWithSynGraph;
 my $option;
@@ -32,15 +33,22 @@ $option->{case} = 1 if $opt{case};
 $option->{postprocess} = 1 if $opt{postprocess};
 $option->{relation} = 1 if $opt{relation};
 $option->{antonym} = 1 if $opt{antonym};
+$option->{jyutugokou_kaisyou} = 1 if $opt{jyutugokou_kaisyou};
 $option->{MT_ver} = 1 if $opt{MT_ver};
 
 my $result = $calcsim->Match(1, $zenbun, $query, $option);
 
 if ($result eq 'unmatch') {
-    print 'unmatch\n';
+    print "unmatch\n";
 }
 else {
-    printf "類似度:%1.2f\n",$result->{score};
+    if (!$opt{MT_ver}){
+	printf "類似度:%1.2f\n",$result->{score};
+    }
+    else {
+	printf "類似度:%1.2f\n",$result->{CALC}->{score};
+    }
+
     if ($opt{match_print}){
 	printf "マッチング:\n";
 	foreach my $qmatch (keys %{$result->{matchbp}}){ 
