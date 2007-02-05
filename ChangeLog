@@ -1,3 +1,9 @@
+2007-02-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl:
+	queryを引数からも与えられるようにした
+	(例) ./test.pl -debug 一番近い駅 最寄りの駅
+
 2007-01-20  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/CalSimWithSynGraph, perl/SynGraph.pm:
