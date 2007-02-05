@@ -7,6 +7,7 @@
 use strict;
 use Dumpvalue;
 use utf8;
+use Encode;
 use lib qw(../perl);
 use CalcSimWithSynGraph;
 use Getopt::Long;
@@ -25,6 +26,10 @@ my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relat
  my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
 # my ($zenbun, $query) = ('最寄り駅', '一番近い駅');
 
+if ($ARGV[0] && $ARGV[1]) {
+    $zenbun = decode('euc-jp', $ARGV[0]);
+    $query = decode('euc-jp', $ARGV[1]);
+}
 
 my $calcsim = new CalcSimWithSynGraph;
 my $option;
