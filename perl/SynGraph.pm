@@ -76,7 +76,7 @@ $penalty->{ukemi} = 0.3;
 # 使役表現の違いによるペナルティ
 $penalty->{shieki} = 0.3;
 # 否定・反義語のフラグの違いによるペナルティ
-$penalty->{negation} = 0.3;
+$penalty->{reversal} = 0.3;
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
 
@@ -137,7 +137,7 @@ sub new {
 # SYNGRAPHを作成
 #
 sub make_sg {
-    my ($this, $input, $ref, $sid, $regnode_option, $match_option) = @_;
+    my ($this, $input, $ref, $sid, $regnode_option, $matching_option) = @_;
 
     # 入力がKNP結果の場合
     if (ref $input eq 'KNP::Result') {
@@ -161,7 +161,7 @@ sub make_sg {
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
    if ($ref->{$sid}) {
        for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $match_option); 
+           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $matching_option); 
 	}
    }
 }
@@ -214,7 +214,7 @@ sub make_tree {
 # BPにSYNノードを付与する
 #
 sub make_bp {
-    my ($this, $ref, $sid, $bp, $regnode_option, $match_option) = @_;
+    my ($this, $ref, $sid, $bp, $regnode_option, $matching_option) = @_;
 
     #このbpについている基本ノード、SYNノードについて調べる
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
@@ -229,20 +229,21 @@ sub make_bp {
 
                 my $headbp = @{$this->{syndata}->{$mid}} - 1;
 
-		# 完全マッチ調べる
-		my $result = $this->pmatch($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
+# 		# マッチ調べる（SYNモードではpa_matching行わない）
+		my $result = $this->syngraph_matching('SYN', $ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
 		next if ($result eq 'unmatch');
-		if ($match_option->{jyutugokou_kaisyou}) {
-		    my $kaisyou = $this->jyutugokou_check($result->{NODE}, $headbp);
-		    foreach my $bp (keys %{$kaisyou}) {
-			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-		    }
-		}
+
+# 		my $result = $this->approximate_matching($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
+# 		next if ($result eq 'unmatch');
+# 		if ($matching_option->{pa_matching_old}) {
+# 		    my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp);
+# 		    foreach my $bp (keys %{$kaisyou}) {
+# 			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
+# 		    }
+# 		}
 		
-		# 類似度計算
-		my $calc = $this->calc_sim('SYN', $result->{NODE}, $headbp, $headbp);
-		next if ($calc eq 'unmatch');
-		$result->{CALC} = $calc;
+# 		$this->calc_sim($result, 'SYN', $headbp);
+# 		next if ($result->{unmatch});
 
 		$this->_regnode({ref            => $ref,
 				 sid            => $sid,
@@ -272,7 +273,7 @@ sub make_bp {
 # BPにIDを付与する (部分木用)
 #
 sub st_make_bp {
-    my ($this, $ref, $sid, $bp, $max_tm_num, $option, $match_option) = @_;
+    my ($this, $ref, $sid, $bp, $max_tm_num, $option, $matching_option) = @_;
 
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
         next if ($node->{weight} == 0);
@@ -290,20 +291,24 @@ sub st_make_bp {
                     $this->db_retrieve($this->{tm_sg}, [$tmid]);
                 }
                 
-		# 完全マッチ調べる
-		my $result = $this->pmatch($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
+		# マッチ調べる
+		my $result = $this->syngraph_matching('Matching', $ref->{sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp,
+						      \%body, $matching_option);
+
 		next if ($result eq 'unmatch');
-		if ($match_option->{jyutugokou_kaisyou}) {
-		    my $kaisyou = $this->jyutugokou_check($result->{NODE}, $headbp);
-		    foreach my $bp (keys %{$kaisyou}) {
-			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-		    }
-		}
-		
-		# 類似度計算
-		my $calc = $this->calc_sim('Matching', $result->{NODE}, $headbp, $headbp);
-		next if ($calc eq 'unmatch');
-		$result->{CALC} = $calc;
+
+#		my $result = $this->approximate_matching($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
+#		next if ($result eq 'unmatch');
+#		if ($matching_option->{pa_matching_old}) {
+#		    my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp);
+#		    foreach my $bp (keys %{$kaisyou}) {
+#			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
+#		    }
+#		}
+#		
+#		# 類似度計算
+#		my $calc = $this->calc_sim($result, 'Matching', $headbp);
+#		next if ($result->{unmatch});
 
 		# 入力の文節番号集合
 		my @s_body;
@@ -387,7 +392,7 @@ sub _get_keywords {
 
     foreach my $tag ($knp_result->tag) {
         my @alt;
-	my @state;
+#	my @state;
         my $nodename;
         my $fuzoku;
 	my $midasi;
@@ -423,7 +428,7 @@ sub _get_keywords {
 	# 態
 	if ($tag->{fstring} =~ /<態:([^\s\/\">]+)/) {
 	    foreach (split(/\|/,$1)) {
-		my $tmp = {};
+#		my $tmp = {};
 #		$tmp->{kanou}   = 1 if ($_ =~ /可能/);
 #		$tmp->{sonnkei} = 1 if ($_ =~ /尊敬/);
 #		$tmp->{shieki}  = 1 if ($_ =~ /使役/);
@@ -434,7 +439,7 @@ sub _get_keywords {
 		$shieki  = 1 if ($_ =~ /使役/);
 		$ukemi   = 1 if ($_ =~ /受動/);
 		
-		push (@state, $tmp);
+#		push (@state, $tmp);
 	    }
 	}
 	
@@ -883,39 +888,97 @@ sub _regnode {
     }
 }
 
+
 #
 # SYNGRAPHどうしのマッチング
+# (graph_1の部分とgraph_2の全体)
+#
+sub syngraph_matching {
+    my ($this, $mode, $graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash, $matching_option) = @_;
+    
+    # SYNGRAPHの近似マッチング
+    my $result = $this->approximate_matching($graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash);
+    return 'unmatch' if ($result eq 'unmatch');
+
+    # 述語項構造単位の違いの解消
+    if ($matching_option->{pa_matching_old} or $mode ne 'SYN'){
+	$this->pa_matching($result, $headbp_2);
+    }
+
+#    if ($matching_option->{pa_matching_old}){
+#	my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp_2);
+#	foreach my $bp (keys %{$kaisyou}) {
+#	    $result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
+#	}
+#    }
+
+    # 類似度計算
+    $this->calc_sim($result, $mode, $headbp_2);
+
+#    my $calc = $this->calc_sim($mode, $result->{NODE}, $headbp_2, $headbp_2);
+#    return 'unmatch' if ($calc eq 'unmatch');
+#    $result->{CALC} = $calc;
+
+    if ($result->{unmatch}) {
+	return 'unmatch';
+    }
+    else {
+	return $result;
+    }
+}
+
+#
+# SYNGRAPHどうしの近似マッチング
 # (graph_1が部分、graph_2が全体)
 # BPのマッチを調べて、マッチすれば子供に対して再帰的に呼び出す
-#
-sub pmatch {
+sub approximate_matching {
     my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash) = @_;
-    my $result = {};
-    my $max = 0;
+    my $result;
+
+    my @types = qw(fuzoku case kanou sonnkei ukemi shieki reversal);
+    my $matchnode_score = 0;
     my $matchnode_1;
     my $matchnode_2;
-    my $unmatch;
-    my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
+    my $matchnode_unmatch;
+    my $matchnode_unmatch_num = @types;
     
     # BP内でマッチするノードを探す
     foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
-        next if ($node_1->{score} <= $max); #この$node_1とのスコアをもとめても前の$node_1のスコアより小さくなるだけだから考慮する必要がない。
+        next if ($node_1->{score} < $matchnode_score);
         foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
-            if ((!defined $body_hash or &st_check($node_2, $body_hash)) and
-		$node_1->{id} eq $node_2->{id} and !($node_1->{relation} and $node_2->{relation})) {
-                my $match_weight = $node_1->{score} * $node_2->{score} * $node_2->{weight};	     
+            if ((!defined $body_hash or &st_check($node_2, $body_hash))
+		and $node_1->{id} eq $node_2->{id} 
+		and !($node_1->{relation} and $node_2->{relation})
+		and !($node_1->{antonym} and $node_2->{antonym})) {
+
+		# スコア
+                my $score = $node_1->{score} * $node_2->{score};
 		
-                if ($max < $match_weight or ($max == $match_weight and ($matchnode_1->{weight} < $node_1->{weight}))) {
-                    $max = $match_weight;
-                    $matchnode_1 = $node_1;
-                    $matchnode_2 = $node_2;
-		    
-		    # 付属語、要素の違いのチェック
-		    foreach my $type (@types) {
-			if ($node_1->{$type} ne $node_2->{$type}) {
-			    $unmatch->{$matchnode_2}->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
+#                if ($matchnode_score < $score 
+#		    or ($matchnode_score == $score 
+#			and ($matchnode_1->{weight} + $matchnode_2->{weight} =< $node_1->{weight} + $node_2->{weight}))) {
+		
+		next if ($matchnode_score > $score 
+			 or ($matchnode_score == $score 
+			     and ($matchnode_1->{weight} + $matchnode_2->{weight} > $node_1->{weight} + $node_2->{weight})));
+		
+		# 付属語、要素の違いのチェック
+		my $unmatch;
+		my $unmatch_num;
+		foreach my $type (@types) {
+		    if ($type eq 'reversal') {
+			if ($node_1->{negation} ^ $node_2->{negation} ^ $node_1->{antonym} ^ $node_2->{antonym}) {
+			    $unmatch->{$type} = 1;
+			    $unmatch_num +=1;			    
 			}
 		    }
+		    else {
+			if ($node_1->{$type} ne $node_2->{$type}) {
+			    $unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
+			    $unmatch_num +=1;
+			}
+		    }
+		}
 #		    # レベル
 #		    if ($node_1->{level} ne $node_2->{level}) {
 #			if ($node_1->{level}) {
@@ -923,25 +986,34 @@ sub pmatch {
 #			}
 #		    }
 
-		}
-	    }
-        }
+		next if ($matchnode_score == $score 
+			 and ($matchnode_1->{weight} + $matchnode_2->{weight} == $node_1->{weight} + $node_2->{weight})
+			 and $matchnode_unmatch_num < $unmatch_num);
+		
+		$matchnode_score = $score;
+		$matchnode_1 = $node_1;
+		$matchnode_2 = $node_2;
+		$matchnode_unmatch = $unmatch;
+		$matchnode_unmatch_num = $unmatch_num;
+	    }		    
+	}
     }
     
+    
     # BPがマッチしない
-    return 'unmatch' if ($max == 0);
-
+    return 'unmatch' if ($matchnode_score == 0);
+    
     # BPがマッチした
-    $result->{NODE}->{$nodebp_2}->{match_weight} = $max;
+    $result->{GRAPH}->{graph_1} = $graph_1;
+    $result->{GRAPH}->{graph_2} = $graph_2;
+    $result->{NODE}->{$nodebp_2}->{score} = $matchnode_score;
     $result->{NODE}->{$nodebp_2}->{weight} = $matchnode_2->{weight};
     $result->{NODE}->{$nodebp_2}->{matchid} = $matchnode_2->{id};
     foreach my $c (keys %{$matchnode_2->{childbp}}){
 	$result->{NODE}->{$nodebp_2}->{childbp}->{$c} = 1;
     }
-    foreach my $type (@types) {
-	$result->{NODE}->{$nodebp_2}->{unmatch}->{$type} = $unmatch->{$matchnode_2}->{$type} if (defined $unmatch->{$matchnode_2}->{$type});
-    }
-#	$result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
+    $result->{NODE}->{$nodebp_2}->{unmatch} = $matchnode_unmatch;;
+#    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
     
     $result->{SYN}->{weight} = $matchnode_1->{weight};
     $result->{SYN}->{midasi} = $matchnode_1->{midasi};
@@ -954,7 +1026,13 @@ sub pmatch {
 
     # マッチの対応
     my @match_1 = sort keys %{$result->{SYN}->{matchbp}};
-    my @match_2 = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
+    my @match_2;
+    if ($matchnode_2->{matchbp}) {
+	@match_2 = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
+    }
+    else { # 後で手直しodani3/1
+	@match_2 = $nodebp_2;
+    }
     push(@{$result->{MATCH}->{match}}, {graph_1 => \@match_1, graph_2 => \@match_2});
     my $matchmidasi_1;
     my $matchmidasi_2;
@@ -991,11 +1069,11 @@ sub pmatch {
 		foreach my $child_1 (@childbp_1) {
 		    next if ($child_1_check{$child_1});
 
-		    my $res = $this->pmatch($graph_1, $child_1, $graph_2, $child_2, $body_hash);
+		    my $res = $this->approximate_matching($graph_1, $child_1, $graph_2, $child_2, $body_hash);
 		    next if ($res eq 'unmatch');
 
 		    foreach my $nodebp (keys %{$res->{NODE}}) {
-			$result->{NODE}->{$nodebp}->{match_weight} = $res->{NODE}->{$nodebp}->{match_weight};
+			$result->{NODE}->{$nodebp}->{score} = $res->{NODE}->{$nodebp}->{score};
 			$result->{NODE}->{$nodebp}->{weight} = $res->{NODE}->{$nodebp}->{weight};
 			$result->{NODE}->{$nodebp}->{matchid} = $res->{NODE}->{$nodebp}->{matchid};
 			foreach my $resc (keys %{$res->{NODE}->{$nodebp}->{childbp}}) {
@@ -1052,14 +1130,77 @@ sub pmatch {
     }
 }
 
-sub jyutugokou_check {
+sub pa_matching {
+    my ($this, $result, $bp) = @_;
+    my $match_tree = $result->{NODE};
+
+    # 子供がいない
+    return if (!defined $match_tree->{$bp}->{childbp});
+
+    # 子供がいる
+    foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
+	$this->pa_matching($result, $childbp);
+    }
+
+    return if (!defined $match_tree->{$bp}->{unmatch});
+
+    # 受身表現
+    # 子供に格の不一致が２つあれば受身表現の不一致を解消する。
+    if ($match_tree->{$bp}->{unmatch}->{ukemi}) {
+	my $check;
+	my @key_child;
+    	
+	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
+	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
+		if ($match_tree->{$childbp}->{unmatch}->{case}->{graph_1} and $match_tree->{$childbp}->{unmatch}->{case}->{graph_2}){
+		    $check += 1;
+		    push @key_child,$childbp;
+		    last if ($check==2);
+		}
+	    }
+	}
+	if ($check==2){
+	    $result->{NODE}->{$bp}->{dissolve}->{ukemi} = 1;
+	    foreach my $childbp (@key_child) {
+		$result->{NODE}->{$childbp}->{dissolve}->{case} = 1;
+	    }
+	}
+    }
+
+    # 述語が反義な表現
+    # 子供に格の不一致が２つあれば述語の反義の不一致を解消する
+    if ($match_tree->{$bp}->{unmatch}->{reversal}) {
+	my $check;
+	my @key_child;
+    	
+	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
+	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
+		if ($match_tree->{$childbp}->{unmatch}->{case}->{graph_1} and $match_tree->{$childbp}->{unmatch}->{case}->{graph_2}){
+		    $check += 1;
+		    push @key_child, $childbp;
+		    last if ($check==2);
+		}
+	    }
+	}
+	if ($check==2){
+	    $result->{NODE}->{$bp}->{dissolve}->{reversal} = 1;
+	    foreach my $childbp (@key_child) {
+		$result->{NODE}->{$childbp}->{dissolve}->{case} = 1;
+	    }
+	}
+    }
+  
+    return;
+}
+
+sub pa_matching_old {
     my ($this, $match_tree, $bp) = @_;
     my $kaisyou={};
 
     return $kaisyou if (!defined $match_tree->{$bp}->{childbp});
 
     foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
-	my $res = $this->jyutugokou_check($match_tree,$childbp);
+	my $res = $this->pa_matching_old($match_tree,$childbp);
 	foreach my $kaisyoubp (keys %{$res}) {
 	    my $tyouhuku_check;
 	    foreach my $type (keys %{$res->{$kaisyoubp}}) {
@@ -1124,10 +1265,71 @@ sub jyutugokou_check {
 }
 
 sub calc_sim {
+    my ($this, $result, $mode, $headbp) = @_;
+    my $matchtree = $result->{NODE};
+    my $score_sum;
+    my $match_num;
+
+    foreach my $bp (keys %{$matchtree}) {
+	if ($matchtree->{$bp}->{unmatch}){
+	    foreach my $unmatch_type (keys %{$matchtree->{$bp}->{unmatch}}) {
+		next if ($matchtree->{$bp}->{dissolve}->{$unmatch_type} == 1);
+		
+		if ($bp == $headbp) {
+		    if ($mode eq 'SYN') {
+			if ($unmatch_type eq 'reversal') {
+			    # 要素引き継ぎ
+			    $result->{SYN}->{$unmatch_type} = 1;
+			}
+			else {
+			    if (!defined $matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2}){
+				# 要素引き継ぎ
+				$result->{SYN}->{$unmatch_type} = $matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1};
+			    }
+			    else {
+				$result->{unmatch} = 1;
+				return;
+			    }
+			}
+		    }
+		    if ($mode eq 'Matching') { # MTでアライメントをとるときはheadでの{fuzoku,case}の違いはみない。
+			if ($unmatch_type eq 'case' or $unmatch_type eq 'fuzoku'){
+			    next;
+			}
+			else {
+			    $matchtree->{$bp}->{score} *= $penalty->{$unmatch_type};
+			}
+		    }
+		}
+		else {
+		    if ($unmatch_type eq 'case'){
+			next if (!$matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1} 
+				 or !$matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2});
+		    }
+		    $matchtree->{$bp}->{score} *= $penalty->{$unmatch_type};
+		}
+
+	    }
+	}	
+	$score_sum += $matchtree->{$bp}->{score};
+	$match_num++;
+    }
+
+    if ($match_num == 0) {
+	$result->{unmatch} = 1;
+	return;
+    }
+    else{
+	$result->{CALC}->{score} = $score_sum / $match_num;
+	return;
+    }
+}
+
+sub calc_sim_old {
     my ($this, $mode, $match_tree, $bp, $headbp) = @_;
     my $result = {};
 
-    $result->{match_weight} = $match_tree->{$bp}->{match_weight};
+    $result->{match_weight} = $match_tree->{$bp}->{score};
     $result->{weight} = $match_tree->{$bp}->{weight};
 
     if ($match_tree->{$bp}->{unmatch}){
@@ -1172,7 +1374,7 @@ sub calc_sim {
     # 子供がいる
     if ($match_tree->{$bp}->{childbp}) {
 	foreach my $cbp (keys %{$match_tree->{$bp}->{childbp}}){
-	    my $res = $this->calc_sim($mode, $match_tree, $cbp, $headbp);
+	    my $res = $this->calc_sim_old($mode, $match_tree, $cbp, $headbp);
 	    $result->{match_weight} += $res->{match_weight};	
 	    $result->{weight} += $res->{weight};	
 	    $result->{score} =$result->{match_weight} / $result->{weight};

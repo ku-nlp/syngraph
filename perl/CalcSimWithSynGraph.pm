@@ -29,12 +29,12 @@ sub Match {
     my $knp_option; 
     my $regnode_option;
     my $matching_option;
-    my $match_option;
+    my $matching_option;
     $knp_option->{case} = 1 if $option->{case};
     $knp_option->{postprocess} = 1 if $option->{postprocess};
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
-    $match_option->{jyutugokou_kaisyou} = 1 if $option->{jyutugokou_kaisyou};
+    $matching_option->{pa_matching} = 1 if $option->{pa_matching};
     $matching_option->{MT_ver} = 1 if $option->{MT_ver};    
 
     my $search = new Search(undef, undef, $knp_option);
@@ -44,9 +44,9 @@ sub Match {
     
     # SYNGRAPHを作成
 
-    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option, $match_option);
-    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option, $match_option);
-    Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
+    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option, $matching_option);
+    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option, $matching_option);
+#    Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 
     if (!$matching_option->{MT_ver}) {
 	# 転置ハッシュを作る
@@ -79,27 +79,17 @@ sub Match {
 	my $graph_2 = $search->{ref}->{$sid2};   
 	my $headbp_2 = @{$search->{ref}->{$sid2}}-1;
 
+	# SYNGRAPHのマッチング
 	# garaph_1は部分、graph_2は完全マッチング
-	my $result = $search->{sgh}->pmatch($graph_1, $headbp_1, $graph_2, $headbp_2);
-	return 'unmatch' if ($result eq 'unmatch');
-	if ($match_option->{jyutugokou_kaisyou}){
-	    my $kaisyou = $search->{sgh}->jyutugokou_check($result->{NODE}, $headbp_2);
-	    foreach my $bp (keys %{$kaisyou}) {
-		$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-	    }
+	my $result = $search->{sgh}->syngraph_matching('Matching', $graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
+
+	if ($option->{debug} and $result ne 'unmatch') {
+	    print "SYNGRAPHマッチング結果\n";
+	    Dumpvalue->new->dumpValue($result);
 	}
 
-	# 類似度計算
-	my $calc = $search->{sgh}->calc_sim('Matching', $result->{NODE}, $headbp_2, $headbp_2);
-	return 'unmatch' if ($calc eq 'unmatch');
-	$result->{CALC} = $calc;
-	if ($option->{debug}) {
-	    print "calc_sim結果\n";
-	    Dumpvalue->new->dumpValue($result);
-	} 
-
 	# マッチペア出力
-	if ($option->{debug}) {
+	if ($option->{debug} and $result ne 'unmatch') {
 	    print "matchpair\n";
 	    for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
 		print "$num\n";
