@@ -1167,6 +1167,34 @@ sub pa_matching {
 	}
     }
 
+    # 使役表現
+    # 子供に格の不一致があって、使役表現の側が「ニ格」、もう一方が「ガ格」
+    if ($match_tree->{$bp}->{unmatch}->{shieki}) {
+	my $shieki;
+	my $non_shieki;
+    	my $check;
+	my $key_child;
+	
+	if ($match_tree->{$bp}->{unmatch}->{shieki}->{graph_1}) {
+	    $shieki = 'graph_1';
+	    $non_shieki = 'graph_2';
+	}
+	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
+	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
+		if ($match_tree->{$childbp}->{unmatch}->{case}->{$shieki} eq 'ニ' 
+		    and $match_tree->{$childbp}->{unmatch}->{case}->{$non_shieki} eq 'ガ'){
+		    $check = 1;
+		    $key_child = $childbp;
+		    last;
+		}
+	    }
+	}
+	if ($check){
+	    $result->{NODE}->{$bp}->{dissolve}->{shieki} = 1;
+	    $result->{NODE}->{$key_child}->{dissolve}->{case} = 1;
+	}
+    }
+
     # 述語が反義な表現
     # 子供に格の不一致が２つあれば述語の反義の不一致を解消する
     if ($match_tree->{$bp}->{unmatch}->{reversal}) {
