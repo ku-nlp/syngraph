@@ -292,7 +292,7 @@ sub st_make_bp {
                 }
                 
 		# マッチ調べる
-		my $result = $this->syngraph_matching('Matching', $ref->{sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp,
+		my $result = $this->syngraph_matching('Matching', $ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp,
 						      \%body, $matching_option);
 
 		next if ($result eq 'unmatch');
