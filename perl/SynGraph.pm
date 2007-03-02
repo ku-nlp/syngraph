@@ -327,6 +327,14 @@ sub st_make_bp {
 			printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_1}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_1}}), $result->{MATCH}->{matchid}->[$num]->{graph_1};
 		    printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_2}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_2}}), $result->{MATCH}->{matchid}->[$num]->{graph_2};
 		    }
+
+#		    print "log\n";
+#		    print "graph_1\n";
+#		    print "*\n";
+#		    foreach $num (@{$result->{MATCH}->{match}}) {
+#			print "@{$result->{GRAPH}->{graph_1}->[$num]}";
+			
+#		    }
 		}
 		
 		my $newid =
@@ -901,7 +909,7 @@ sub syngraph_matching {
     return 'unmatch' if ($result eq 'unmatch');
 
     # 述語項構造単位の違いの解消
-    if ($matching_option->{pa_matching_old} or $mode ne 'SYN'){
+    if ($matching_option->{pa_matching} or $mode ne 'SYN'){
 	$this->pa_matching($result, $headbp_2);
     }
 
@@ -1338,9 +1346,11 @@ sub calc_sim {
 		}
 
 	    }
-	}	
-	$score_sum += $matchtree->{$bp}->{score};
-	$match_num++;
+	}
+	if ($matchtree->{$bp}->{score}) {
+	    $score_sum += $matchtree->{$bp}->{score};
+	    $match_num++;
+	}
     }
 
     if ($match_num == 0) {
