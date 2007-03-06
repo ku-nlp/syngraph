@@ -1535,8 +1535,9 @@ sub fomat_syngraph_old {
     }
 }
 
-sub fomat_syngraph {
+sub format_syngraph {
     my ($this, $syngraph) = @_;
+    my $result_string_hash;
     my $result_string;
     my $co_hash;
     my $co_string;
@@ -1577,8 +1578,8 @@ sub fomat_syngraph {
 	    
 	    unless ($co_check){
 		$co_hash->{$bp}->{kakari_type} .= "$node->{kakari_type}";
-		$co_hash->{$bp}->{string} .= "<midasi:$node->{midasi}>";
-		$co_hash->{$bp}->{string} .= "<格解析結果:$node->{case}>格" if ($node->{case});
+		$co_hash->{$bp}->{string} .= "<見出し:$node->{midasi}>";
+		$co_hash->{$bp}->{string} .= "<格解析結果:$node->{case}格>" if ($node->{case});
 		$co_hash->{$bp}->{string} .= "<可能表現>" if ($node->{kanou});
 		$co_hash->{$bp}->{string} .= "<尊敬表現>" if ($node->{sonnkei});
 		$co_hash->{$bp}->{string} .= "<使役表現>" if ($node->{sieki});
@@ -1591,14 +1592,15 @@ sub fomat_syngraph {
 	$bp++;
     }
     
-    my $num = $bp;
-    for ($bp=0;$bp<$num;$bp++) {
+    my $max = $bp;
+    for ($bp=0;$bp<$max;$bp++) {
 	$co_string = "!! $bp";
 	my $check;
 	if ($co_hash->{$bp}->{parent}) {
 	    foreach (keys %{$co_hash->{$bp}->{parent}}) {
 		if (!$check){
 		    $co_string .= " $_";
+		    $check++;
 		}
 		else {
 		    $co_string .= "/$_";
@@ -1611,11 +1613,14 @@ sub fomat_syngraph {
 	$co_string .= "$co_hash->{$bp}->{kakari_type}";
 	$co_string .= " $co_hash->{$bp}->{string}";
 	
-	printf "$co_string\n";
+	$result_string = "$co_string\n";
 	foreach (@{@{$bp_string}[$bp]}) {
-	    printf "$_\n";
+	    $result_string .= "$_\n";
 	}
+
+	push (@{$result_string_hash}, $result_string);
     }
+    return $result_string_hash;
 }
 
 

@@ -38,8 +38,25 @@ $SynGraph->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syn
 
 # SynGraphを作成
 my $syngraph = {};
-$SynGraph->make_sg($sentence, $syngraph, 1, $regnode_option);
+$syngraph->{parse} = $SynGraph->{knp}->parse($sentence);
+#$syngraph->{parse}->set_id('syngraph');
+$syngraph->{graph} = {};
+$SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
 Dumpvalue->new->dumpValue($syngraph) if ($option->{debug});
 
-# SynGraphを出力
-$SynGraph->fomat_syngraph($syngraph->{1});
+# SynGraphをformat化
+$syngraph->{format} = $SynGraph->format_syngraph($syngraph->{graph}->{$syngraph->{parse}->id});
+
+# KNPと併せて出力
+print $syngraph->{parse}->comment;
+my $bp = 0;
+foreach ($syngraph->{parse}->bnst) {
+    print "* ", defined $_->{parent} ? $_->{parent}->id : '-1', "$_->{dpndtype} $_->{fstring}\n";
+    foreach ($_->tag) {
+	printf $syngraph->{format}->[$bp];
+	printf $_->spec;
+	$bp++;
+    }
+}
+
+print "EOS\n";
