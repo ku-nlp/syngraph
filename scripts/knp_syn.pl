@@ -36,7 +36,7 @@ $SynGraph->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syn
 if ($opt{sentence}) {
     $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
-    &outputformat($result);
+    &outputformat_new($result);
 }
 else {
     my ($sid, $knp_buf);
@@ -67,19 +67,85 @@ sub outputformat {
     $SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
     Dumpvalue->new->dumpValue($syngraph) if ($option->{debug});
 
-# SynGraphをformat化
+    # SynGraphをformat化
     $syngraph->{format} = $SynGraph->format_syngraph($syngraph->{graph}->{$syngraph->{parse}->id});
 
-# KNPと併せて出力
+    # KNPと併せて出力
     print $syngraph->{parse}->comment;
     my $bp = 0;
     foreach ($syngraph->{parse}->bnst) {
 	print "* ", defined $_->{parent} ? $_->{parent}->id : '-1', "$_->{dpndtype} $_->{fstring}\n";
 	foreach ($_->tag) {
 	    printf $syngraph->{format}->[$bp];
-	    printf $_->spec;
+	    print "+ ", defined $_->{parent} ? $_->{parent}->id : '-1', "$_->{dpndtype} $_->{fstring}\n";
+	    foreach ($_->mrph) {
+		printf $_->spec, "\n";
+	    }
 	    $bp++;
 	}
+    }
+
+    print "EOS\n";
+}
+
+sub outputformat_new { 
+    my ($result) = @_;
+
+    my $syngraph = {};
+
+    $syngraph->{parse} = $result;
+    $syngraph->{graph} = {};
+    $SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
+    Dumpvalue->new->dumpValue($syngraph) if ($option->{debug});
+
+    # SynGraphをformat化
+    $syngraph->{format} = $SynGraph->format_syngraph_new($syngraph->{graph}->{$syngraph->{parse}->id});
+
+    # KNPと併せて出力
+    print $syngraph->{parse}->comment;
+    my $bp = 0;
+    foreach my $bnst ($syngraph->{parse}->bnst) {
+	my $knp_string;
+	my $syngraph_string;
+	$knp_string = "* ";
+	if ($bnst->{parent}) {
+	    $knp_string .= $bnst->{parent}->{id};	
+	}
+	else {
+	    $knp_string .= -1;
+	}
+	$knp_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
+
+	foreach my $tag ($bnst->tag) {
+	    $knp_string .= "+ ";
+	    if ($tag->{parent}) {
+		$knp_string .= $tag->{parent}->{id};	
+	    }
+	    else {
+		$knp_string .= -1;
+	    }
+	    $knp_string .= "$tag->{dpndtype} $tag->{fstring}\n";
+
+	    foreach my $mrph ($tag->mrph) {
+		$knp_string .= $mrph->spec;
+	    }
+	    $bp++;
+	}
+	foreach (keys %{$syngraph->{format}->{key}}) {
+	    my @array;
+	    my $num=0;
+	    foreach (split/,/, $_) {
+		$array[$num] = $_;
+		$num++;
+	    }
+	    if (pop(@array) < $bp) {
+		delete $syngraph->{format}->{key}->{$_};
+		$syngraph_string .= "$syngraph->{format}->{$_}->{co_string}\n" 
+		    . "$syngraph->{format}->{$_}->{node_string}";
+	    }
+	}
+	printf "$syngraph_string$knp_string";
+	
     }
 
     print "EOS\n";

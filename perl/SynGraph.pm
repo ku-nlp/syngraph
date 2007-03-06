@@ -1462,79 +1462,6 @@ sub calc_sim_old {
 #                                                                              #
 ################################################################################
 
-sub fomat_syngraph_old {
-    my ($this, $syngraph) = @_;
-    my $result_string;
-
-    my $bp = 0;
-    foreach (@{$syngraph}) {
-	my $bp_string;
-	my $co_string;
-	my @node_string_array;
-	$co_string = "!! $bp";
-
-	my $co_check;
-	foreach my $node(@{$_}) {
-	    my $node_string;
-	    $node_string = "!";
-
-	    my $check;
-	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
-		if (!$check) {
-		    $node_string .= " $_";
-		    $check++;
-		}
-		else {
-		    $node_string .= ",$_";
-		}
-	    }
-
-	    $node_string .= " <SYNID:$node->{id}><スコア:$node->{score}>";
-	    if ($node->{childbp}) {
-		my $childbp;
-		my $check;
-		foreach (sort (keys %{$node->{childbp}})) {
-		    if (!$check) {
-			$childbp .= "$_";
-			$check++;
-		    }
-		    else {
-			$childbp .= ",$_";
-		    }
-		}
-		$node_string .= "<子供:$childbp>";
-	    }
-
-	    $node_string .= "<反義語>" if ($node->{antonym});
-	    $node_string .= "<上位語>" if ($node->{relation});
-	    $node_string .= "<否定表現>" if ($node->{negation});
-	    
-	    unless ($co_check){
-		$co_string .= " $node->{parentbp}$node->{kakari_type}";
-		$co_string .= " <midasi:$node->{midasi}>";
-		$co_string .= "<格解析結果:$node->{case}>格" if ($node->{case});
-		$co_string .= "<可能表現>" if ($node->{kanou});
-		$co_string .= "<尊敬表現>" if ($node->{sonnkei});
-		$co_string .= "<使役表現>" if ($node->{sieki});
-		$co_string .= "<受身表現>" if ($node->{ukemi});
-		$co_check++;
-	    }
-	    
-	    push (@node_string_array, $node_string);
-	}
-
-	push (@{$bp_string}, $co_string, @node_string_array);
-	push (@{$result_string}, $bp_string);
-	$bp++;
-    }
-    
-    foreach (@{$result_string}) {
-	for my $string (@{$_}) {
-	    print "$string\n";
-	}
-    }
-}
-
 sub format_syngraph {
     my ($this, $syngraph) = @_;
     my $result_string_hash;
@@ -1567,11 +1494,21 @@ sub format_syngraph {
 	    $node_string .= " <SYNID:$node->{id}><スコア:$node->{score}>";
 
 	    if ($node->{childbp}) {
+		my $child;
+		my $check;
 		foreach my $childbp (sort (keys %{$node->{childbp}})) {
 		    $co_hash->{$childbp}->{parent}->{$matchbp} = 1 unless ($co_hash->{$childbp}->{parent}->{$matchbp});
+		    if (!$check) {
+			$child .= "$childbp";
+			$check++;
+		    }
+		    else {
+			$child .= ",$childbp";
+		    }		    
 		}
+		$node_string .= "<子供:$child>";
 	    }
-	    
+
 	    $node_string .= "<反義語>" if ($node->{antonym});
 	    $node_string .= "<上位語>" if ($node->{relation});
 	    $node_string .= "<否定表現>" if ($node->{negation});
@@ -1623,6 +1560,112 @@ sub format_syngraph {
     return $result_string_hash;
 }
 
+sub format_syngraph_new {
+    my ($this, $syngraph) = @_;
+    my $key;
+    my $result; # 
+    my $co_string; # !!の行要素
+    my $node_string; # !の行要素
+
+    my $bp=0;
+    foreach (@{$syngraph}) {	
+	# 基本句(BP)単位
+	foreach my $node (@{$_}) {
+	    # ノード単位
+
+	    my $matchbp;
+	    my $check;
+	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
+		if (!$check) {
+		    $matchbp = "$_";
+		    $check++;
+		}
+		else {
+		    $matchbp .= ",$_";
+		}
+	    }
+	    
+	    my @array;
+	    my $num=0;
+	    foreach (split/,/, $matchbp) {
+		$array[$num] = $_;
+		$num++;
+	    }
+	    $key->{$matchbp} = 1 unless ($key->{matchbp});
+	    $node_string->{fstring} = "<SYNID:$node->{id}><スコア:$node->{score}>";
+	    $node_string->{fstring} .= "<反義語>" if ($node->{antonym});
+	    $node_string->{fstring} .= "<上位語>" if ($node->{relation});
+	    $node_string->{fstring} .= "<否定表現>" if ($node->{negation});
+
+	    unless ($co_string->{$matchbp}->{fstring}) {
+		$co_string->{$matchbp}->{kakari_type} .= "$node->{kakari_type}";
+		$co_string->{$matchbp}->{fstring} .= "<見出し:$node->{midasi}>";
+		$co_string->{$matchbp}->{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
+		$co_string->{$matchbp}->{fstring} .= "<可能表現>" if ($node->{kanou});
+		$co_string->{$matchbp}->{fstring} .= "<尊敬表現>" if ($node->{sonnkei});
+		$co_string->{$matchbp}->{fstring} .= "<使役表現>" if ($node->{sieki});
+		$co_string->{$matchbp}->{fstring} .= "<受身表現>" if ($node->{ukemi});
+	    }
+	    
+	    if ($node->{childbp}) {
+#		my $child;
+		my $check;
+		foreach my $childbp (sort (keys %{$node->{childbp}})) {
+		    $co_string->{$childbp}->{parent}->{$matchbp} = 1 unless ($co_string->{$childbp}->{parent}->{$matchbp});
+#		    if (!$check) {
+#			$child .= "$childbp";
+#			$check++;
+#		    }
+#		    else {
+#			$child .= ",$childbp";
+#		    }		    
+		}
+#		$node_string .= "<子供:$child>";
+	    }
+	    $result->{key} = $key;
+	    $result->{$matchbp}->{node_string} .= "! $matchbp $node_string->{fstring}\n";
+	}
+	$bp++;
+    }
+
+    foreach my $num (keys %{$co_string}) {
+	$result->{$num}->{co_string} = "!! $num";
+	my $check;
+	if ($co_string->{$num}->{parent}) {
+	    foreach (keys %{$co_string->{$num}->{parent}}) {
+		unless ($check){
+		    $result->{$num}->{co_string} .= " $_"; 
+		    $check++;
+		}
+		else {
+		    $result->{$num}->{co_string} .= "/$_"; 
+		}
+	    }
+	}
+	elsif ($num =~ /,/) {
+	    foreach (split/,/, $num) {
+		if ($co_string->{$_}->{parent}) {
+		    foreach (keys %{$co_string->{$_}->{parent}}) {
+			next if ($num =~ /$_/);
+			unless ($check){
+			    $result->{$num}->{co_string} .= " $_"; 
+			    $check++;
+			}
+			else {
+			    $result->{$num}->{co_string} .= "/$_"; 
+			}
+		    }
+		}
+	    }
+	}
+	else{	    
+	    $result->{$num}->{co_string} .= " -1";	    
+	}
+	$result->{$num}->{co_string} .= "$co_string->{$num}->{kakari_type} $co_string->{$num}->{fstring}"; 
+    }
+
+    return $result;
+}
 
 ################################################################################
 #                                                                              #
