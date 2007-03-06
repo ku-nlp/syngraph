@@ -188,23 +188,25 @@ sub make_tree {
         }
         foreach my $node (@{$keywords[$bp_num]}) {
             # 基本ノード登録（ここではregnode_optionは関係ない）
-            $this->_regnode({ref      => $tree_ref,
-                             sid      => $sid,
-                             bp       => $bp_num,
-                             id       => $node->{name},
-                             fuzoku   => $node->{fuzoku},
-			     midasi   => $node->{midasi},
-                             childbp  => $node->{child},
-			     case     => $node->{case},
-                             origbp   => $bp_num,
-                             kanou    => $node->{kanou},
-			     sonnkei  => $node->{sonnkei},
-                             ukemi    => $node->{ukemi},
-			     shieki   => $node->{shieki},
-			     negation => $node->{negation},
-			     level    => $node->{level},
-                             score    => 1,
-                             weight   => $weight});
+            $this->_regnode({ref         => $tree_ref,
+                             sid         => $sid,
+                             bp          => $bp_num,
+                             id          => $node->{name},
+                             fuzoku      => $node->{fuzoku},
+			     midasi      => $node->{midasi},
+                             childbp     => $node->{child},
+			     parentbp    => $node->{parent},
+			     kakari_type => $node->{kakari_type},
+			     case        => $node->{case},
+                             origbp      => $bp_num,
+                             kanou       => $node->{kanou},
+			     sonnkei     => $node->{sonnkei},
+                             ukemi       => $node->{ukemi},
+			     shieki      => $node->{shieki},
+			     negation    => $node->{negation},
+			     level       => $node->{level},
+                             score       => 1,
+                             weight      => $weight});
         }
     }
 }
@@ -253,6 +255,8 @@ sub make_bp {
 				 midasi         => $result->{SYN}->{midasi},
 				 matchbp        => $result->{SYN}->{matchbp},
 				 childbp        => $result->{SYN}->{childbp},
+				 parentbp       => $result->{SYN}->{parentbp},
+				 kakari_type    => $result->{SYN}->{kakari_type},
 				 case           => $result->{SYN}->{case},
 				 kanou          => $result->{SYN}->{kanou},
 				 sonnkei        => $result->{SYN}->{sonnkei},
@@ -347,6 +351,8 @@ sub st_make_bp {
 				     midasi         => $result->{SYN}->{midasi},
 				     matchbp        => $result->{SYN}->{matchbp},
 				     childbp        => $result->{SYN}->{childbp},
+				     parentbp       => $result->{SYN}->{parentbp},
+				     kakari_type    => $result->{SYN}->{kakari_type},
 				     case           => $result->{SYN}->{case},
 				     kanou          => $result->{SYN}->{kanou},
 				     sonnkei        => $result->{SYN}->{sonnkei},
@@ -404,6 +410,8 @@ sub _get_keywords {
         my $nodename;
         my $fuzoku;
 	my $midasi;
+	my $parent;
+	my $kakari_type;
         my $negation;
 	my $level;
 	my $kanou;
@@ -413,6 +421,17 @@ sub _get_keywords {
 
         # 子供 child->{親のid}->{子のid}
         $child->{$tag->{parent}->{id}}->{$tag->{id}} = 1 if ($tag->{parent});
+
+	# 親
+	if ($tag->{parent}) {
+	    $parent = $tag->{parent}->{id};
+	}
+	else {
+	    $parent = -1;
+	}
+
+	# 親への係り方
+	$kakari_type = $tag->dpndtype if ($tag->dpndtype);
 
 	# 格 case->{係り元のid}->{係り先のid} = '〜格'
 	# <格解析結果:書く/かく:動1:ガ/C/彼/0/0/?;ヲ/N/本/2/0/?;ニ/U/-/-/-/-;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;マデ/U/-/-/-/-;φ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;ニツク/U/-/-/-/->
@@ -532,16 +551,18 @@ sub _get_keywords {
 	
         # 登録
 	my %tmp;
-	$tmp{name}     = $nodename;
-	$tmp{fuzoku}   = $fuzoku;
-	$tmp{midasi}   = $midasi;
-	$tmp{kanou}    = $kanou if ($kanou);
-	$tmp{sonnkei}  = $sonnkei if ($sonnkei);
-	$tmp{ukemi}    = $ukemi if ($ukemi);
-	$tmp{shieki}   = $shieki if ($shieki);
-	$tmp{negation} = $negation if ($negation);
-	$tmp{level}    = $level if ($level);
-	$tmp{child}    = $child->{$tag->{id}} if ($child->{$tag->{id}});
+	$tmp{name}        = $nodename;
+	$tmp{fuzoku}      = $fuzoku;
+	$tmp{midasi}      = $midasi;
+	$tmp{kanou}       = $kanou if ($kanou);
+	$tmp{sonnkei}     = $sonnkei if ($sonnkei);
+	$tmp{ukemi}       = $ukemi if ($ukemi);
+	$tmp{shieki}      = $shieki if ($shieki);
+	$tmp{negation}    = $negation if ($negation);
+	$tmp{level}       = $level if ($level);
+	$tmp{parent}      = $parent if ($parent);
+	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
+	$tmp{kakari_type} = $kakari_type if ($kakari_type);
 	if ($child->{$tag->{id}}) {
 	    foreach my $childbp (keys %{$child->{$tag->{id}}}) {
 		if ($case->{$childbp}->{$tag->{id}}) {
@@ -560,16 +581,18 @@ sub _get_keywords {
 		next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
 		# 登録
 		my %tmp2;
-		$tmp2{name}     = $alt_key;
-		$tmp2{fuzoku}   = $tmp{fuzoku};
-		$tmp2{midasi}   = $tmp{midasi};
-		$tmp2{kanou}    = $tmp{kanou} if ($tmp{kanou});
-		$tmp2{sonnkei}  = $tmp{sonnkei} if ($tmp{sonnkei});
-		$tmp2{ukemi}    = $tmp{ukemi} if ($tmp{ukemi});
-		$tmp2{shieki}   = $tmp{shieki} if ($tmp{shieki});
-		$tmp2{negation} = $tmp{negation} if ($tmp{negation});                
-		$tmp2{level}    = $tmp{level} if ($tmp{level});
-		$tmp2{child}    = $tmp{child} if ($tmp{shild});
+		$tmp2{name}       = $alt_key;
+		$tmp2{fuzoku}     = $tmp{fuzoku};
+		$tmp2{midasi}     = $tmp{midasi};
+		$tmp2{kanou}      = $tmp{kanou} if ($tmp{kanou});
+		$tmp2{sonnkei}    = $tmp{sonnkei} if ($tmp{sonnkei});
+		$tmp2{ukemi}      = $tmp{ukemi} if ($tmp{ukemi});
+		$tmp2{shieki}     = $tmp{shieki} if ($tmp{shieki});
+		$tmp2{negation}   = $tmp{negation} if ($tmp{negation});                
+		$tmp2{level}      = $tmp{level} if ($tmp{level});
+		$tmp2{child}      = $tmp{child} if ($tmp{shild});
+		$tmp{parent}      = $tmp{parent} if ($tmp{parent});
+		$tmp{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
 		$tmp2{case}     = $tmp{case} if ($tmp{case});
 		push(@{$keywords[$tag->{id}]}, \%tmp2);
 	    }
@@ -764,6 +787,8 @@ sub _regnode {
     my $midasi                = $args_hash->{midasi};
     my $matchbp               = $args_hash->{matchbp};
     my $childbp               = $args_hash->{childbp};
+    my $parentbp              = $args_hash->{parentbp};
+    my $kakari_type           = $args_hash->{kakari_type};
     my $case                  = $args_hash->{case};
     my $kanou                 = $args_hash->{kanou};
     my $sonnkei               = $args_hash->{sonnkei};
@@ -811,6 +836,8 @@ sub _regnode {
         foreach my $c (keys %{$childbp}) {
             $newid->{childbp}->{$c} = 1;
         }
+	$newid->{parentbp} = $parentbp if ($parentbp);
+	$newid->{kakari_type} = $kakari_type if ($kakari_type);
 	$newid->{case} = $case if ($case);
         if ($matchbp) {
             foreach my $m (keys %{$matchbp}) {
@@ -842,6 +869,8 @@ sub _regnode {
 				     fuzoku         => $fuzoku,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
+				     parentbp       => $parentbp,
+				     kakari_type    => $kakari_type,
 				     case           => $case,
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
@@ -868,6 +897,8 @@ sub _regnode {
 				     fuzoku         => $fuzoku,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
+				     parentbp       => $parentbp,
+				     kakari_type    => $kakari_type,
 				     case           => $case,
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
@@ -1025,6 +1056,8 @@ sub approximate_matching {
     
     $result->{SYN}->{weight} = $matchnode_1->{weight};
     $result->{SYN}->{midasi} = $matchnode_1->{midasi};
+    $result->{SYN}->{parentbp} = $matchnode_1->{parentbp};
+    $result->{SYN}->{kakari_type} = $matchnode_1->{kakari_type};
     if ($matchnode_1->{matchbp}) {
 	foreach my $m (keys %{$matchnode_1->{matchbp}}) {
 	    $result->{SYN}->{matchbp}->{$m} = 1;
@@ -1420,6 +1453,169 @@ sub calc_sim_old {
     }
 
     return $result;
+}
+
+
+################################################################################
+#                                                                              #
+#                          SYNGRAPHのフォーマット 関係                           #
+#                                                                              #
+################################################################################
+
+sub fomat_syngraph_old {
+    my ($this, $syngraph) = @_;
+    my $result_string;
+
+    my $bp = 0;
+    foreach (@{$syngraph}) {
+	my $bp_string;
+	my $co_string;
+	my @node_string_array;
+	$co_string = "!! $bp";
+
+	my $co_check;
+	foreach my $node(@{$_}) {
+	    my $node_string;
+	    $node_string = "!";
+
+	    my $check;
+	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
+		if (!$check) {
+		    $node_string .= " $_";
+		    $check++;
+		}
+		else {
+		    $node_string .= ",$_";
+		}
+	    }
+
+	    $node_string .= " <SYNID:$node->{id}><スコア:$node->{score}>";
+	    if ($node->{childbp}) {
+		my $childbp;
+		my $check;
+		foreach (sort (keys %{$node->{childbp}})) {
+		    if (!$check) {
+			$childbp .= "$_";
+			$check++;
+		    }
+		    else {
+			$childbp .= ",$_";
+		    }
+		}
+		$node_string .= "<子供:$childbp>";
+	    }
+
+	    $node_string .= "<反義語>" if ($node->{antonym});
+	    $node_string .= "<上位語>" if ($node->{relation});
+	    $node_string .= "<否定表現>" if ($node->{negation});
+	    
+	    unless ($co_check){
+		$co_string .= " $node->{parentbp}$node->{kakari_type}";
+		$co_string .= " <midasi:$node->{midasi}>";
+		$co_string .= "<格解析結果:$node->{case}>格" if ($node->{case});
+		$co_string .= "<可能表現>" if ($node->{kanou});
+		$co_string .= "<尊敬表現>" if ($node->{sonnkei});
+		$co_string .= "<使役表現>" if ($node->{sieki});
+		$co_string .= "<受身表現>" if ($node->{ukemi});
+		$co_check++;
+	    }
+	    
+	    push (@node_string_array, $node_string);
+	}
+
+	push (@{$bp_string}, $co_string, @node_string_array);
+	push (@{$result_string}, $bp_string);
+	$bp++;
+    }
+    
+    foreach (@{$result_string}) {
+	for my $string (@{$_}) {
+	    print "$string\n";
+	}
+    }
+}
+
+sub fomat_syngraph {
+    my ($this, $syngraph) = @_;
+    my $result_string;
+    my $co_hash;
+    my $co_string;
+    my $bp_string;
+
+    my $bp = 0;
+    foreach (@{$syngraph}) {
+	my $node_string_array;
+	my $co_check;
+	foreach my $node(@{$_}) {
+	    my $node_string;
+	    $node_string = "!";
+
+	    my $matchbp;
+	    my $check;
+	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
+		if (!$check) {
+		    $matchbp = "$_";
+		    $check++;
+		}
+		else {
+		    $matchbp .= ",$_";
+		}
+	    }
+	    $node_string .= " $matchbp";
+
+	    $node_string .= " <SYNID:$node->{id}><スコア:$node->{score}>";
+
+	    if ($node->{childbp}) {
+		foreach my $childbp (sort (keys %{$node->{childbp}})) {
+		    $co_hash->{$childbp}->{parent}->{$matchbp} = 1 unless ($co_hash->{$childbp}->{parent}->{$matchbp});
+		}
+	    }
+	    
+	    $node_string .= "<反義語>" if ($node->{antonym});
+	    $node_string .= "<上位語>" if ($node->{relation});
+	    $node_string .= "<否定表現>" if ($node->{negation});
+	    
+	    unless ($co_check){
+		$co_hash->{$bp}->{kakari_type} .= "$node->{kakari_type}";
+		$co_hash->{$bp}->{string} .= "<midasi:$node->{midasi}>";
+		$co_hash->{$bp}->{string} .= "<格解析結果:$node->{case}>格" if ($node->{case});
+		$co_hash->{$bp}->{string} .= "<可能表現>" if ($node->{kanou});
+		$co_hash->{$bp}->{string} .= "<尊敬表現>" if ($node->{sonnkei});
+		$co_hash->{$bp}->{string} .= "<使役表現>" if ($node->{sieki});
+		$co_hash->{$bp}->{string} .= "<受身表現>" if ($node->{ukemi});
+		$co_check++;
+	    }
+	    push (@{$node_string_array}, $node_string);
+	}
+	push (@{$bp_string}, $node_string_array);
+	$bp++;
+    }
+    
+    my $num = $bp;
+    for ($bp=0;$bp<$num;$bp++) {
+	$co_string = "!! $bp";
+	my $check;
+	if ($co_hash->{$bp}->{parent}) {
+	    foreach (keys %{$co_hash->{$bp}->{parent}}) {
+		if (!$check){
+		    $co_string .= " $_";
+		}
+		else {
+		    $co_string .= "/$_";
+		}
+	    }
+	}
+	else {
+	    $co_string .= " -1";
+	}
+	$co_string .= "$co_hash->{$bp}->{kakari_type}";
+	$co_string .= " $co_hash->{$bp}->{string}";
+	
+	printf "$co_string\n";
+	foreach (@{@{$bp_string}[$bp]}) {
+	    printf "$_\n";
+	}
+    }
 }
 
 
