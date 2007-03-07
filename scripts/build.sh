@@ -50,7 +50,7 @@ echo "STEP1 start\t`date`"
 ########################################################
 
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation.txt --antonym=$SIM_DIR/antonym.txt --convert_file=syndb.convert --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym_aa.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation.txt --antonym=$SIM_DIR/antonym.txt --convert_file=syndb.convert --syndbdir=$SYNDB_DIR
 
 # Juman & KNP
 juman -e2 -B -i '#' < syndb.convert | knp -tab > syndb.parse

@@ -31,7 +31,7 @@ if ($opt{definition}) {
     while (<DEF>) {
         chomp;
         my ($midasi, $def) = split(/ /, $_);
-	$midasi = (split(/:/, $midasi))[0];
+	$midasi = (split(/\//, $midasi))[0];
 	
         # 定義文の例外 （★★SYNGRAPH化してからとる）
         $def =~ s/。$//;
@@ -64,7 +64,7 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 	close(SYN);
     }
     if ($opt{synonym_ne}) {
-	open(SYN, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
+	open(SYN_NE, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
 	while (<SYN_NE>) {
 	    push @lines, $_;
 	}
@@ -77,7 +77,7 @@ if ($opt{synonym} or $opt{synonym_ne}) {
         chomp;
 
         # 数が多いのは使わない
-	my @syn_list = split(/ /, $_);
+	my @syn_list = split(/\s/, $_);
 	my @syn_conv_list;
 	next if (@syn_list > 40);
         ###############################################################
@@ -98,7 +98,7 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 	my $num = 0;
 	foreach (@syn_list) {
 	    my $syn_word = $_;
-	    $syn_word = (split(/:/,$syn_word))[0];
+	    $syn_word = (split(/\//,$syn_word))[0];
             $syn_word = $2 if ($syn_word =~ /(NORSK|AMB)\((.+?)\)/);
 	    next if ($syn_word =~ /-/);
 	    $syn_conv_list[$num] = $syn_word;
@@ -139,6 +139,8 @@ if ($opt{antonym}) {
 	# 曖昧性は全組み合わせ考える
 	foreach my $word1 (split(/\?/, $word1_strings)) {
 	    foreach my $word2 (split(/\?/, $word2_strings)) {
+		$word1 = (split(/\//,$word1))[0];
+		$word2 = (split(/\//,$word2))[0];
 		$word1 = &get_synid($word1, $line_number, 'a');
 		$word2 = &get_synid($word2, $line_number, 'a');
 		$antonym{$word1}{$word2} = 1;
@@ -192,7 +194,7 @@ if ($opt{relation}) {
         ####################################################################
 
         # 上位語
-	$parent = (split(/:/, $parent))[0];
+	$parent = (split(/\//, $parent))[0];
 	$parent = $2 if ($parent =~ /(NORSK|AMB)\((.+?)\)/);
 	next if ($parent =~ /-/);
         $parent = &get_synid($parent, $line_number, 'r');
@@ -201,7 +203,7 @@ if ($opt{relation}) {
 	my $num = 0;
 	foreach (@children) {
 	    my $child_word = $_;
-	    $child_word = (split(/:/,$child_word))[0];
+	    $child_word = (split(/\//,$child_word))[0];
             $child_word = $2 if ($child_word =~ /(NORSK|AMB)\((.+?)\)/);
 	    next if ($child_word =~ /-/);
 	    $children_conv[$num] = $child_word;

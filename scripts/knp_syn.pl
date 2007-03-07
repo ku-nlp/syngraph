@@ -32,8 +32,8 @@ my $SynGraph = new SynGraph($knp_option);
 
 
 # 類義表現DBをtie
-#$SynGraph->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syndb/synparent.mldbm', '../syndb/synantonym.mldbm');
-$SynGraph->tie_syndb('../syndb.back/syndata.mldbm', '../syndb.back/synhead.mldbm', '../syndb.back/synparent.mldbm', '../syndb.back/synantonym.mldbm');
+$SynGraph->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syndb/synparent.mldbm', '../syndb/synantonym.mldbm');
+#$SynGraph->tie_syndb('../syndb.back/syndata.mldbm', '../syndb.back/synhead.mldbm', '../syndb.back/synparent.mldbm', '../syndb.back/synantonym.mldbm');
 
 if ($opt{sentence}) {
     $input = decode('euc-jp', $opt{sentence});

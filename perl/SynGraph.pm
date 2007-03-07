@@ -1659,6 +1659,9 @@ sub format_syngraph_new {
 			    $result->{$num}->{co_string} .= "/$_"; 
 			}
 		    }
+		    unless ($check) {
+			$result->{$num}->{co_string} .= " -1";	    			
+		    }
 		}
 	    }
 	    unless ($check) {
