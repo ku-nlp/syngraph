@@ -65,7 +65,7 @@ sub outputformat {
     $syngraph->{parse} = $result;
     $syngraph->{graph} = {};
     $SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
-    Dumpvalue->new->dumpValue($syngraph) if ($option->{debug});
+    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
     $syngraph->{format} = $SynGraph->format_syngraph($syngraph->{graph}->{$syngraph->{parse}->id});
@@ -96,7 +96,7 @@ sub outputformat_new {
     $syngraph->{parse} = $result;
     $syngraph->{graph} = {};
     $SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
-    Dumpvalue->new->dumpValue($syngraph) if ($option->{debug});
+    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
     $syngraph->{format} = $SynGraph->format_syngraph_new($syngraph->{graph}->{$syngraph->{parse}->id});

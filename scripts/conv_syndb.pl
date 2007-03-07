@@ -53,13 +53,23 @@ if ($opt{definition}) {
 #
 # 同義語の読み込み
 #
-if ($opt{synonym}) {
+if ($opt{synonym} or $opt{synonym_ne}) {
     my @lines;
-    open(SYN, '<:encoding(euc-jp)', $opt{synonym}) or die;
-    while (<SYN>) {
-	push @lines, $_;
+
+    if ($opt{synonym}) {
+	open(SYN, '<:encoding(euc-jp)', $opt{synonym}) or die;
+	while (<SYN>) {
+	    push @lines, $_;
+	}
+	close(SYN);
     }
-    close(SYN);
+    if ($opt{synonym_ne}) {
+	open(SYN, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
+	while (<SYN_NE>) {
+	    push @lines, $_;
+	}
+	close(SYN_NE);
+    }
 
     my $line_number = 0;
     foreach (@lines) {

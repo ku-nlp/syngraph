@@ -47,8 +47,8 @@ sub Match {
     $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option, $matching_option);
     $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option, $matching_option);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
-    $search->{sgh}->fomat_syngraph($search->{ref}->{$sid1}) if $option->{debug};
-    $search->{sgh}->fomat_syngraph($search->{ref}->{$sid2}) if $option->{debug};
+#    $search->{sgh}->format_syngraph($search->{ref}->{$sid1}) if $option->{debug};
+#    $search->{sgh}->format_syngraph($search->{ref}->{$sid2}) if $option->{debug};
 
     if (!$matching_option->{MT_ver}) {
 	# 転置ハッシュを作る
