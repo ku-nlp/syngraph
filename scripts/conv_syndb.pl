@@ -33,18 +33,18 @@ if ($opt{definition}) {
         my ($midasi, $def) = split(/ /, $_);
 	$midasi = (split(/:/, $midasi))[0];
 	
-        # 定義文の例外
+        # 定義文の例外 （★★SYNGRAPH化してからとる）
         $def =~ s/。$//;
         next if ($def =~ /(物ごと|…)/);
         next if ($def =~ /の(一つ|一種)$/);
 
-        # こと・所を取る
+        # こと・所を取る （★★SYNGRAPH化してからとる）
         $def =~ s/のこと$//;
         $def =~ s/こと$//;
         $def =~ s/い所$/い/;
 
         # ハッシュに登録
-	$definition{$midasi} = $def;
+	$definition{$midasi} = $def unless ($definition{$midasi});
     }
 
     close(DEF);

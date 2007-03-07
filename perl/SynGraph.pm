@@ -904,7 +904,7 @@ sub _regnode {
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     shieki         => $shieki,
-				     negation       => $negation ^ 1,
+				     negation       => $negation,
 				     level          => $level,
 				     score          => $score * $antonym_penalty,
 				     weight         => $weight,
@@ -1562,10 +1562,13 @@ sub format_syngraph {
 
 sub format_syngraph_new {
     my ($this, $syngraph) = @_;
-    my $key;
-    my $result; # 
-    my $co_string; # !!の行要素
-    my $node_string; # !の行要素
+    my $result; # $result->{対応する基本句番号}->{co_string} = !!の行
+                # $result->{対応する基本句番号}->{node_string} = !の行
+                # $result->{key} = 基本句番号のソート列
+
+    my $co_string; # $co_string->{対応する基本句番号} = !!の行要素のハッシュ
+    my $node_string; # $node_string->{対応する基本句番号} = !の行要素のハッシュ
+    my $key; #$key->{基本句番号}=1
 
     my $bp=0;
     foreach (@{$syngraph}) {	
@@ -1622,11 +1625,12 @@ sub format_syngraph_new {
 		}
 #		$node_string .= "<子供:$child>";
 	    }
-	    $result->{key} = $key;
 	    $result->{$matchbp}->{node_string} .= "! $matchbp $node_string->{fstring}\n";
 	}
 	$bp++;
     }
+
+    $result->{key} = $this->key_sort_for_format($key);
 
     foreach my $num (keys %{$co_string}) {
 	$result->{$num}->{co_string} = "!! $num";
@@ -1657,6 +1661,9 @@ sub format_syngraph_new {
 		    }
 		}
 	    }
+	    unless ($check) {
+		$result->{$num}->{co_string} .= " -1";	    			
+	    }
 	}
 	else{	    
 	    $result->{$num}->{co_string} .= " -1";	    
@@ -1665,6 +1672,36 @@ sub format_syngraph_new {
     }
 
     return $result;
+}
+
+#
+# SYNGRAPHの出力順に
+#
+sub key_sort_for_format{    
+    my ($this, $key) = @_;
+    my $sort_key;
+
+#     foreach (keys %{$key}) {
+# 	print "$_\n";
+#     }
+#     $sort_key = $key;
+
+    my $begin; # 先頭を格納
+    my $last; # おしりを格納
+    foreach (keys %{$key}) {
+	push (my @array, (split/,/, $_));
+	$begin->{$array[0]}->{$_} = 1;
+	$last->{$_} = $array[@array-1];
+    }
+
+    foreach my $num (sort (keys %{$begin})) {
+	foreach (sort {$last->{$b} <=> $last->{$a}} keys %{$begin->{$num}}) {
+	    push (@{$sort_key->{$num}}, $_);
+	}
+    }
+#    Dumpvalue->new->dumpValue($sort_key);
+
+    return $sort_key;
 }
 
 ################################################################################
