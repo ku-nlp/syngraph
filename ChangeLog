@@ -1,3 +1,8 @@
+2007-03-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm, scripts/knp_syn.pl:
+	Format表示関数をSynGraph.pmの中に移行
+
 2007-03-01  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb:辞書を更新
