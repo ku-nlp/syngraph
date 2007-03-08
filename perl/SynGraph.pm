@@ -438,6 +438,7 @@ sub _get_keywords {
 
 	if($tag->{fstring} =~ /\<格解析結果:(.+?):(.+?):([PC]\d+:)?(.+?)\>/) {
 	    foreach my $node_case (split(/;/, $4)){
+		# 要修正
 		push (my @node_case_feature, split(/\//, $node_case));
 		$case->{$node_case_feature[3]}->{$tag->{id}} = $node_case_feature[0] unless ($node_case_feature[3] =~ /-/);
 	    }
@@ -1461,6 +1462,66 @@ sub calc_sim_old {
 #                          SYNGRAPHのフォーマット 関係                           #
 #                                                                              #
 ################################################################################
+
+sub OutputSynFormat { 
+    my ($this, $result, $regnode_option) = @_;
+
+    my $syngraph = {};
+
+    $syngraph->{graph} = {};
+    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option);
+#    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
+
+    # SynGraphをformat化
+    $syngraph->{format} = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
+
+    # KNPと併せて出力
+    print $result->comment;
+    my $bp = 0;
+    foreach my $bnst ($result->bnst) {
+	my $knp_string;
+	my $syngraph_string;
+
+	# knp出力を格納
+	$knp_string = "* ";
+	if ($bnst->{parent}) {
+	    $knp_string .= $bnst->{parent}->{id};	
+	}
+	else {
+	    $knp_string .= -1;
+	}
+	$knp_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
+	foreach my $tag ($bnst->tag) {
+	    $knp_string .= "+ ";
+	    if ($tag->{parent}) {
+		$knp_string .= $tag->{parent}->{id};	
+	    }
+	    else {
+		$knp_string .= -1;
+	    }
+	    $knp_string .= "$tag->{dpndtype} $tag->{fstring}\n";
+	    foreach my $mrph ($tag->mrph) {
+		$knp_string .= $mrph->spec;
+	    }
+	    $bp++;
+	}
+
+	# 出力
+	foreach (sort (keys %{$syngraph->{format}->{key}})) {
+#	    Dumpvalue->new->dumpValue($syngraph->{format}->{key});
+	    if ($_ < $bp) {
+		foreach (@{$syngraph->{format}->{key}->{$_}}) {
+		    $syngraph_string .= "$syngraph->{format}->{$_}->{co_string}\n" 
+			. "$syngraph->{format}->{$_}->{node_string}";
+		}
+		delete $syngraph->{format}->{key}->{$_};
+	    }
+	}
+	printf "$syngraph_string$knp_string";
+    }
+
+    print "EOS\n";
+}
 
 sub format_syngraph {
     my ($this, $syngraph) = @_;

@@ -38,7 +38,8 @@ $SynGraph->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syn
 if ($opt{sentence}) {
     $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
-    &outputformat($result);
+    $SynGraph->OutputSynFormat($result, $regnode_option);
+#    &outputformat($result);
 }
 else {
     my ($sid, $knp_buf);
@@ -48,7 +49,7 @@ else {
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if ($sid);
-	    &outputformat($result);
+	    $SynGraph->OutputSynFormat($result, $regnode_option);
 	    $knp_buf = "";
 	}
 	elsif (/\# S-ID:(.+) KNP:/) {
@@ -60,63 +61,3 @@ else {
     }
 }
 
-sub outputformat { 
-    my ($result) = @_;
-
-    my $syngraph = {};
-
-    $syngraph->{parse} = $result;
-    $syngraph->{graph} = {};
-    $SynGraph->make_sg($syngraph->{parse}, $syngraph->{graph}, $syngraph->{parse}->id, $regnode_option);
-    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
-
-    # SynGraphをformat化
-    $syngraph->{format} = $SynGraph->format_syngraph_new($syngraph->{graph}->{$syngraph->{parse}->id});
-
-    # KNPと併せて出力
-    print $syngraph->{parse}->comment;
-    my $bp = 0;
-    foreach my $bnst ($syngraph->{parse}->bnst) {
-	my $knp_string;
-	my $syngraph_string;
-
-	# knp出力を格納
-	$knp_string = "* ";
-	if ($bnst->{parent}) {
-	    $knp_string .= $bnst->{parent}->{id};	
-	}
-	else {
-	    $knp_string .= -1;
-	}
-	$knp_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
-	foreach my $tag ($bnst->tag) {
-	    $knp_string .= "+ ";
-	    if ($tag->{parent}) {
-		$knp_string .= $tag->{parent}->{id};	
-	    }
-	    else {
-		$knp_string .= -1;
-	    }
-	    $knp_string .= "$tag->{dpndtype} $tag->{fstring}\n";
-	    foreach my $mrph ($tag->mrph) {
-		$knp_string .= $mrph->spec;
-	    }
-	    $bp++;
-	}
-
-	# 出力
-	foreach (sort (keys %{$syngraph->{format}->{key}})) {
-#	    Dumpvalue->new->dumpValue($syngraph->{format}->{key});
-	    if ($_ < $bp) {
-		foreach (@{$syngraph->{format}->{key}->{$_}}) {
-		    $syngraph_string .= "$syngraph->{format}->{$_}->{co_string}\n" 
-			. "$syngraph->{format}->{$_}->{node_string}";
-		}
-		delete $syngraph->{format}->{key}->{$_};
-	    }
-	}
-	printf "$syngraph_string$knp_string";
-    }
-
-    print "EOS\n";
-}
