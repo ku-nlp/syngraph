@@ -31,7 +31,9 @@ if ($opt{definition}) {
     while (<DEF>) {
         chomp;
         my ($midasi, $def) = split(/ /, $_);
-	$midasi = (split(/\//, $midasi))[0];
+
+	# 見出しの「：」以下をとる。
+	$midasi = (split(/：/, $midasi))[0];
 	
         # 定義文の例外 （★★SYNGRAPH化してからとる）
         $def =~ s/。$//;
@@ -78,38 +80,17 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 
         # 数が多いのは使わない
 	my @syn_list = split(/\s/, $_);
-	my @syn_conv_list;
 	next if (@syn_list > 40);
-        ###############################################################
-        ## perl -ne 'split; print "$_[0]\t" . @_ . "\n";' < synonym.txt
-        ## 上位10個
-        ## 頻りに/しきりに:1/1:1/1:2/3     50
-        ## 順序/じゅんじょ:1/1:1/1:1/1     50
-        ## 遣り口/やりくち:1/1:1/1:1/1     45
-        ## 風采/ふうさい:1/1:1/1:1/1       43
-        ## 連日/れんじつ:1/1:1/1:1/1       34
-        ## 間も無く/まもなく:1/1:1/1:1/1   25
-        ## 頻りに/しきりに:1/1:1/1:1/3     24
-        ## 益々/ますます:1/1:1/1:1/1       23
-        ## 逐一/ちくいち:1/1:1/1:1/1       22
-        ## 輪郭/りんかく:1/1:1/1:2/2       21
-        ###############################################################
-
-	my $num = 0;
-	foreach (@syn_list) {
-	    my $syn_word = $_;
-	    $syn_word = (split(/\//,$syn_word))[0];
-            $syn_word = $2 if ($syn_word =~ /(NORSK|AMB)\((.+?)\)/);
-	    next if ($syn_word =~ /-/);
-	    $syn_conv_list[$num] = $syn_word;
-	    $num++;
-	}
 
         # SYNID
-        my $synid = 's' . $line_number . $syn_conv_list[0];
+	# 「：」以下をとる。
+	$syn_list[0] = (split(/：/, $syn_list[0]))[0];
+        my $synid = 's' . $line_number . $syn_list[0];
 
         # 同義グループを作る
-        foreach my $syn (@syn_conv_list) {	    
+        foreach my $syn (@syn_list) {	    
+	    # 「：」以下をとる。
+	    $syn = (split(/：/, $syn))[0];
             $syn_group{$synid}->{entry}->{$syn} = 1;
             $syn_hash{$syn} = $synid;
 
@@ -129,8 +110,8 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 if ($opt{antonym}) {
     my $line_number = 0;
 
-    open(SYN, '<:encoding(euc-jp)', $opt{antonym}) or die;
-    while (<SYN>) {
+    open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
+    while (<ANT>) {
         $line_number++;
         chomp;
 
@@ -139,8 +120,6 @@ if ($opt{antonym}) {
 	# 曖昧性は全組み合わせ考える
 	foreach my $word1 (split(/\?/, $word1_strings)) {
 	    foreach my $word2 (split(/\?/, $word2_strings)) {
-		$word1 = (split(/\//,$word1))[0];
-		$word2 = (split(/\//,$word2))[0];
 		$word1 = &get_synid($word1, $line_number, 'a');
 		$word2 = &get_synid($word2, $line_number, 'a');
 		$antonym{$word1}{$word2} = 1;
@@ -148,7 +127,7 @@ if ($opt{antonym}) {
 	    }
 	}
     }
-    close(SYN);
+    close(ANT);
 }
 
 #
@@ -162,58 +141,21 @@ if ($opt{relation}) {
     while (<REL>) {
         $line_number++;
         chomp;
-        next if (/<振>/);  # NORSK(海藻<振>かいそう</振>)
-
-        # 数が多いの(もの、人、、、)は使わない
-        my ($parent, @children) = split(/ /, $_);
-	my @children_conv;
-        next if (@children > 100);
-        ####################################################################
-        ## perl -ne 'split; print "$_[0]\t" . (@_-1) . "\n";' < relation.txt
-        ## 上位20個
-        ## 物/もの:1/1:1/1:1/7     870
-        ## AMB(人/ひと)            696
-        ## AMB(所/ところ)          342
-        ## AMB(様子/ようす)        240
-        ## AMB(言葉/ことば)        199
-        ## 事/こと:1/1:1/1:1/4     168
-        ## NORSK(ところ/ところ)    166
-        ## AMB(国/くに)            158
-        ## 道具/どうぐ:1/1:1/1:1/1 153
-        ## 部分/ぶぶん:1/1:1/1:1/1 143
-        ## AMB(力/ちから)          114
-        ## NORSK(御/お-金/かね)    109
-        ## AMB(気持ち/きもち)       96
-        ## AMB(木/き)               92
-        ## AMB(動物/どうぶつ)       83
-        ## AMB(土地/とち)           77
-        ## AMB(単位/たんい)         70
-        ## AMB(場所/ばしょ)         70
-        ## AMB(仕事/しごと)         70
-        ## AMB(性質/せいしつ)       69
-        ####################################################################
+	my ($child, $parent) = split(/ /, $_);
 
         # 上位語
-	$parent = (split(/\//, $parent))[0];
-	$parent = $2 if ($parent =~ /(NORSK|AMB)\((.+?)\)/);
-	next if ($parent =~ /-/);
+	# +こと/こと
+        $parent =~ s/\+こと\/こと$//;
+	# 「：」以下をとる。
+	$parent = (split(/：/, $parent))[0];
         $parent = &get_synid($parent, $line_number, 'r');
 
         # 下位語
-	my $num = 0;
-	foreach (@children) {
-	    my $child_word = $_;
-	    $child_word = (split(/\//,$child_word))[0];
-            $child_word = $2 if ($child_word =~ /(NORSK|AMB)\((.+?)\)/);
-	    next if ($child_word =~ /-/);
-	    $children_conv[$num] = $child_word;
-	    $num++;
-	}
-	
-        foreach my $child (@children_conv) {
-            $child = &get_synid($child, $line_number, 'r');
-            $relation_parent{$child}{$parent} = 1;
-        }
+	# 「：」以下をとる。
+	$child = (split(/：/, $child))[0];
+	$child = &get_synid($child, $line_number, 'r');
+
+	$relation_parent{$child}{$parent} = 1;
     }
     close(REL);
 }
@@ -243,13 +185,13 @@ if ($opt{convert_file}) {
 	    # ふり仮名をとる
 	    $expression = (split(/\//, $expression))[0];
 
-#            # ハイフンを繋げる
-#            my @mrph_list = split(/\+/, $expression);
-#            my $buf;
-#            foreach my $mrph (@mrph_list) {
-#                $buf .= (split(/\//, $mrph))[0];
-#            }
-#            $expression = $buf;
+            # 「+」を繋げる
+            my @mrph_list = split(/\+/, $expression);
+            my $buf;
+            foreach my $mrph (@mrph_list) {
+                $buf .= (split(/\//, $mrph))[0];
+            }
+            $expression = $buf;
 
             # 2文字以下のひらがなは無視
             next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2);
