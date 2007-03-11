@@ -1464,13 +1464,13 @@ sub calc_sim_old {
 ################################################################################
 
 sub OutputSynFormat { 
-    my ($this, $result, $regnode_option) = @_;
+    my ($this, $result, $regnode_option, $option) = @_;
 
     my $syngraph = {};
 
     $syngraph->{graph} = {};
     $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option);
-#    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
+    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
     $syngraph->{format} = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
