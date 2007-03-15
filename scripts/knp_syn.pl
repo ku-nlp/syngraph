@@ -16,10 +16,6 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'postprocess', 'relation', 'antonym');
 
-# my $input = '一番近い駅';
- my $input = '彼の歩き方を学ぶ';
-#my $input = '彼は彼女を助ける';
-
 my $option;
 my $knp_option;
 my $regnode_option;
@@ -34,10 +30,9 @@ my $SynGraph = new SynGraph($knp_option);
 # 類義表現DBをtie
 my $syndbdir = '../syndb';
 $SynGraph->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
-#$SynGraph->tie_syndb('../syndb.back/syndata.mldbm', '../syndb.back/synhead.mldbm', '../syndb.back/synparent.mldbm', '../syndb.back/synantonym.mldbm');
 
 if ($opt{sentence}) {
-    $input = decode('euc-jp', $opt{sentence});
+    my $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
     $SynGraph->OutputSynFormat($result, $regnode_option, $option);
 }
