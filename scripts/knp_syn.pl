@@ -34,7 +34,7 @@ $SynGraph->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syn
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
-    $SynGraph->OutputSynFormat($result, $regnode_option, $option);
+    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
 }
 else {
     my ($sid, $knp_buf);
@@ -44,7 +44,7 @@ else {
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if ($sid);
-	    $SynGraph->OutputSynFormat($result, $regnode_option, $option);
+	    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
 	    $knp_buf = "";
 	}
 	elsif (/\# S-ID:(.+) KNP:/) {
