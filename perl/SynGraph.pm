@@ -1466,6 +1466,7 @@ sub calc_sim_old {
 sub OutputSynFormat { 
     my ($this, $result, $regnode_option, $option) = @_;
 
+    my $ret_string;
     my $syngraph = {};
 
     $syngraph->{graph} = {};
@@ -1476,7 +1477,8 @@ sub OutputSynFormat {
     $syngraph->{format} = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
 
     # KNPと併せて出力
-    print $result->comment;
+    $ret_string .= $result->comment;
+
     my $bp = 0;
     foreach my $bnst ($result->bnst) {
 	my $knp_string;
@@ -1516,10 +1518,12 @@ sub OutputSynFormat {
 		delete $syngraph->{format}->{key}->{$_};
 	    }
 	}
-	printf "$knp_string$syngraph_string";
+	$ret_string .= "$knp_string$syngraph_string";
     }
 
-    print "EOS\n";
+    $ret_string .= "EOS\n";
+
+    return $ret_string;
 }
 
 sub format_syngraph_new {
