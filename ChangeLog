@@ -1,3 +1,11 @@
+2007-03-15  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	関数OutputSynFormatで、printせずに文字列をreturnするように変更
+
+	* scripts/knp_syn.pl:
+	SynGraph.pmの変更に対応
+
 2007-03-15  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/knp_syn.pl, perl/SynGraph.pm:
