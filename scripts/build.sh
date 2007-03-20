@@ -53,7 +53,7 @@ echo "STEP1 start\t`date`"
 perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation.txt --antonym=$SIM_DIR/antonym.txt --convert_file=syndb.convert --syndbdir=$SYNDB_DIR
 
 # Juman & KNP
-juman -e2 -B -i '#' < syndb.convert | knp -tab > syndb.parse
+juman -e2 -B -i '#' < syndb.convert | knp -dpnd -postprocess -tab > syndb.parse
 # コンパイル
 perl -I$PERL_DIR compile.pl --knp_result=syndb.parse --syndbdir=$SYNDB_DIR
 # synhead.mldbmのソート
