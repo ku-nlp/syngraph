@@ -23,9 +23,10 @@ my $kakari_weight = 0.5;
 sub new {
     my ($this, $db_hash, $index_ref, $knp_option) = @_;
 
+    my $syndbdir = '../syndb';
     $this = {
         mode         => '',
-        sgh          => new SynGraph($knp_option),
+        sgh          => new SynGraph($syndbdir, $knp_option),
         index        => [],
         ref          => {},
         thash        => {},
@@ -39,8 +40,6 @@ sub new {
     # DB情報
     $this->{sgh}->db_set($db_hash);
 
-    # 類義表現DBをtie
-    $this->{sgh}->tie_syndb('../syndb/syndata.mldbm', '../syndb/synhead.mldbm', '../syndb/synparent.mldbm', '../syndb/synantonym.mldbm');
 
     # インデックスをtie
 #    $this->tie_index(@$index_ref);

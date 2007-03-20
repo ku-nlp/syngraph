@@ -16,6 +16,7 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'postprocess', 'relation', 'antonym');
 
+my $syndbdir = '../syndb';
 my $option;
 my $knp_option;
 my $regnode_option;
@@ -24,12 +25,7 @@ $knp_option->{postprocess} = 1 if $opt{postprocess};
 $regnode_option->{relation} = 1 if $opt{relation};
 $regnode_option->{antonym} = 1 if $opt{antonym};
 
-my $SynGraph = new SynGraph($knp_option);
-
-
-# 類義表現DBをtie
-my $syndbdir = '../syndb';
-$SynGraph->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
+my $SynGraph = new SynGraph($syndbdir, $knp_option);
 
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});

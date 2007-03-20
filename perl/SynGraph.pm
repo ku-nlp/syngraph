@@ -91,7 +91,7 @@ my @stop_words;
 # コンストラクタ
 #
 sub new {
-    my ($this, $option) = @_;
+    my ($this, $syndbdir, $option) = @_;
 
     # knp option
     my @knpoptions = ('-tab');
@@ -121,6 +121,10 @@ sub new {
     };
     
     bless $this;
+
+    # 類義表現DBをtie
+    $syndbdir = '../syndb' unless ($syndbdir);
+    $this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
 
     return $this;
 }
