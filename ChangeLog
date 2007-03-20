@@ -1,3 +1,15 @@
+2007-03-20  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+	* perl/SynGraph.pm
+	KNPの解析結果にSYNGRAPHを付与したformatにおいてSYNGRAPHの情報で＜可能表現＞などを＜可能＞に変更（他、否定、尊敬、受身、使役）
+	* perl/SynGraph.pm, perl/Search.pm, scripts/knp_syn.pl, scripts/compile.pm
+	SynGraph.pmをnewする際にデータベースとtieするように変更	
+	* dic, syndb
+	辞書とデータベースを更新
+	* scripts/build.sh
+	コンパイル時は格解析を行わないように変更
+	* scripts/conv_syndb.pl
+	類義表現データベースのIDを"s（番号）:（グループの一表現）"に統一
+	
 2007-03-16  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb:代表表記の変更に対応
