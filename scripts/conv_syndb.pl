@@ -32,9 +32,6 @@ if ($opt{definition}) {
         chomp;
         my ($midasi, $def) = split(/ /, $_);
 
-	# 見出しの「：」以下をとる。
-	$midasi = (split(/：/, $midasi))[0];
-	
         # 定義文の例外 （★★SYNGRAPH化してからとる）
         $def =~ s/。$//;
         next if ($def =~ /(物ごと|…)/);
@@ -73,34 +70,28 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 	close(SYN_NE);
     }
 
-    my $line_number = 0;
     foreach (@lines) {
-        $line_number++;
         chomp;
-
+	
         # 数が多いのは使わない
 	my @syn_list = split(/\s/, $_);
 	next if (@syn_list > 40);
-
-        # SYNID
-	# 「：」以下をとる。
-	$syn_list[0] = (split(/：/, $syn_list[0]))[0];
-        my $synid = 's' . $line_number . $syn_list[0];
-
+	
+        # SYNIDの獲得
+	my $synid = &get_synid($syn_list[0], 'synonym');
+	
         # 同義グループを作る
-        foreach my $syn (@syn_list) {	    
-	    # 「：」以下をとる。
-	    $syn = (split(/：/, $syn))[0];
+        foreach my $syn (@syn_list) {
             $syn_group{$synid}->{entry}->{$syn} = 1;
             $syn_hash{$syn} = $synid;
-
+	    
             # 定義文がある場合も登録
             if ($definition{$syn}) {
 		$syn_group{$synid}->{entry}->{$definition{$syn}} = 1;
                 $syn_hash{$definition{$syn}} = $synid;
                 delete $definition{$syn};
 	    }
-        }
+        }	
     }
 }
 
@@ -108,24 +99,19 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 # 反義語の読み込み
 #
 if ($opt{antonym}) {
-    my $line_number = 0;
-
     open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
     while (<ANT>) {
-        $line_number++;
         chomp;
 
-        my ($word1_strings, $word2_strings) = split(/ /, $_);      
+        next if ($_ =~ /\?/);
 
-	# 曖昧性は全組み合わせ考える
-	foreach my $word1 (split(/\?/, $word1_strings)) {
-	    foreach my $word2 (split(/\?/, $word2_strings)) {
-		$word1 = &get_synid($word1, $line_number, 'a');
-		$word2 = &get_synid($word2, $line_number, 'a');
-		$antonym{$word1}{$word2} = 1;
-		$antonym{$word2}{$word1} = 1;
-	    }
-	}
+        my ($word1, $word2) = split(/ /, $_);      
+
+	# SYNIDを獲得
+	$word1 = &get_synid($word1, 'antonym');
+	$word2 = &get_synid($word2, 'antonym');
+	$antonym{$word1}{$word2} = 1;
+	$antonym{$word2}{$word1} = 1;
     }
     close(ANT);
 }
@@ -135,26 +121,20 @@ if ($opt{antonym}) {
 # (上下関係は全てSYNIDで扱う)
 #
 if ($opt{relation}) {
-    my $line_number = 0;
-
     open(REL, '<:encoding(euc-jp)', $opt{relation}) or die;
     while (<REL>) {
-        $line_number++;
         chomp;
+
+        next if ($_ =~ /\?/);
+
 	my ($child, $parent) = split(/ /, $_);
 
         # 上位語
-	# +こと/こと
-        $parent =~ s/\+こと\/こと$//;
-	# 「：」以下をとる。
-	$parent = (split(/：/, $parent))[0];
-        $parent = &get_synid($parent, $line_number, 'r');
-
-        # 下位語
-	# 「：」以下をとる。
-	$child = (split(/：/, $child))[0];
-	$child = &get_synid($child, $line_number, 'r');
-
+#        $parent =~ s/\+こと\/こと$//;
+	
+	# SYNIDを獲得
+        $parent = &get_synid($parent, 'relation');
+	$child = &get_synid($child, 'relation');
 	$relation_parent{$child}{$parent} = 1;
     }
     close(REL);
@@ -165,7 +145,8 @@ if ($opt{relation}) {
 # 余った定義文は同義グループを作って登録
 #
 foreach my $midasi (keys %definition) {
-    my $synid = 'd' . $midasi;
+
+    my $synid = &get_synid($midasi, 'definition');
     $syn_group{$synid}->{entry}->{$midasi} = 1;
     $syn_group{$synid}->{entry}->{$definition{$midasi}} = 1;
     $syn_hash{$midasi} = $synid;
@@ -182,16 +163,11 @@ if ($opt{convert_file}) {
     foreach my $synid (keys %syn_group) {
         foreach my $expression (keys %{$syn_group{$synid}->{entry}}) {
 
+            # :1/1:1/1:1/1などを取る
+            $expression = (split(/:/, $expression))[0];
+
 	    # ふり仮名をとる
 	    $expression = (split(/\//, $expression))[0];
-
-            # 「+」を繋げる
-            my @mrph_list = split(/\+/, $expression);
-            my $buf;
-            foreach my $mrph (@mrph_list) {
-                $buf .= (split(/\//, $mrph))[0];
-            }
-            $expression = $buf;
 
             # 2文字以下のひらがなは無視
             next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2);
@@ -231,7 +207,52 @@ if ($opt{convert_file}) {
 #
 # SYNIDを取得、なければ同義グループを作る
 #
+my $line_number = 0; # 同義グループ番号
 sub get_synid {
+    my ($word, $mode) = @_;
+    my $synid; # 同義グループ名
+
+    if ($mode eq ('synonym'|'definition')) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
+	# SYNIDの作成
+	$synid = 's' . $line_number . ":" . $word;
+	$line_number++;
+
+	return $synid;
+    }
+    else{ # antony,.txt, relation.txtからの読み込み   
+	# 同義グループにある場合はそのSYNIDを返す
+	if ($syn_hash{$word}) {
+	    return $syn_hash{$word};
+	}
+	# なければ同義グループ作成
+	else {
+	    # SYNIDを振る
+	    $synid = 's' . $line_number . ":" . $word;
+	    $line_number++;
+	    
+	    # グループに登録
+	    $syn_group{$synid}->{entry}->{$word} = 1;
+	    $syn_hash{$word} = $synid;
+	    
+	    # 定義文があるとき
+	    if (@definition{$word}) {
+		foreach (@definition{$word}) {
+		    $syn_group{$synid}->{entry}->{$_} = 1;
+		    $syn_hash{$_} = $synid;
+		    delete @definition{$word};
+		}
+	    }
+	    
+	    # IDを返す
+	    return $synid;
+	}
+    }
+}
+
+#
+# SYNIDを取得、なければ同義グループを作る
+#
+sub get_synid_old {
     my ($word, $line_number, $label) = @_;
 
     # 同義グループにある場合はそのSYNIDを返す
@@ -241,9 +262,6 @@ sub get_synid {
     else {
         # SYNIDを振る
         my $synid = $label . $line_number . $word;
-
-        # ADJ、VERBは同義グループを作らない
-        return $synid if ($word =~ /(ADJ|VERB)/);
 
         # グループに登録
         $syn_group{$synid}->{entry}->{$word} = 1;
