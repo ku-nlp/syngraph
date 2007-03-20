@@ -591,9 +591,9 @@ sub _get_keywords {
 		$tmp2{shieki}     = $tmp{shieki} if ($tmp{shieki});
 		$tmp2{negation}   = $tmp{negation} if ($tmp{negation});                
 		$tmp2{level}      = $tmp{level} if ($tmp{level});
-		$tmp2{child}      = $tmp{child} if ($tmp{shild});
-		$tmp{parent}      = $tmp{parent} if ($tmp{parent});
-		$tmp{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
+		$tmp2{child}      = $tmp{child} if ($tmp{child});
+		$tmp2{parent}      = $tmp{parent} if ($tmp{parent});
+		$tmp2{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
 		$tmp2{case}     = $tmp{case} if ($tmp{case});
 		push(@{$keywords[$tag->{id}]}, \%tmp2);
 	    }
@@ -1557,16 +1557,16 @@ sub format_syngraph_new {
 	    $node_string->{fstring} = "<SYNID:$node->{id}><スコア:$node->{score}>";
 	    $node_string->{fstring} .= "<反義語>" if ($node->{antonym});
 	    $node_string->{fstring} .= "<上位語>" if ($node->{relation});
-	    $node_string->{fstring} .= "<否定表現>" if ($node->{negation});
+	    $node_string->{fstring} .= "<否定>" if ($node->{negation});
 
 	    unless ($co_string->{$matchbp}->{fstring}) {
 		$co_string->{$matchbp}->{kakari_type} = "$node->{kakari_type}";
 		$co_string->{$matchbp}->{fstring} .= "<見出し:$node->{midasi}>";
 		$co_string->{$matchbp}->{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
-		$co_string->{$matchbp}->{fstring} .= "<可能表現>" if ($node->{kanou});
-		$co_string->{$matchbp}->{fstring} .= "<尊敬表現>" if ($node->{sonnkei});
-		$co_string->{$matchbp}->{fstring} .= "<使役表現>" if ($node->{sieki});
-		$co_string->{$matchbp}->{fstring} .= "<受身表現>" if ($node->{ukemi});
+		$co_string->{$matchbp}->{fstring} .= "<可能>" if ($node->{kanou});
+		$co_string->{$matchbp}->{fstring} .= "<尊敬>" if ($node->{sonnkei});
+		$co_string->{$matchbp}->{fstring} .= "<使役>" if ($node->{sieki});
+		$co_string->{$matchbp}->{fstring} .= "<受身>" if ($node->{ukemi});
 	    }
 	    
 	    # ノード間の親子関係
