@@ -91,11 +91,11 @@ my @stop_words;
 # コンストラクタ
 #
 sub new {
-    my ($this, $syndbdir, $option) = @_;
+    my ($this, $syndbdir, $option, $mode) = @_;
 
     # knp option
     my @knpoptions = ('-tab');
-
+    
     push @knpoptions, '-case2' if $option->{case};
     push @knpoptions, '-postprocess' if $option->{postprocess};
 
@@ -122,10 +122,12 @@ sub new {
     
     bless $this;
 
-    # 類義表現DBをtie
-    $syndbdir = '../syndb' unless ($syndbdir);
-    $this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
-
+    if ($mode ne 'compile') {
+	# 類義表現DBをtie
+	$syndbdir = '../syndb' unless ($syndbdir);
+	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
+    }
+    
     return $this;
 }
 
