@@ -1469,6 +1469,61 @@ sub calc_sim_old {
 #                                                                              #
 ################################################################################
 
+# 出力例：ホテルに一番近い
+#
+# # S-ID:1 KNP:2007/03/24
+# * 2D <BGH:ホテル/ほてる><文頭><ニ><助詞><体言><係:ニ格><区切:0-0><RID:1175><格要素><連用要素>
+# + 2D <BGH:ホテル/ほてる><文頭><ニ><助詞><体言><係:ニ格><区切:0-0><RID:1175><格要素><連用要素><名詞項候補><先行詞候補><解析格:ニ>
+# ホテル ほてる ホテル 名詞 6 普通名詞 1 * 0 * 0 "組織名末尾 ドメイン:家庭・暮らし:ビジネス 代表表記:ホテル/ほてる" <組織名末尾><ドメイン:家庭・暮らし:ビジネス><代表表記:ホテル/ほてる><文頭><記英数カ><カタカナ><名詞相当語><自立><意味有><タグ単位始><文節始><固有キー>
+# に に に 助詞 9 格助詞 1 * 0 * 0 NIL <品曖><ALT-に-に-に-9-3-0-0-NIL><品曖-格助詞><品曖-その他><品曖-接続助詞><かな漢字><ひらがな><付属>
+# !! 0 1,2/2D <見出し:ホテルに><格解析結果:ニ格>
+# ! 0 <SYNID:ホテル><スコア:1>
+# ! 0 <SYNID:s33521:ホテル/ほてる:1/1:1/1><スコア:0.99>
+# ! 0 <SYNID:s6135:宿/やど:1/1:2/2><スコア:0.693><上位語>
+# ! 0 <SYNID:s12314:宿泊施設><スコア:0.99>
+# ! 0 <SYNID:s12897:旅館><スコア:0.99>
+# ! 0 <SYNID:s12855:朝食><スコア:0.99>
+# * 2D <BGH:一番/いちばん><相対名詞修飾><用言弱修飾><副詞><係:連用><区切:0-4><RID:1385><連用要素>
+# + 2D <BGH:一番/いちばん><相対名詞修飾><用言弱修飾><副詞><係:連用><区切:0-4><RID:1385><連用要素>
+# 一番 いちばん 一番 副詞 8 * 0 * 0 * 0 "相対名詞修飾 用言弱修飾 代表表記:一番/いちばん" <相対名詞修飾><用言弱修飾><代表表記:一番/いちばん><漢字><かな漢字><自立><意味有><タグ単位始><文節始>
+# !! 1 2D <見出し:一番>
+# ! 1 <SYNID:一番><スコア:1>
+# ! 1 <SYNID:s2979:随一/ずいいち:1/1:1/1><スコア:0.99>
+# ! 1 <SYNID:s342:一番/いちばん:2/2:1/1><スコア:0.99>
+# ! 1 <SYNID:s4064:トップ/とっぷ:1/1:1/1><スコア:0.99>
+# ! 1 <SYNID:s15565:ラスト/らすと><スコア:0.792><反義語><否定>
+# ! 1 <SYNID:s341:一番/いちばん:1/2:1/2><スコア:0.99>
+# ! 1 <SYNID:s5091:ファースト/ふぁーすと:1/1:1/2><スコア:0.693><上位語>
+# ! 1 <SYNID:s6024:最も/もっとも:1/1:1/1><スコア:0.99>
+# ! 1 <SYNID:s4339:何より/なにより:1/1:1/2><スコア:0.99>
+# ! 1 <SYNID:s16494:もの/もの><スコア:0.693><上位語>
+# ! 1 <SYNID:s17531:一番/いちばん:1/2:2/2><スコア:0.99>
+# ! 1 <SYNID:s17530:取り組み/とりくみv><スコア:0.693><上位語>
+# ! 1 <SYNID:s2437:首位/しゅい:1/1:1/1><スコア:0.99>
+# ! 1 <SYNID:s4409:ナンバーワン/なんばーわん:1/1:1/2><スコア:0.99>
+# * -1D <BGH:近い/ちかい><文末><用言:形><レベル:C><区切:5-5><ID:（文末）><RID:112><提題受:30><主節><定義文主辞>
+# + -1D <BGH:近い/ちかい><文末><用言:形><レベル:C><区切:5-5><ID:（文末）><RID:112><提題受:30><主節><定義文主辞><格要素-ガ:＃一人称優位><格要素-ヲ:NIL><格要素-ニ:ホテル><格要素-ト:NIL><格要素-デ:NIL><格要素-カラ:NIL><格要素-ヨリ:NIL><格要素-マデ:NIL><格要素-ヘ:NIL><格要素-時間:NIL><格要素-外の関係:NIL><格要素-ノ:NIL><格要素-トスル:NIL><格要素-トイウ:NIL><格要素-ニトル:NIL><格要素-ニツク:NIL><格要素-ニオク:NIL><格要素-ニクラベル:NIL><格要素-ニヨル:NIL><格要素-ニカンスル:NIL><格フレーム-ガ-主体><格フレーム-ト-主体><格フレーム-カラ-主体><格フレーム-ヨリ-主体><格フレーム-マデ-主体><格フレーム-ヘ-主体><格フレーム-ノ-主体><格フレーム-ニトル-主体><格フレーム-ニクラベル-主体><格フレーム-ガ-主体ｏｒ主体準><主題格:一人称優位><格関係0:ニ:ホテル><格解析結果:近い/ちかい:形1:ガ/U/-/-/-/-;ヲ/U/-/-/-/-;ニ/C/ホテル/0/0/?;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;ヨリ/U/-/-/-/-;マデ/U/-/-/-/-;ヘ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;トスル/U/-/-/-/-;トイウ/U/-/-/-/-;ニトル/U/-/-/-/-;ニツク/U/-/-/-/-;ニオク/U/-/-/-/-;ニクラベル/U/-/-/-/-;ニヨル/U/-/-/-/-;ニカンスル/U/-/-/-/->
+# 近い ちかい 近い 形容詞 3 * 0 イ形容詞アウオ段 18 基本形 2 "代表表記:近い/ちかい" <代表表記:近い/ちかい><文末><表現文末><かな漢字><連体修飾><活用語><自立><意味有><タグ単位始><文節始>
+# !! 2 -1D <見出し:近い>
+# ! 2 <SYNID:近い><スコア:1>
+# ! 2 <SYNID:s3553:近く/ちかく:1/2:1/1><スコア:0.99>
+# ! 2 <SYNID:s4832:場所/ばしょ:1/1:1/3><スコア:0.693><上位語>
+# ! 2 <SYNID:s15413:遠く><スコア:0.792><反義語><否定>
+# ! 2 <SYNID:s3550:近い/ちかい:1/1:2/3><スコア:0.99>
+# ! 2 <SYNID:s15412:遠い/とおい><スコア:0.792><反義語><否定>
+# ! 2 <SYNID:s92:辺り/あたり:1/2:1/1><スコア:0.99>
+# ! 2 <SYNID:s3554:近く/ちかく:2/2:1/1><スコア:0.99>
+# ! 2 <SYNID:s3551:近い/ちかい:1/1:3/3><スコア:0.99>
+# ! 2 <SYNID:s27928:近い/ちかい:1/1:1/3><スコア:0.99>
+# ! 2 <SYNID:s27927:はなれていない><スコア:0.693><上位語>
+# ! 2 <SYNID:s30691:近く/ちかく><スコア:0.99>
+# ! 2 <SYNID:s15554:近く><スコア:0.99>
+# ! 2 <SYNID:s4006:遠く/とおく:1/1:1/1><スコア:0.792><反義語><否定>
+# !! 1,2 -1D <見出し:一番近い>
+# ! 1,2 <SYNID:s6065:最寄り/もより:1/1:1/1><スコア:0.99>
+# ! 1,2 <SYNID:s4832:場所/ばしょ:1/1:1/3><スコア:0.693><上位語>
+# EOS
+
 sub OutputSynFormat { 
     my ($this, $result, $regnode_option, $option) = @_;
 
@@ -1480,7 +1535,7 @@ sub OutputSynFormat {
     Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
-    $syngraph->{format} = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
+    $syngraph->{format} = $this->format_syngraph($syngraph->{graph}->{$result->id});
 
     # KNPと併せて出力
     $ret_string .= $result->comment;
@@ -1532,7 +1587,44 @@ sub OutputSynFormat {
     return $ret_string;
 }
 
-sub format_syngraph_new {
+sub OutputSynFormat_new { 
+    my ($this, $result, $regnode_option, $option) = @_;
+
+    my $ret_string;
+    my $syngraph = {};
+    my $syngraph_string;
+
+    # 入力をSynGraph化
+    $syngraph->{graph} = {};
+    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option);
+    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
+
+    # SynGraphをformat化
+#    $syngraph->{format} = $this->format_syngraph($syngraph->{graph}->{$result->id});
+    $syngraph_string = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
+
+    # KNPとSYNGRAPHを併せて出力
+    $ret_string = $result->comment;
+    my $bp = 0;
+    foreach my $tag ($result->tag) {
+	# knp解析結果を出力
+	$ret_string .= "+ ";
+	$ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
+	$ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
+	foreach my $mrph ($tag->mrph) {
+	    $ret_string .= $mrph->spec;
+	}
+
+    	# SYNGRPH情報の付与
+	$ret_string .= "$syngraph_string->[$bp]";
+	$bp++;
+    }
+    $ret_string .= "EOS\n";
+
+    return $ret_string;
+}
+
+sub format_syngraph {
     my ($this, $syngraph) = @_;
     my $result; # $result->{対応する基本句番号}->{co_string} = !!の行
                 # $result->{対応する基本句番号}->{node_string} = !の行
@@ -1629,6 +1721,92 @@ sub format_syngraph_new {
     return $result;
 }
 
+sub format_syngraph_new {
+    my ($this, $syngraph) = @_;
+    my $syngraph_string; 
+
+    my $co_hash; # $co_hash->{対応する基本句番号} = !!の行要素
+    my $synnode_string; # $synnode_string->{対応する基本句番号} = 対応する基本句が同じ!行の集合
+    my $co_string;
+    my $key; # $key->{基本句番号} = 1 （どんな大きさのノードがあるか）
+    my $sort_key; # $sort_key->[基本句番号] = headが同じノードの配列
+
+    my $bp = 0;
+    foreach my $syn_bp (@{$syngraph}) { # 基本句(BP)単位
+	foreach my $node (@{$syn_bp}) { # ノード単位
+	    # ノードの対応する基本句番号
+	    my $matchbp;
+	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
+		$matchbp .= !defined $matchbp ? "$_" : ",$_";
+	    }
+	    
+	    # ノードの種類（どんな大きさのノードがあるか）
+	    $key->{$matchbp} = 1 unless ($key->{$matchbp});
+
+	    # !行の出力を格納
+	    $synnode_string->{$matchbp} .= "! $matchbp";
+	    $synnode_string->{$matchbp} .= " <SYNID:$node->{id}><スコア:$node->{score}>";
+	    $synnode_string->{$matchbp} .= "<反義語>" if ($node->{antonym});
+	    $synnode_string->{$matchbp} .= "<上位語>" if ($node->{relation});
+	    $synnode_string->{$matchbp} .= "<否定>" if ($node->{negation});
+	    $synnode_string->{$matchbp} .= "\n";
+
+	    unless ($co_hash->{$matchbp}->{fstring}) {
+		$co_hash->{$matchbp}->{kakari_type} = "$node->{kakari_type}";
+		$co_hash->{$matchbp}->{fstring} .= "<見出し:$node->{midasi}>";
+		$co_hash->{$matchbp}->{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
+		$co_hash->{$matchbp}->{fstring} .= "<可能>" if ($node->{kanou});
+		$co_hash->{$matchbp}->{fstring} .= "<尊敬>" if ($node->{sonnkei});
+		$co_hash->{$matchbp}->{fstring} .= "<使役>" if ($node->{sieki});
+		$co_hash->{$matchbp}->{fstring} .= "<受身>" if ($node->{ukemi});
+	    }
+	    
+	    # ノード間の親子関係
+	    if ($node->{childbp}) {
+		foreach my $childbp (sort (keys %{$node->{childbp}})) {
+		    $co_hash->{$childbp}->{parent}->{$matchbp} = 1 unless ($co_hash->{$childbp}->{parent}->{$matchbp});
+		}
+	    }
+	}
+	$bp++;
+    }
+
+    $sort_key = $this->key_sort_for_format($key);
+
+    # !!行の出力
+    foreach my $num (keys %{$co_hash}) {
+	$co_string->{$num} = "!! $num";
+	my $check;
+	foreach (split/,/, $num) {
+	    if ($co_hash->{$_}->{parent}) {
+		foreach (keys %{$co_hash->{$_}->{parent}}) {
+		    next if ($num =~ /$_/);
+		    unless ($check){
+			$co_string->{$num} .= " $_"; 
+			$check++;
+		    }
+		    else {
+			$co_string->{$num} .= "/$_"; 
+		    }
+		}
+	    }
+	}
+	unless ($check) {
+	    $co_string->{$num} .= " -1";	    			
+	}	
+	$co_string->{$num} .= "$co_hash->{$num}->{kakari_type} $co_hash->{$num}->{fstring}"; 
+    }
+    
+    # SYNGRAPH情報の出力
+    foreach my $num (sort keys %{$sort_key}) {
+	foreach my $num2 (@{$sort_key->{$num}}) {
+	    $syngraph_string->[$num] .= "$co_string->{$num2}\n" . "$synnode_string->{$num2}";
+	}
+    }
+   
+    return $syngraph_string;
+}
+
 #
 # SYNGRAPHの出力順に
 #
@@ -1640,8 +1818,8 @@ sub key_sort_for_format{
     my $last; # おしりを格納
     foreach (keys %{$key}) {
 	my @array = (split/,/, $_);
-	$last->{$array[@array-1]}->{$_} = 1;    
 	$begin->{$_} = $array[0];
+	$last->{$array[@array-1]}->{$_} = 1;    
     }
 
     foreach my $num (sort (keys %{$begin})) {

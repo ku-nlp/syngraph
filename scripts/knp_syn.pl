@@ -30,7 +30,7 @@ my $SynGraph = new SynGraph($syndbdir, $knp_option);
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
-    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
+    print $SynGraph->OutputSynFormat_new($result, $regnode_option, $option);
 }
 else {
     my ($sid, $knp_buf);
@@ -40,7 +40,7 @@ else {
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if ($sid);
-	    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
+	    print $SynGraph->OutputSynFormat_new($result, $regnode_option, $option);
 	    $knp_buf = "";
 	}
 	elsif (/\# S-ID:(.+) KNP:/) {
