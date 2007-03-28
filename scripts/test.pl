@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relation', 'antonym', 'pa_matching', 'MT_ver');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'no_case', 'postprocess', 'relation', 'antonym', 'pa_matching', 'MT_ver');
 
 # my $zenbun = <STDIN>;
 # chomp $zenbun;
@@ -24,7 +24,8 @@ my %opt; GetOptions(\%opt, 'debug', 'match_print', 'case', 'postprocess', 'relat
 # chomp $query;
 
  my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
-# my ($zenbun, $query) = ('最寄り駅', '一番近い駅');
+# my ($zenbun, $query) = ('彼に向かわせる', '彼が向かう');
+
 
 if ($ARGV[0] && $ARGV[1]) {
     $zenbun = decode('euc-jp', $ARGV[0]);
@@ -34,7 +35,7 @@ if ($ARGV[0] && $ARGV[1]) {
 my $calcsim = new CalcSimWithSynGraph;
 my $option;
 $option->{debug} = 1 if $opt{debug};
-$option->{case} = 1 if $opt{case};
+$option->{no_case} = 1 if $opt{no_case};
 $option->{postprocess} = 1 if $opt{postprocess};
 $option->{relation} = 1 if $opt{relation};
 $option->{antonym} = 1 if $opt{antonym};

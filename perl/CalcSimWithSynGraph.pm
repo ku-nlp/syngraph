@@ -30,7 +30,7 @@ sub Match {
     my $regnode_option;
     my $matching_option;
     my $matching_option;
-    $knp_option->{case} = 1 if $option->{case};
+    $knp_option->{no_case} = 1 if $option->{no_case};
     $knp_option->{postprocess} = 1 if $option->{postprocess};
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
