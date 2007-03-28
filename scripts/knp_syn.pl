@@ -14,7 +14,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'postprocess', 'relation', 'antonym');
+my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'postprocess', 'no_case', 'relation', 'antonym');
 
 my $syndbdir = '../syndb';
 my $option;
@@ -22,6 +22,7 @@ my $knp_option;
 my $regnode_option;
 $option->{debug} = 1 if $opt{debug};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
+$knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};
 $regnode_option->{antonym} = 1 if $opt{antonym};
 
@@ -30,7 +31,7 @@ my $SynGraph = new SynGraph($syndbdir, $knp_option);
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});
     my $result = $SynGraph->{knp}->parse($input);
-    print $SynGraph->OutputSynFormat_new($result, $regnode_option, $option);
+    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
 }
 else {
     my ($sid, $knp_buf);
@@ -40,7 +41,7 @@ else {
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if ($sid);
-	    print $SynGraph->OutputSynFormat_new($result, $regnode_option, $option);
+	    print $SynGraph->OutputSynFormat($result, $regnode_option, $option);
 	    $knp_buf = "";
 	}
 	elsif (/\# S-ID:(.+) KNP:/) {

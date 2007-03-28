@@ -98,6 +98,7 @@ sub new {
     
     push @knpoptions, '-case2' if $option->{case};
     push @knpoptions, '-postprocess' if $option->{postprocess};
+    push @knpoptions, '-dpnd' if $option->{no_case};
 
     my $knpoption = join(' ', @knpoptions);
 
@@ -472,7 +473,8 @@ sub _get_keywords {
 		$sonnkei = 1 if ($_ =~ /尊敬/);
 		$shieki  = 1 if ($_ =~ /使役/);
 		$ukemi   = 1 if ($_ =~ /受動/);
-		
+
+		last;
 #		push (@state, $tmp);
 	    }
 	}
@@ -1529,69 +1531,6 @@ sub OutputSynFormat {
 
     my $ret_string;
     my $syngraph = {};
-
-    $syngraph->{graph} = {};
-    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option);
-    Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
-
-    # SynGraphをformat化
-    $syngraph->{format} = $this->format_syngraph($syngraph->{graph}->{$result->id});
-
-    # KNPと併せて出力
-    $ret_string .= $result->comment;
-
-    my $bp = 0;
-    foreach my $bnst ($result->bnst) {
-	my $knp_string;
-	my $syngraph_string;
-
-	# knp出力を格納
-	$knp_string = "* ";
-	if ($bnst->{parent}) {
-	    $knp_string .= $bnst->{parent}->{id};	
-	}
-	else {
-	    $knp_string .= -1;
-	}
-	$knp_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
-	foreach my $tag ($bnst->tag) {
-	    $knp_string .= "+ ";
-	    if ($tag->{parent}) {
-		$knp_string .= $tag->{parent}->{id};	
-	    }
-	    else {
-		$knp_string .= -1;
-	    }
-	    $knp_string .= "$tag->{dpndtype} $tag->{fstring}\n";
-	    foreach my $mrph ($tag->mrph) {
-		$knp_string .= $mrph->spec;
-	    }
-	    $bp++;
-	}
-
-	# 出力
-	foreach (sort (keys %{$syngraph->{format}->{key}})) {
-	    if ($_ < $bp) {
-		foreach (@{$syngraph->{format}->{key}->{$_}}) {
-		    $syngraph_string .= "$syngraph->{format}->{$_}->{co_string}\n" 
-			. "$syngraph->{format}->{$_}->{node_string}";
-		}
-		delete $syngraph->{format}->{key}->{$_};
-	    }
-	}
-	$ret_string .= "$knp_string$syngraph_string";
-    }
-
-    $ret_string .= "EOS\n";
-
-    return $ret_string;
-}
-
-sub OutputSynFormat_new { 
-    my ($this, $result, $regnode_option, $option) = @_;
-
-    my $ret_string;
-    my $syngraph = {};
     my $syngraph_string;
 
     # 入力をSynGraph化
@@ -1600,8 +1539,7 @@ sub OutputSynFormat_new {
     Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
-#    $syngraph->{format} = $this->format_syngraph($syngraph->{graph}->{$result->id});
-    $syngraph_string = $this->format_syngraph_new($syngraph->{graph}->{$result->id});
+    $syngraph_string = $this->format_syngraph($syngraph->{graph}->{$result->id});
 
     # KNPとSYNGRAPHを併せて出力
     $ret_string = $result->comment;
@@ -1625,103 +1563,6 @@ sub OutputSynFormat_new {
 }
 
 sub format_syngraph {
-    my ($this, $syngraph) = @_;
-    my $result; # $result->{対応する基本句番号}->{co_string} = !!の行
-                # $result->{対応する基本句番号}->{node_string} = !の行
-                # $result->{key} = 基本句番号の出力順ソート列
-
-    my $co_string; # $co_string->{対応する基本句番号} = !!の行要素のハッシュ
-    my $node_string; # $node_string->{対応する基本句番号} = !の行要素のハッシュ
-    my $key; #$key->{基本句番号}=1
-
-    my $bp=0;
-    foreach (@{$syngraph}) {	
-	# 基本句(BP)単位
-	foreach my $node (@{$_}) {
-	    # ノード単位
-	    # ノードの対応する基本句番号
-	    my $matchbp;
-	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
-		$matchbp .= !defined $matchbp ? "$_" : ",$_";
-	    }
-	    
-	    my @array;
-	    @array = (split/,/, $matchbp);
-
-	    # ノードの種類
-	    $key->{$matchbp} = 1 unless ($key->{matchbp});
-
-	    # ノードのfeature列
-	    $node_string->{fstring} = "<SYNID:$node->{id}><スコア:$node->{score}>";
-	    $node_string->{fstring} .= "<反義語>" if ($node->{antonym});
-	    $node_string->{fstring} .= "<上位語>" if ($node->{relation});
-	    $node_string->{fstring} .= "<否定>" if ($node->{negation});
-
-	    unless ($co_string->{$matchbp}->{fstring}) {
-		$co_string->{$matchbp}->{kakari_type} = "$node->{kakari_type}";
-		$co_string->{$matchbp}->{fstring} .= "<見出し:$node->{midasi}>";
-		$co_string->{$matchbp}->{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
-		$co_string->{$matchbp}->{fstring} .= "<可能>" if ($node->{kanou});
-		$co_string->{$matchbp}->{fstring} .= "<尊敬>" if ($node->{sonnkei});
-		$co_string->{$matchbp}->{fstring} .= "<使役>" if ($node->{sieki});
-		$co_string->{$matchbp}->{fstring} .= "<受身>" if ($node->{ukemi});
-	    }
-	    
-	    # ノード間の親子関係
-	    if ($node->{childbp}) {
-		foreach my $childbp (sort (keys %{$node->{childbp}})) {
-		    $co_string->{$childbp}->{parent}->{$matchbp} = 1 unless ($co_string->{$childbp}->{parent}->{$matchbp});
-		}
-	    }
-	    $result->{$matchbp}->{node_string} .= "! $matchbp $node_string->{fstring}\n";
-	}
-	$bp++;
-    }
-
-    $result->{key} = $this->key_sort_for_format($key);
-
-    foreach my $num (keys %{$co_string}) {
-	$result->{$num}->{co_string} = "!! $num";
-	my $check;
-	if ($co_string->{$num}->{parent}) {
-	    foreach (keys %{$co_string->{$num}->{parent}}) {
-		unless ($check){
-		    $result->{$num}->{co_string} .= " $_"; 
-		    $check++;
-		}
-		else {
-		    $result->{$num}->{co_string} .= "/$_"; 
-		}
-	    }
-	}
-	elsif ($num =~ /,/) {
-	    foreach (split/,/, $num) {
-		if ($co_string->{$_}->{parent}) {
-		    foreach (keys %{$co_string->{$_}->{parent}}) {
-			next if ($num =~ /$_/);
-			unless ($check){
-			    $result->{$num}->{co_string} .= " $_"; 
-			    $check++;
-			}
-			else {
-			    $result->{$num}->{co_string} .= "/$_"; 
-			}
-		    }
-		}
-	    }
-	    unless ($check) {
-		$result->{$num}->{co_string} .= " -1";	    			
-	    }
-	}
-	else{	    
-	    $result->{$num}->{co_string} .= " -1";	    
-	}
-	$result->{$num}->{co_string} .= "$co_string->{$num}->{kakari_type} $co_string->{$num}->{fstring}"; 
-    }
-    return $result;
-}
-
-sub format_syngraph_new {
     my ($this, $syngraph) = @_;
     my $syngraph_string; 
 
@@ -1749,16 +1590,16 @@ sub format_syngraph_new {
 	    $synnode_string->{$matchbp} .= "<反義語>" if ($node->{antonym});
 	    $synnode_string->{$matchbp} .= "<上位語>" if ($node->{relation});
 	    $synnode_string->{$matchbp} .= "<否定>" if ($node->{negation});
+	    $synnode_string->{$matchbp} .= "<可能>" if ($node->{kanou});
+	    $synnode_string->{$matchbp} .= "<尊敬>" if ($node->{sonnkei});
+	    $synnode_string->{$matchbp} .= "<受身>" if ($node->{ukemi});
+	    $synnode_string->{$matchbp} .= "<使役>" if ($node->{shieki});
 	    $synnode_string->{$matchbp} .= "\n";
 
 	    unless ($co_hash->{$matchbp}->{fstring}) {
 		$co_hash->{$matchbp}->{kakari_type} = "$node->{kakari_type}";
 		$co_hash->{$matchbp}->{fstring} .= "<見出し:$node->{midasi}>";
 		$co_hash->{$matchbp}->{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
-		$co_hash->{$matchbp}->{fstring} .= "<可能>" if ($node->{kanou});
-		$co_hash->{$matchbp}->{fstring} .= "<尊敬>" if ($node->{sonnkei});
-		$co_hash->{$matchbp}->{fstring} .= "<使役>" if ($node->{sieki});
-		$co_hash->{$matchbp}->{fstring} .= "<受身>" if ($node->{ukemi});
 	    }
 	    
 	    # ノード間の親子関係
