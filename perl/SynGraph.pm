@@ -75,8 +75,8 @@ $penalty->{sonnkei} = 1;
 $penalty->{ukemi} = 0.3;
 # 使役表現の違いによるペナルティ
 $penalty->{shieki} = 0.3;
-# 否定・反義語のフラグの違いによるペナルティ
-$penalty->{reversal} = 0.3;
+# 否定のフラグの違いによるペナルティ
+$penalty->{negation} = 0.3;
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
 
@@ -96,7 +96,6 @@ sub new {
     # knp option
     my @knpoptions = ('-tab');
     
-    push @knpoptions, '-case2' if $option->{case};
     push @knpoptions, '-postprocess' if $option->{postprocess};
     push @knpoptions, '-dpnd' if $option->{no_case};
 
@@ -269,7 +268,7 @@ sub make_bp {
 				 sonnkei        => $result->{SYN}->{sonnkei},
 				 ukemi          => $result->{SYN}->{ukemi},
 				 shieki         => $result->{SYN}->{shieki},
-				 negation       => $result->{SYN}->{reversal},
+				 negation       => $result->{SYN}->{negation},
 				 level          => $result->{SYN}->{level}, 
 				 score          => $result->{CALC}->{score} * $synonym_penalty,
 				 weight         => $result->{SYN}->{weight},
@@ -913,7 +912,7 @@ sub _regnode {
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     shieki         => $shieki,
-				     negation       => $negation,
+				     negation       => $negation ^ 1,
 				     level          => $level,
 				     score          => $score * $antonym_penalty,
 				     weight         => $weight,
@@ -983,7 +982,7 @@ sub approximate_matching {
     my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash) = @_;
     my $result;
 
-    my @types = qw(fuzoku case kanou sonnkei ukemi shieki reversal);
+    my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
     my $matchnode_score = 0;
     my $matchnode_1;
     my $matchnode_2;
@@ -1014,17 +1013,9 @@ sub approximate_matching {
 		my $unmatch;
 		my $unmatch_num;
 		foreach my $type (@types) {
-		    if ($type eq 'reversal') {
-			if ($node_1->{negation} ^ $node_2->{negation} ^ $node_1->{antonym} ^ $node_2->{antonym}) {
-			    $unmatch->{$type} = 1;
-			    $unmatch_num +=1;			    
-			}
-		    }
-		    else {
-			if ($node_1->{$type} ne $node_2->{$type}) {
-			    $unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
-			    $unmatch_num +=1;
-			}
+		    if ($node_1->{$type} ne $node_2->{$type}) {
+			$unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
+			$unmatch_num +=1;
 		    }
 		}
 #		    # レベル
@@ -1247,7 +1238,7 @@ sub pa_matching {
 
     # 述語が反義な表現
     # 子供に格の不一致が２つあれば述語の反義の不一致を解消する
-    if ($match_tree->{$bp}->{unmatch}->{reversal}) {
+    if ($match_tree->{$bp}->{unmatch}->{negation}) {
 	my $check;
 	my @key_child;
     	
@@ -1261,7 +1252,7 @@ sub pa_matching {
 	    }
 	}
 	if ($check==2){
-	    $result->{NODE}->{$bp}->{dissolve}->{reversal} = 1;
+	    $result->{NODE}->{$bp}->{dissolve}->{negation} = 1;
 	    foreach my $childbp (@key_child) {
 		$result->{NODE}->{$childbp}->{dissolve}->{case} = 1;
 	    }
@@ -1355,7 +1346,7 @@ sub calc_sim {
 		
 		if ($bp == $headbp) {
 		    if ($mode eq 'SYN') {
-			if ($unmatch_type eq 'reversal') {
+			if ($unmatch_type eq 'negation') {
 			    # 要素引き継ぎ
 			    $result->{SYN}->{$unmatch_type} = 1;
 			}
