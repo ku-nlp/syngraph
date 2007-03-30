@@ -36,6 +36,7 @@ sub Match {
     $regnode_option->{antonym} = 1 if $option->{antonym};
     $matching_option->{pa_matching} = 1 if $option->{pa_matching};
     $matching_option->{MT_ver} = 1 if $option->{MT_ver};    
+    $option->{log_sg} = 1 if $option->{log_sg};
 
     my $search = new Search(undef, undef, $knp_option);
 
@@ -44,8 +45,8 @@ sub Match {
     
     # SYNGRAPHを作成
 
-    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option, $matching_option);
-    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option, $matching_option);
+    $search->{sgh}->make_sg($str1, $search->{ref}, $sid1, $regnode_option, $option);
+    $search->{sgh}->make_sg($str2, $search->{ref}, $sid2, $regnode_option, $option);
     Dumpvalue->new->dumpValue($search->{ref}) if $option->{debug};
 #    $search->{sgh}->format_syngraph($search->{ref}->{$sid1}) if $option->{debug};
 #    $search->{sgh}->format_syngraph($search->{ref}->{$sid2}) if $option->{debug};

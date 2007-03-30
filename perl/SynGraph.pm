@@ -143,7 +143,7 @@ sub new {
 # SYNGRAPHを作成
 #
 sub make_sg {
-    my ($this, $input, $ref, $sid, $regnode_option, $matching_option) = @_;
+    my ($this, $input, $ref, $sid, $regnode_option, $option) = @_;
 
     # 入力がKNP結果の場合
     if (ref $input eq 'KNP::Result') {
@@ -167,7 +167,7 @@ sub make_sg {
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
    if ($ref->{$sid}) {
        for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $matching_option); 
+           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
    }
 }
@@ -222,7 +222,7 @@ sub make_tree {
 # BPにSYNノードを付与する
 #
 sub make_bp {
-    my ($this, $ref, $sid, $bp, $regnode_option, $matching_option) = @_;
+    my ($this, $ref, $sid, $bp, $regnode_option, $option) = @_;
 
     #このbpについている基本ノード、SYNノードについて調べる
     foreach my $node (@{$ref->{$sid}->[$bp]}) {
@@ -240,18 +240,8 @@ sub make_bp {
 # 		# マッチ調べる（SYNモードではpa_matching行わない）
 		my $result = $this->syngraph_matching('SYN', $ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
 		next if ($result eq 'unmatch');
-
-# 		my $result = $this->approximate_matching($ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
-# 		next if ($result eq 'unmatch');
-# 		if ($matching_option->{pa_matching_old}) {
-# 		    my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp);
-# 		    foreach my $bp (keys %{$kaisyou}) {
-# 			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-# 		    }
-# 		}
 		
-# 		$this->calc_sim($result, 'SYN', $headbp);
-# 		next if ($result->{unmatch});
+		print $this->Log_bp($result, $synid2) if($option->{log_sg}) ;
 
 		$this->_regnode({ref            => $ref,
 				 sid            => $sid,
@@ -829,6 +819,8 @@ sub _regnode {
                     $i->{weight}    == $weight) {
                     if ($i->{score} < $score) {
                         $i->{score} = $score;
+			$relation ? $i->{relation} = 1 : delete $i->{relation};
+			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
                     }
                     return;
                 }
@@ -951,13 +943,6 @@ sub syngraph_matching {
     if ($matching_option->{pa_matching} or $mode ne 'SYN'){
 	$this->pa_matching($result, $headbp_2);
     }
-
-#    if ($matching_option->{pa_matching_old}){
-#	my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp_2);
-#	foreach my $bp (keys %{$kaisyou}) {
-#	    $result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-#	}
-#    }
 
     # 類似度計算
     $this->calc_sim($result, $mode, $headbp_2);
@@ -1526,7 +1511,7 @@ sub OutputSynFormat {
 
     # 入力をSynGraph化
     $syngraph->{graph} = {};
-    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option);
+    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option, $option);
     Dumpvalue->new->dumpValue($syngraph->{graph}) if ($option->{debug});
 
     # SynGraphをformat化
@@ -1549,6 +1534,30 @@ sub OutputSynFormat {
 	$bp++;
     }
     $ret_string .= "EOS\n";
+
+    return $ret_string;
+}
+
+sub Log_bp { 
+    my ($this, $result, $id) = @_;
+
+    my $ret_string;
+    my $syngraph_string;
+
+    $ret_string = "#################################MatchLog############################################\n";
+    $ret_string .= "SYNID:$id\n";
+    
+    foreach my $key (keys %{$result->{GRAPH}}) {
+	# SynGraphをformat化
+	$syngraph_string = $this->format_syngraph($result->{GRAPH}->{$key});
+
+	$ret_string .= "$key\n";
+	foreach $_ (@{$syngraph_string}) {
+	    # SYNGRPH情報の付与
+	    $ret_string .= "$_";
+	}
+    }
+    $ret_string .= "#################################MatchLogEnd############################################\n";
 
     return $ret_string;
 }
