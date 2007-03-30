@@ -2,7 +2,9 @@
 
 	* scripts/test.pl, scripts/knp_syn.pl, perl/CalcSimWithSynGraph, perl/SynGraph.pm
 	SYNGRAPH化の際のログを表示するオプション"-log_sg"を作成。
-
+	* dic, syndb
+	辞書を更新し、それをコンパイル
+	
 2007-03-29  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm
