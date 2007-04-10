@@ -102,9 +102,6 @@ if ($opt{antonym}) {
     open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
     while (<ANT>) {
         chomp;
-
-        next if ($_ =~ /\?/);
-
         my ($word1, $word2) = split(/ /, $_);      
 
 	# SYNIDを獲得
@@ -124,14 +121,8 @@ if ($opt{relation}) {
     open(REL, '<:encoding(euc-jp)', $opt{relation}) or die;
     while (<REL>) {
         chomp;
-
-        next if ($_ =~ /\?/);
-
 	my ($child, $parent) = split(/ /, $_);
 
-        # 上位語
-#        $parent =~ s/\+こと\/こと$//;
-	
 	# SYNIDを獲得
         $parent = &get_synid($parent, 'relation');
 	$child = &get_synid($child, 'relation');
@@ -212,9 +203,10 @@ sub get_synid {
     my ($word, $mode) = @_;
     my $synid; # 同義グループ名
 
-    if ($mode eq ('synonym'|'definition')) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
+#    if ($mode eq ('synonym'|'definition')) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
+    if ($mode =~ /^(synonym|definition)$/) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
 	# SYNIDの作成
-	$synid = 's' . $line_number . ":" . $word;
+	$synid = 's' . $line_number . ":" . (split(/:/, $word))[0];
 	$line_number++;
 
 	return $synid;
@@ -227,7 +219,7 @@ sub get_synid {
 	# なければ同義グループ作成
 	else {
 	    # SYNIDを振る
-	    $synid = 's' . $line_number . ":" . $word;
+	    $synid = 's' . $line_number . ":" . (split(/:/, $word))[0];
 	    $line_number++;
 	    
 	    # グループに登録
