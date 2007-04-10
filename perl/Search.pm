@@ -23,7 +23,7 @@ my $kakari_weight = 0.5;
 sub new {
     my ($this, $db_hash, $index_ref, $knp_option) = @_;
 
-    my $syndbdir = '../syndb';
+    my $syndbdir = '../syndb/i686';
     $this = {
         mode         => '',
         sgh          => new SynGraph($syndbdir, $knp_option),

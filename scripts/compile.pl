@@ -12,7 +12,7 @@ binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s');
-my $sgh = new SynGraph( undef, undef, 'compile');
+my $sgh = new SynGraph( undef, undef);
 
 # synparent.mldbm、synantonym.mldbmがある場所(そこに出来た類義表現DBも出力する)
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';

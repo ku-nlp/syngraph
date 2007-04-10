@@ -16,7 +16,7 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym');
 
-my $syndbdir = '../syndb';
+my $syndbdir = '../syndb/i686';
 my $option;
 my $knp_option;
 my $regnode_option;
