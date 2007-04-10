@@ -1,3 +1,16 @@
+2007-04-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm
+	品詞変更を利用
+	* script/conv_syndb.pl
+	SYNIDから:1/1:1/1をとる
+	* syndb
+	reed用（i686）とorchid用（x86-64）の２種類用意
+	* perl/SynGraph.pm, Search.pm, scripts/knp_syn.pl, compile.pm
+	SynGraph.pmのnewにおいてDBをtieするところを変更
+	* scripts/build.sh
+	reed、orchid用のDBコンパイルをオプションで管理（-o）
+
 2007-03-30  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/test.pl, scripts/knp_syn.pl, perl/CalcSimWithSynGraph, perl/SynGraph.pm
