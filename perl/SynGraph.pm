@@ -294,21 +294,8 @@ sub st_make_bp {
 		# マッチ調べる
 		my $result = $this->syngraph_matching('Matching', $ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp,
 						      \%body, $matching_option);
-
 		next if ($result eq 'unmatch');
 
-#		my $result = $this->approximate_matching($ref->{$sid}, $bp, $this->{tm_sg}->{$tmid}, $headbp, \%body, $headbp);
-#		next if ($result eq 'unmatch');
-#		if ($matching_option->{pa_matching_old}) {
-#		    my $kaisyou = $this->pa_matching_old($result->{NODE}, $headbp);
-#		    foreach my $bp (keys %{$kaisyou}) {
-#			$result->{NODE}->{$bp}->{kaisyou} = $kaisyou->{$bp};
-#		    }
-#		}
-#		
-#		# 類似度計算
-#		my $calc = $this->calc_sim($result, 'Matching', $headbp);
-#		next if ($result->{unmatch});
 
 		# 入力の文節番号集合
 		my @s_body;
@@ -494,7 +481,7 @@ sub _get_keywords {
                     $nodename .= $mrph->{genkei};
                 }
 		
-                # ALT
+                # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
                 if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
 		    foreach (@tmp){
 			# 可能動詞であれば戻す
@@ -515,6 +502,15 @@ sub _get_keywords {
 #                 if ($this->{mode} eq 'compile' and @alt > 0) {
 #                     undef @alt;
 #                 }
+
+                # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
+                while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
+		    # 代表表記
+		    if ($1 =~ /代表表記:([^\s\/\">]+)/){
+			push(@alt,$1);		
+		    }
+		}
+
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
@@ -819,8 +815,8 @@ sub _regnode {
                     $i->{weight}    == $weight) {
                     if ($i->{score} < $score) {
                         $i->{score} = $score;
-			$relation ? $i->{relation} = 1 : delete $i->{relation};
-			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
+#			$relation ? $i->{relation} = 1 : delete $i->{relation};
+#			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
                     }
                     return;
                 }
@@ -946,11 +942,6 @@ sub syngraph_matching {
 
     # 類似度計算
     $this->calc_sim($result, $mode, $headbp_2);
-
-#    my $calc = $this->calc_sim($mode, $result->{NODE}, $headbp_2, $headbp_2);
-#    return 'unmatch' if ($calc eq 'unmatch');
-#    $result->{CALC} = $calc;
-
     if ($result->{unmatch}) {
 	return 'unmatch';
     }
