@@ -9,7 +9,18 @@ SRC_DIR='.'
 SIM_DIR=../dic
 
 # 同義表現データベース
-SYNDB_DIR=../syndb
+SYNDB_DIR=../syndb/i686
+
+while getopts oh OPT
+do
+  case $OPT in
+      o)  SYNDB_DIR=../syndb/x86_64
+          ;;
+      h)  usage
+          ;;
+    esac
+done
+shift `expr $OPTIND - 1`
 
 # Perl module
 PERL_DIR=../perl
