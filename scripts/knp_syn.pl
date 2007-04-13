@@ -7,26 +7,27 @@ use Dumpvalue;
 use utf8;
 use Encode;
 use lib qw(../perl);
-use CalcSimWithSynGraph;
+use SynGraph;
 use Getopt::Long;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym');
 
-my $syndbdir = '../syndb/i686';
 my $option;
 my $knp_option;
 my $regnode_option;
 $option->{debug} = 1 if $opt{debug};
+$option->{orchid} = 1 if $opt{orchid};
 $option->{log_sg} = 1 if $opt{log_sg};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
 $knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};
 $regnode_option->{antonym} = 1 if $opt{antonym};
 
+my $syndbdir = !$option->{orchid} ? '../syndb/i686' : '../syndb/x86_64';
 my $SynGraph = new SynGraph($syndbdir, $knp_option);
 
 if ($opt{sentence}) {
