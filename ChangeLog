@@ -1,11 +1,19 @@
+2007-04-15  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/conv_syndb.pl, scripts/change_dic.pl, scripts/build.sh, dic/antonym_change.txt, dic/synonym_change.txt, dic/relation_change.txt, syndb
+	コンパイルにおける多義性の問題を解決
+	
+	* syndb/i686/syndb.sonvert, syndb/i686/syndb.parse, syndb/x86_64/syndb.convert, syndb/x86_64/syndb.parse
+	追加
+	
 2007-04-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm
 	品詞変更を利用
-	* script/conv_syndb.pl
+	* scripts/conv_syndb.pl
 	SYNIDから:1/1:1/1をとる
 	* syndb
-	reed用（i686）とorchid用（x86-64）の２種類用意
+	reed用（i686）とorchid用（x86_64）の２種類用意
 	* perl/SynGraph.pm, Search.pm, scripts/knp_syn.pl, compile.pm
 	SynGraph.pmのnewにおいてDBをtieするところを変更
 	* scripts/build.sh
