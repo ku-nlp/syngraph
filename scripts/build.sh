@@ -48,8 +48,8 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 
 # 全部削除する
-rm -v $SYNDB_DIR/synparent.mldbm $SYNDB_DIR/synantonym.mldbm syndb.convert
-rm -v syndb.parse
+rm -v $SYNDB_DIR/synparent.mldbm $SYNDB_DIR/synantonym.mldbm $SYNDB_DIR/syndb.convert
+rm -v $SYNDB_DIR/syndb.parse
 rm -v $SYNDB_DIR/synhead.mldbm $SYNDB_DIR/syndata.mldbm
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
@@ -59,14 +59,16 @@ rm -v $INDEX_FILE
 ########################################################
 echo "STEP1 start\t`date`"
 ########################################################
+# 辞書を変換（多義性の扱い）
+perl -I$PERL_DIR change_dic.pl --synonym=$SIM_DIR/synonym.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation.txt --antonym=$SIM_DIR/antonym.txt --synonym_change=$SIM_DIR/synonym_change.txt --relation_change=$SIM_DIR/relation_change.txt --antonym_change=$SIM_DIR/antonym_change.txt
 
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation.txt --antonym=$SIM_DIR/antonym.txt --convert_file=syndb.convert --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym_change.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --relation=$SIM_DIR/relation_change.txt --antonym=$SIM_DIR/antonym_change.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR
 
 # Juman & KNP
-juman -e2 -B -i '#' < syndb.convert | knp -dpnd -postprocess -tab > syndb.parse
+juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
 # コンパイル
-perl -I$PERL_DIR compile.pl --knp_result=syndb.parse --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
 # synhead.mldbmのソート
 # syndataをtieできない(odani0116)
 #perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR

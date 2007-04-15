@@ -22,6 +22,8 @@ my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ（SYNID => {entry} => 表現 => 1）
 my %relation_parent;                  # 下位 => 上位
 my %antonym;			      # 反義語 	
+my $syn_number = 1;                   # 同義グループ番号
+my %def_delete;
 
 #
 # 定義文の読み込み
@@ -78,20 +80,21 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 	next if (@syn_list > 40);
 	
         # SYNIDの獲得
-	my $synid = &get_synid($syn_list[0], 'synonym');
-	
+	my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
+	$syn_number++;
+
         # 同義グループを作る
         foreach my $syn (@syn_list) {
             $syn_group{$synid}->{entry}->{$syn} = 1;
-            $syn_hash{$syn} = $synid;
+            push (@{$syn_hash{$syn}}, $synid);
 	    
             # 定義文がある場合も登録
             if ($definition{$syn}) {
 		$syn_group{$synid}->{entry}->{$definition{$syn}} = 1;
-                $syn_hash{$definition{$syn}} = $synid;
-                delete $definition{$syn};
+                push (@{$syn_hash{$definition{$syn}}}, $synid);
+		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
 	    }
-        }	
+        }
     }
 }
 
@@ -105,10 +108,14 @@ if ($opt{antonym}) {
         my ($word1, $word2) = split(/ /, $_);      
 
 	# SYNIDを獲得
-	$word1 = &get_synid($word1, 'antonym');
-	$word2 = &get_synid($word2, 'antonym');
-	$antonym{$word1}{$word2} = 1;
-	$antonym{$word2}{$word1} = 1;
+	$word1 = &get_synid($word1);
+	$word2 = &get_synid($word2);
+	foreach my $word1_synid (@$word1) {
+	    foreach my $word2_synid (@$word2) {
+		$antonym{$word1_synid}{$word2_synid} = 1;
+		$antonym{$word2_synid}{$word1_synid} = 1;
+	    }    
+	}
     }
     close(ANT);
 }
@@ -124,9 +131,13 @@ if ($opt{relation}) {
 	my ($child, $parent) = split(/ /, $_);
 
 	# SYNIDを獲得
-        $parent = &get_synid($parent, 'relation');
-	$child = &get_synid($child, 'relation');
-	$relation_parent{$child}{$parent} = 1;
+        $parent = &get_synid($parent);
+	$child = &get_synid($child);
+	foreach my $parent_synid (@$parent) {
+	    foreach my $child_synid (@$child) {
+		$relation_parent{$child_synid}{$parent_synid} = 1;
+	    }    
+	}
     }
     close(REL);
 }
@@ -137,11 +148,16 @@ if ($opt{relation}) {
 #
 foreach my $midasi (keys %definition) {
 
-    my $synid = &get_synid($midasi, 'definition');
+    next if($def_delete{$midasi});
+    
+    # SYNIDの作成
+    my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
+    $syn_number++;
+
     $syn_group{$synid}->{entry}->{$midasi} = 1;
     $syn_group{$synid}->{entry}->{$definition{$midasi}} = 1;
-    $syn_hash{$midasi} = $synid;
-    $syn_hash{$definition{$midasi}} = $synid;
+    push @{$syn_hash{$midasi}}, $synid;
+    push @{$syn_hash{$definition{$midasi}}}, $synid;
 }
 
 
@@ -194,81 +210,33 @@ if ($opt{convert_file}) {
 
 
 
-
 #
 # SYNIDを取得、なければ同義グループを作る
 #
-my $line_number = 0; # 同義グループ番号
 sub get_synid {
-    my ($word, $mode) = @_;
-    my $synid; # 同義グループ名
-
-#    if ($mode eq ('synonym'|'definition')) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
-    if ($mode =~ /^(synonym|definition)$/) { # synonym.txt, synonym_ne.txt, 余ったdefinition.txtからの読み込み
-	# SYNIDの作成
-	$synid = 's' . $line_number . ":" . (split(/:/, $word))[0];
-	$line_number++;
-
-	return $synid;
-    }
-    else{ # antony,.txt, relation.txtからの読み込み   
-	# 同義グループにある場合はそのSYNIDを返す
-	if ($syn_hash{$word}) {
-	    return $syn_hash{$word};
-	}
-	# なければ同義グループ作成
-	else {
-	    # SYNIDを振る
-	    $synid = 's' . $line_number . ":" . (split(/:/, $word))[0];
-	    $line_number++;
-	    
-	    # グループに登録
-	    $syn_group{$synid}->{entry}->{$word} = 1;
-	    $syn_hash{$word} = $synid;
-	    
-	    # 定義文があるとき
-	    if (@definition{$word}) {
-		foreach (@definition{$word}) {
-		    $syn_group{$synid}->{entry}->{$_} = 1;
-		    $syn_hash{$_} = $synid;
-		    delete @definition{$word};
-		}
-	    }
-	    
-	    # IDを返す
-	    return $synid;
-	}
-    }
-}
-
-#
-# SYNIDを取得、なければ同義グループを作る
-#
-sub get_synid_old {
-    my ($word, $line_number, $label) = @_;
+    my ($word) = @_;
 
     # 同義グループにある場合はそのSYNIDを返す
-    if ($syn_hash{$word}) {
+    if (defined $syn_hash{$word}) {
         return $syn_hash{$word};
     }
     else {
         # SYNIDを振る
-        my $synid = $label . $line_number . $word;
+	my $synid = 's' . $syn_number . ":" . (split(/:/, $word))[0];
+	$syn_number++;
 
         # グループに登録
         $syn_group{$synid}->{entry}->{$word} = 1;
-        $syn_hash{$word} = $synid;
+        push (@{$syn_hash{$word}}, $synid);
 
         # 定義文があるとき
-        if (@definition{$word}) {
-	    foreach (@definition{$word}) {
-		$syn_group{$synid}->{entry}->{$_} = 1;
-		$syn_hash{$_} = $synid;
-		delete @definition{$word};
-	    }
+        if ($definition{$word}) {
+	    $syn_group{$synid}->{entry}->{$definition{$word}} = 1;
+	    push (@{$syn_hash{$definition{$word}}}, $synid);
+	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
 	}
 	
         # IDを返す
-        return $synid;
+        return $syn_hash{$word};
     }
 }
