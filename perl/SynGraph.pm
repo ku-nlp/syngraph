@@ -1184,7 +1184,7 @@ sub pa_matching {
     }
 
     # 使役表現
-    # 子供に格の不一致があって、使役表現の側が「ニ格」、もう一方が「ガ格」
+    # 子供に格の不一致があって、使役表現の側が「ヲ格」、もう一方が「ガ格」
     if ($match_tree->{$bp}->{unmatch}->{shieki}) {
 	my $shieki;
 	my $non_shieki;
@@ -1195,6 +1195,10 @@ sub pa_matching {
 	    $shieki = 'graph_1';
 	    $non_shieki = 'graph_2';
 	}
+	else {
+	    $shieki = 'graph_2';
+	    $non_shieki = 'graph_1';
+	}	
 	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
 	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
 		if ($match_tree->{$childbp}->{unmatch}->{case}->{$shieki} eq 'ニ' 
@@ -1235,77 +1239,6 @@ sub pa_matching {
     }
   
     return;
-}
-
-sub pa_matching_old {
-    my ($this, $match_tree, $bp) = @_;
-    my $kaisyou={};
-
-    return $kaisyou if (!defined $match_tree->{$bp}->{childbp});
-
-    foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
-	my $res = $this->pa_matching_old($match_tree,$childbp);
-	foreach my $kaisyoubp (keys %{$res}) {
-	    my $tyouhuku_check;
-	    foreach my $type (keys %{$res->{$kaisyoubp}}) {
-		$tyouhuku_check = 1 if ($kaisyou->{$kaisyoubp}->{$type} == 1);
-	    }
-	    next if ($tyouhuku_check == 1);
-	    foreach my $type (keys %{$res->{$kaisyoubp}}) {
-		$kaisyou->{$kaisyoubp}->{$type} = 1;
-	    }
-	}
-    }
-
-    return $kaisyou if (!defined $match_tree->{$bp}->{unmatch});
-
-    # 受身表現
-    # 子供に格の不一致が２つあれば受身表現の不一致を解消する。
-    if ($match_tree->{$bp}->{unmatch}->{ukemi}) {
-	my $check;
-	my @key_child;
-    	
-	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
-	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
-		if ($match_tree->{$childbp}->{unmatch}->{case}->{graph_1} and $match_tree->{$childbp}->{unmatch}->{case}->{graph_2}){
-		    $check += 1;
-		    push @key_child,$childbp;
-		    last if ($check==2);
-		}
-	    }
-	}
-	if ($check==2){
-	    $kaisyou->{$bp}->{ukemi} = 1;
-	    foreach my $childbp (@key_child) {
-		$kaisyou->{$childbp}->{case} = 1;
-	    }
-	}
-    }
-
-    # 述語が反義な表現
-    # 子供に格の不一致が２つあれば述語の反義の不一致を解消する
-    if ($match_tree->{$bp}->{unmatch}->{negation}) {
-	my $check;
-	my @key_child;
-    	
-	foreach my $childbp (keys %{$match_tree->{$bp}->{childbp}}) {
-	    if ($match_tree->{$childbp}->{unmatch}->{case}) {
-		if ($match_tree->{$childbp}->{unmatch}->{case}->{graph_1} and $match_tree->{$childbp}->{unmatch}->{case}->{graph_2}){
-		    $check += 1;
-		    push @key_child, $childbp;
-		    last if ($check==2);
-		}
-	    }
-	}
-	if ($check==2){
-	    $kaisyou->{$bp}->{negation} = 1;
-	    foreach my $childbp (@key_child) {
-		$kaisyou->{$childbp}->{case} = 1;
-	    }
-	}
-    }
-
-    return $kaisyou;
 }
 
 sub calc_sim {
