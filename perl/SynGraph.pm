@@ -510,6 +510,14 @@ sub _get_keywords {
 		    }
 		}
 
+                # 同義<同義:方法/ほうほう>
+                while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
+		    # 代表表記
+		    if ($1 =~ /同義:([^\s\/\">]+)/){
+			push(@alt,$1);		
+		    }
+		}
+
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
