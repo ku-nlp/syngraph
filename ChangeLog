@@ -1,10 +1,15 @@
+2007-04-17  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm, syndb
+	基本ノードのIDに振り仮名を付与
+	
 2007-04-15  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/conv_syndb.pl, scripts/change_dic.pl, scripts/build.sh, dic/antonym_change.txt, dic/synonym_change.txt, dic/relation_change.txt, syndb
-	コンパイルにおける多義性の問題を解決
+	コンパイルにおける多義性の扱いを決定（曖昧なものは展開）
 	
 	* syndb/i686/syndb.sonvert, syndb/i686/syndb.parse, syndb/x86_64/syndb.convert, syndb/x86_64/syndb.parse
-	追加
+	syndb.convertとsyn.parseの置き場所変更
 	
 2007-04-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
