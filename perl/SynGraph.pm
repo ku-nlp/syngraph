@@ -465,34 +465,38 @@ sub _get_keywords {
             # 意味有
             if ($mrph->{fstring} =~ /<意味有>/) {
 		# 可能動詞であれば戻す
-		if ($mrph->{fstring} =~ /<可能動詞:([^\s\/\">]+)/) {
-		    $nodename .= $1;
+		if ($mrph->{fstring} =~ /<可能動詞:([^\s\">]+)/) {
+		    $nodename .= !$nodename ? "$1" : "+$1";
 		}
 		# 尊敬動詞であれば戻す
-		elsif ($mrph->{fstring} =~ /<尊敬動詞:([^\s\/\">]+)/) {
-		    $nodename .= $1;
+		elsif ($mrph->{fstring} =~ /<尊敬動詞:([^\s\">]+)/) {
+		    $nodename .= !$nodename ? "$1" : "+$1";
 		}
                 # 代表表記
-                elsif ($mrph->{fstring} =~ /<代表表記:([^\s\/\">]+)/) {
-                    $nodename .= $1;
+                elsif ($mrph->{fstring} =~ /<代表表記:([^\s\">]+)/) {
+		    $nodename .= !$nodename ? "$1" : "+$1";
+                }
+                # 擬似代表表記
+                elsif ($mrph->{fstring} =~ /<疑似代表表記:([^\s\">]+)/) {
+		    $nodename .= !$nodename ? "$1" : "+$1";
                 }
                 else {
-                    $nodename .= $mrph->{genkei};
+		    $nodename .= !$nodename ? "$mrph->{genkei}" : "+$mrph->{genkei}";
                 }
 		
                 # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
                 if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
 		    foreach (@tmp){
 			# 可能動詞であれば戻す
-			if ($_ =~ /可能動詞:([^\s\/\">]+)/) {
+			if ($_ =~ /可能動詞:([^\s\">]+)/) {
 			    push(@alt,$1);
 			}
 			# 尊敬動詞であれば戻す
-			elsif ($_ =~ /尊敬動詞:([^\s\/\">]+)/) {
+			elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
 			    push(@alt,$1);
 			}
 			# 代表表記
-			elsif ($_ =~ /代表表記:([^\s\/\">]+)/){
+			elsif ($_ =~ /代表表記:([^\s\">]+)/){
 			    push(@alt,$1);
 			}
 		    }
@@ -505,7 +509,15 @@ sub _get_keywords {
                 # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
                 while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
 		    # 代表表記
-		    if ($1 =~ /代表表記:([^\s\/\">]+)/){
+		    if ($1 =~ /代表表記:([^\s\">]+)/){
+			push(@alt,$1);		
+		    }
+		}
+
+                # 同義<同義:方法/ほうほう>
+                while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
+		    # 代表表記
+		    if ($1 =~ /同義:([^\s\">]+)/){
 			push(@alt,$1);		
 		    }
 		}
