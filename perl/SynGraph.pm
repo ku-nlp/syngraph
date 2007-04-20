@@ -522,14 +522,6 @@ sub _get_keywords {
 		    }
 		}
 
-                # 同義<同義:方法/ほうほう>
-                while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
-		    # 代表表記
-		    if ($1 =~ /同義:([^\s\/\">]+)/){
-			push(@alt,$1);		
-		    }
-		}
-
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
@@ -834,8 +826,8 @@ sub _regnode {
                     $i->{weight}    == $weight) {
                     if ($i->{score} < $score) {
                         $i->{score} = $score;
-#			$relation ? $i->{relation} = 1 : delete $i->{relation};
-#			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
+			$relation ? $i->{relation} = 1 : delete $i->{relation};
+			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
                     }
                     return;
                 }
@@ -986,8 +978,11 @@ sub approximate_matching {
     
     # BP内でマッチするノードを探す
     foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
+	# スコアが低いものは調べない。
         next if ($node_1->{score} < $matchnode_score);
+
         foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
+	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
 		and $node_1->{id} eq $node_2->{id} 
 		and !($node_1->{relation} and $node_2->{relation})
@@ -995,11 +990,7 @@ sub approximate_matching {
 
 		# スコア
                 my $score = $node_1->{score} * $node_2->{score};
-		
-#                if ($matchnode_score < $score 
-#		    or ($matchnode_score == $score 
-#			and ($matchnode_1->{weight} + $matchnode_2->{weight} =< $node_1->{weight} + $node_2->{weight}))) {
-		
+		# スコアが低いものは調べない。同じスコアでも重みの小さなものは調べない。
 		next if ($matchnode_score > $score 
 			 or ($matchnode_score == $score 
 			     and ($matchnode_1->{weight} + $matchnode_2->{weight} > $node_1->{weight} + $node_2->{weight})));
@@ -1013,22 +1004,18 @@ sub approximate_matching {
 			$unmatch_num +=1;
 		    }
 		}
-#		    # レベル
-#		    if ($node_1->{level} ne $node_2->{level}) {
-#			if ($node_1->{level}) {
-#			    $level_unmatch = $node_1->{level};
-#			}
-#		    }
 
-		next if ($matchnode_score == $score 
-			 and ($matchnode_1->{weight} + $matchnode_2->{weight} == $node_1->{weight} + $node_2->{weight})
-			 and $matchnode_unmatch_num < $unmatch_num);
-		
-		$matchnode_score = $score;
-		$matchnode_1 = $node_1;
-		$matchnode_2 = $node_2;
-		$matchnode_unmatch = $unmatch;
-		$matchnode_unmatch_num = $unmatch_num;
+		# スコアが大きいペアを採用。同じスコアならば重みの大きいものを、重みが同じならば要素の違いが少ないものを。
+		if ($matchnode_score < $score
+		    or ($matchnode_1->{weight} + $matchnode_2->{weight} < $node_1->{weight} + $node_2->{weight})
+		    or ($matchnode_1->{weight} + $matchnode_2->{weight} == $node_1->{weight} + $node_2->{weight}
+			and $matchnode_unmatch_num > $unmatch_num)) {
+		    $matchnode_score = $score;
+		    $matchnode_1 = $node_1;
+		    $matchnode_2 = $node_2;
+		    $matchnode_unmatch = $unmatch;
+		    $matchnode_unmatch_num = $unmatch_num;
+		}
 	    }		    
 	}
     }
@@ -1047,8 +1034,8 @@ sub approximate_matching {
 	$result->{NODE}->{$nodebp_2}->{childbp}->{$c} = 1;
     }
     $result->{NODE}->{$nodebp_2}->{unmatch} = $matchnode_unmatch;;
-#    $result->{unmatch}->[$nodebp_2]->{level}    = $level_unmatch if ($level_unmatch);
     
+    # graph_2がgraph_1の中でどのような役割を果たしているか
     $result->{SYN}->{weight} = $matchnode_1->{weight};
     $result->{SYN}->{midasi} = $matchnode_1->{midasi};
     $result->{SYN}->{parentbp} = $matchnode_1->{parentbp};
@@ -1062,13 +1049,7 @@ sub approximate_matching {
 
     # マッチの対応
     my @match_1 = sort keys %{$result->{SYN}->{matchbp}};
-    my @match_2;
-    if ($matchnode_2->{matchbp}) {
-	@match_2 = sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2);
-    }
-    else { # 後で手直しodani3/1
-	@match_2 = $nodebp_2;
-    }
+    my @match_2 = $matchnode_2->{matchbp} ? sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2) : ($nodebp_2);
     push(@{$result->{MATCH}->{match}}, {graph_1 => \@match_1, graph_2 => \@match_2});
     my $matchmidasi_1;
     my $matchmidasi_2;
@@ -1322,65 +1303,6 @@ sub calc_sim {
 	$result->{CALC}->{score} = $score_sum / $match_num;
 	return;
     }
-}
-
-sub calc_sim_old {
-    my ($this, $mode, $match_tree, $bp, $headbp) = @_;
-    my $result = {};
-
-    $result->{match_weight} = $match_tree->{$bp}->{score};
-    $result->{weight} = $match_tree->{$bp}->{weight};
-
-    if ($match_tree->{$bp}->{unmatch}){
-	foreach my $unmatch_type (keys %{$match_tree->{$bp}->{unmatch}}) {
-	    next if ($match_tree->{$bp}->{kaisyou}->{$unmatch_type} == 1);
-
-	    if ($bp == $headbp) {
-		if ($mode eq 'SYN') {
-		    if (!defined $match_tree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2}){
-			# 要素引き継ぎ
-			$result->{SYN}->{$unmatch_type} = $match_tree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1};
-		    }
-		    else {
-			return 'unmatch';
-		    }
-		}
-		if ($mode eq 'Matching') { # MTでアライメントをとるときはheadでの{fuzoku,case}の違いはみない。
-		    if ($unmatch_type eq 'case' or $unmatch_type eq 'fuzoku'){
-			next;
-		    }
-		    else {
-			$result->{match_weight} *= $penalty->{$unmatch_type};
-		    }
-		}
-	    }
-	    else {
-		if ($unmatch_type eq 'case'){
-		    next if (!$match_tree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1} or !$match_tree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2});
-		}
-		$result->{match_weight} *= $penalty->{$unmatch_type};
-	    }
-	}
-    }
-    if (defined $result->{weight}) {
-	$result->{score} = $result->{match_weight} / $result->{weight};
-    }
-    else {
-	print "error!!\n";
-	$result->{score} = 0;
-    }
-
-    # 子供がいる
-    if ($match_tree->{$bp}->{childbp}) {
-	foreach my $cbp (keys %{$match_tree->{$bp}->{childbp}}){
-	    my $res = $this->calc_sim_old($mode, $match_tree, $cbp, $headbp);
-	    $result->{match_weight} += $res->{match_weight};	
-	    $result->{weight} += $res->{weight};	
-	    $result->{score} =$result->{match_weight} / $result->{weight};
-	}
-    }
-
-    return $result;
 }
 
 
@@ -2137,6 +2059,19 @@ sub h2z {
     $string =~ tr/0-9A-Za-z !\"\#$%&\'()*+,-.\/:;<=>?@[\\]^_\`{|}~/０-９Ａ-Ｚａ-ｚ　！”＃＄％＆’（）＊＋，−．／：；＜＝＞？＠［￥］＾＿‘｛｜｝〜/;
 
     return $string;
+}
+
+
+################################################################################
+#                                                                              #
+#                                 時間測定                                      #
+#                                                                              #
+################################################################################
+
+sub recursive {
+    my ($number) = @_;
+
+    &recursive(--$number) if ($number);
 }
 
 
