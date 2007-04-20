@@ -11,7 +11,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym=s', 'synonym_ne=s', 'definition=s', 'relation=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
+my %opt; GetOptions(\%opt, 'synonym=s', 'synonym_ne=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
@@ -124,8 +124,8 @@ if ($opt{antonym}) {
 # 上位・下位の読み込み
 # (上下関係は全てSYNIDで扱う)
 #
-if ($opt{relation}) {
-    open(REL, '<:encoding(euc-jp)', $opt{relation}) or die;
+if ($opt{isa}) {
+    open(REL, '<:encoding(euc-jp)', $opt{isa}) or die;
     while (<REL>) {
         chomp;
 	my ($child, $parent) = split(/ /, $_);

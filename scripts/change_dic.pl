@@ -9,7 +9,7 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %wordid;
 
-my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'relation=s', 'antonym=s', 'synonym_change=s', 'relation_change=s', 'antonym_change=s');
+my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'synonym_change=s', 'isa_change=s', 'antonym_change=s');
 
 open (FILE, '<:encoding(euc-jp)', $opt{definition}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
 while (<FILE>) {
@@ -55,7 +55,7 @@ while (<FILE>) {
 }
 close(FILE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{relation}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
+open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
 while (<FILE>) {
 
     my $sent = $_;
@@ -129,8 +129,8 @@ while (<FILE>) {
 close(FILE);
 close(CHANGE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{relation}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-open(CHANGE, '>:encoding(euc-jp)', $opt{relation_change}) or die;
+open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
+open(CHANGE, '>:encoding(euc-jp)', $opt{isa_change}) or die;
 while (<FILE>) {
 
     my $sent = $_;
