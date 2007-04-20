@@ -1,3 +1,14 @@
+2007-04-20  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/isa.txt, dic/isa_change.txt	
+	relation.txt, relation_change.txtを改名
+	* dic, syndbb
+	辞書を更新
+	* scripts/build.sh, scripts/conv_syndb.pl, scripts/compile.pl
+	辞書の改名に対応
+	* perl/SynGraph.pm
+	同義関係と上位下位関係がとれているときは同義関係を優先する
+	
 2007-04-17  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm, syndb
