@@ -105,6 +105,7 @@ sub new {
         mode       => '',
         regnode    => '',
         syndata    => {},
+        syndatacache    => {},
         synhead    => {},
         synparent  => {},
         synantonym  => {},
@@ -234,10 +235,15 @@ sub make_bp {
                 my $synid2 = (split(/,/, $mid))[0];
                 next if ($synid1 eq $synid2);
 
-                my $headbp = @{$this->{syndata}->{$mid}} - 1;
+		# キャッシュしておく
+ 		if (!defined $this->{syndatacache}{$mid}) {
+		    $this->{syndatacache}{$mid} = $this->{syndata}->{$mid};
+ 		}
+
+                my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
 # 		# マッチ調べる（SYNモードではpa_matching行わない）
-		my $result = $this->syngraph_matching('SYN', $ref->{$sid}, $bp, $this->{syndata}->{$mid}, $headbp);
+		my $result = $this->syngraph_matching('SYN', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		next if ($result eq 'unmatch');
 		
 		print $this->Log_bp($result, $synid2) if($option->{log_sg}) ;
