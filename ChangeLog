@@ -1,3 +1,18 @@
+2007-04-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_syndb.pl
+	DBチェック関数を作成
+	* syndb/i686/synnnumber.mldbm, syndb.mldbm, syndb/x86_64/synnumber.mldbm, syndb.mldbm
+	DBチェッ関数用のDB
+	* scripts/build.sh, conv_syndb.pl, compile.pl
+	DBチェッ関数用のDBの作成
+	* scripts/change_dic.pl
+	原島辞書のふり仮名ついていないものに対応
+	* dic/synonym_ne.txt, syndb
+	主辞だけが取り出されたものは削除。（「早稲田大学」＝「大学」）
+	* perl/SynGraph.pm
+	CGI用に小修正
+	
 2007-04-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
