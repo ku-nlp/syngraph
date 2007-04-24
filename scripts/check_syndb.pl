@@ -37,6 +37,16 @@ print "# S-ID:$synid\n";
 my $result = $SynGraph->{syndb}->{$synid};
 $result =~ s/\|/  \|  /g;
 print $result, "\n";
+if (defined $SynGraph->{synparent}->{$synid}) {
+    foreach my $pid (keys %{$SynGraph->{synparent}->{$synid}}) {
+	print "上位：$pid\n";
+    }
+}
+if (defined $SynGraph->{synantonym}->{$synid}) {
+    foreach my $aid (keys %{$SynGraph->{synantonym}->{$synid}}) {
+	print "反義：$aid\n";
+    }
+}
 
 if ($opt{print_syngraph}) {
     # 同義グループに所属するSYNGRAPHを出力
