@@ -12,6 +12,8 @@
 	主辞だけが取り出されたものは削除。（「早稲田大学」＝「大学」）
 	* perl/SynGraph.pm
 	CGI用に小修正
+	* scripts/check_syndb.pl
+	DBチェック関数でそのSYNIDの上位、反義のSYNID表示
 	
 2007-04-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
