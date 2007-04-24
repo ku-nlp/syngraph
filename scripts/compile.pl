@@ -20,7 +20,7 @@ my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 # 上位・下位関係の読み込み
 &SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
 
-# 反義語の読み込み
+# 反義関係の読み込み
 &SynGraph::retrieve_mldbm("$dir/synantonym.mldbm", $sgh->{synantonym});
 
 # KNP結果ファイルを開く

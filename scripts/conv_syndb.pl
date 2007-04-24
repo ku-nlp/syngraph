@@ -19,9 +19,11 @@ my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 my %definition;                       # 語ID => 定義文の配列
 my %syn_hash;                         # 表現 => SYNID
-my %syn_group;                        # 同義グループ（SYNID => {entry} => 表現 => 1）
-my %relation_parent;                  # 下位 => 上位
-my %antonym;			      # 反義語 	
+my %syn_group;                        # 同義グループ
+my %relation_parent;                  # 上位下位関係情報
+my %antonym;			      # 反義関係情報
+my %syndb;                            # 同義グループ
+my %synnum;                           # 同義グループ番号情報
 my $syn_number = 1;                   # 同義グループ番号
 my %def_delete;
 
@@ -85,12 +87,12 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 
         # 同義グループを作る
         foreach my $syn (@syn_list) {
-            $syn_group{$synid}->{entry}->{$syn} = 1;
+	    push (@{$syn_group{$synid}}, $syn);
             push (@{$syn_hash{$syn}}, $synid);
 	    
             # 定義文がある場合も登録
             if ($definition{$syn}) {
-		$syn_group{$synid}->{entry}->{$definition{$syn}} = 1;
+		push (@{$syn_group{$synid}}, $definition{$syn});
                 push (@{$syn_hash{$definition{$syn}}}, $synid);
 		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
 	    }
@@ -105,7 +107,7 @@ if ($opt{antonym}) {
     open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
     while (<ANT>) {
         chomp;
-        my ($word1, $word2) = split(/ /, $_);      
+        my ($word1, $word2) = split(/ /, $_);
 
 	# SYNIDを獲得
 	$word1 = &get_synid($word1);
@@ -136,7 +138,7 @@ if ($opt{isa}) {
 	foreach my $parent_synid (@$parent) {
 	    foreach my $child_synid (@$child) {
 		$relation_parent{$child_synid}{$parent_synid} = 1;
-	    }    
+	    }
 	}
     }
     close(REL);
@@ -149,15 +151,15 @@ if ($opt{isa}) {
 foreach my $midasi (keys %definition) {
 
     next if($def_delete{$midasi});
-    
+
     # SYNIDの作成
     my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
     $syn_number++;
 
-    $syn_group{$synid}->{entry}->{$midasi} = 1;
-    $syn_group{$synid}->{entry}->{$definition{$midasi}} = 1;
-    push @{$syn_hash{$midasi}}, $synid;
-    push @{$syn_hash{$definition{$midasi}}}, $synid;
+    push (@{$syn_group{$synid}}, $midasi);
+    push (@{$syn_group{$synid}}, $definition{$midasi});
+    push (@{$syn_hash{$midasi}}, $synid);
+    push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
 
 
@@ -167,8 +169,10 @@ foreach my $midasi (keys %definition) {
 if ($opt{convert_file}) {
     open(CF, '>:encoding(euc-jp)', $opt{convert_file}) or die;
 
+#    foreach my $synid (keys %syn_group) {
+#	foreach my $expression (keys %{$syn_group{$synid}->{entry}}) {
     foreach my $synid (keys %syn_group) {
-        foreach my $expression (keys %{$syn_group{$synid}->{entry}}) {
+	foreach my $expression (@{$syn_group{$synid}}) {
 
             # :1/1:1/1:1/1などを取る
             $expression = (split(/:/, $expression))[0];
@@ -181,6 +185,11 @@ if ($opt{convert_file}) {
 
             # 全角に変換
             $expression = &SynGraph::h2z($expression);
+
+	    # 同義グループ作成
+	    my $key_num = (split(/:/, $synid))[0];
+	    $synnum{$key_num}{$synid} = 1;
+	    $syndb{$synid} .= $syndb{$synid} ? " | $expression" : "$expression";
 
             # 出力
             print CF "# S-ID:$synid,$expression\n";
@@ -208,6 +217,15 @@ if ($opt{convert_file}) {
 #
 &SynGraph::store_mldbm("$dir/synantonym.mldbm", \%antonym);
 
+#
+# 同義グループの保存
+#
+&SynGraph::store_mldbm("$dir/syndb.mldbm", \%syndb);
+
+#
+# 同義グループ番号の保存
+#
+&SynGraph::store_mldbm("$dir/synnumber.mldbm", \%synnum);
 
 
 #
@@ -226,12 +244,12 @@ sub get_synid {
 	$syn_number++;
 
         # グループに登録
-        $syn_group{$synid}->{entry}->{$word} = 1;
+	push (@{$syn_group{$synid}}, $word);
         push (@{$syn_hash{$word}}, $synid);
 
         # 定義文があるとき
         if ($definition{$word}) {
-	    $syn_group{$synid}->{entry}->{$definition{$word}} = 1;
+	    push (@{$syn_group{$synid}}, $definition{$word});
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
 	}
