@@ -94,12 +94,15 @@ sub new {
     my ($this, $syndbdir, $option) = @_;
 
     # knp option
-    my @knpoptions = ('-tab');
-    
+    my @knpoptions = ('-tab');    
     push @knpoptions, '-postprocess' if $option->{postprocess};
     push @knpoptions, '-dpnd' if $option->{no_case};
-
     my $knpoption = join(' ', @knpoptions);
+    
+    my %knp_pm_args = ( -Option => $knpoption );
+
+    # CGI用
+    $knp_pm_args{'-Command'} = $option->{knpcommand} if defined $option->{knpcommand};
 
     $this = {
         mode       => '',
@@ -109,6 +112,8 @@ sub new {
         synhead    => {},
         synparent  => {},
         synantonym  => {},
+        syndb  => {},
+        synnumber  => {},
         filehandle => undef,
         db_type    => '',
         db_name    => '',
@@ -118,7 +123,7 @@ sub new {
         st_head    => {},
         st_data    => {},
         tm_sg      => {},
-	knp        => new KNP(-Option => $knpoption),
+	knp        => new KNP(%knp_pm_args),
     };
     
     bless $this;
@@ -1250,14 +1255,13 @@ sub pa_matching {
 
 sub calc_sim {
     my ($this, $result, $mode, $headbp) = @_;
-    my $matchtree = $result->{NODE};
     my $score_sum;
     my $match_num;
 
-    foreach my $bp (keys %{$matchtree}) {
-	if ($matchtree->{$bp}->{unmatch}){
-	    foreach my $unmatch_type (keys %{$matchtree->{$bp}->{unmatch}}) {
-		next if ($matchtree->{$bp}->{dissolve}->{$unmatch_type} == 1);
+    foreach my $bp (keys %{$result->{NODE}}) {
+	if ($result->{NODE}->{$bp}->{unmatch}){
+	    foreach my $unmatch_type (keys %{$result->{NODE}->{$bp}->{unmatch}}) {
+		next if ($result->{NODE}->{$bp}->{dissolve}->{$unmatch_type} == 1);
 		
 		if ($bp == $headbp) {
 		    if ($mode eq 'SYN') {
@@ -1266,9 +1270,9 @@ sub calc_sim {
 			    $result->{SYN}->{$unmatch_type} = 1;
 			}
 			else {
-			    if (!defined $matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2}){
+			    if (!defined $result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_2}){
 				# 要素引き継ぎ
-				$result->{SYN}->{$unmatch_type} = $matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1};
+				$result->{SYN}->{$unmatch_type} = $result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_1};
 			    }
 			    else {
 				$result->{unmatch} = 1;
@@ -1281,22 +1285,22 @@ sub calc_sim {
 			    next;
 			}
 			else {
-			    $matchtree->{$bp}->{score} *= $penalty->{$unmatch_type};
+			    $result->{NODE}->{$bp}->{score} *= $penalty->{$unmatch_type};
 			}
 		    }
 		}
 		else {
 		    if ($unmatch_type eq 'case'){
-			next if (!$matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_1} 
-				 or !$matchtree->{$bp}->{unmatch}->{$unmatch_type}->{graph_2});
+			next if (!$result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_1} 
+				 or !$result->{NODE}->{$bp}->{unmatch}->{$unmatch_type}->{graph_2});
 		    }
-		    $matchtree->{$bp}->{score} *= $penalty->{$unmatch_type};
+		    $result->{NODE}->{$bp}->{score} *= $penalty->{$unmatch_type};
 		}
 
 	    }
 	}
-	if ($matchtree->{$bp}->{score}) {
-	    $score_sum += $matchtree->{$bp}->{score};
+	if ($result->{NODE}->{$bp}->{score}) {
+	    $score_sum += $result->{NODE}->{$bp}->{score};
 	    $match_num++;
 	}
     }
@@ -1921,6 +1925,19 @@ sub tie_syndb {
     &tie_mldbm($synparent, $this->{synparent});
     &tie_mldbm($synantonym, $this->{synantonym});
 }
+
+#
+# syndbチェック用のDBをtie
+#
+sub tie_forsyndbcheck {
+    my ($this, $syndb, $synnumber) = @_;
+    $syndb = 'syndb.mldbm' unless ($syndb);
+    $synnumber = 'synnumber.mldbm' unless ($synnumber);
+
+    &tie_mldbm($syndb, $this->{syndb});
+    &tie_mldbm($synnumber, $this->{synnumber});
+}
+
 
 
 #
