@@ -29,17 +29,18 @@ if ($opt{synid}) {
     $synid = decode('euc-jp', $opt{synid});
 }
 elsif ($opt{number}) {
-    $synid = (keys %{$SynGraph->{synnumber}->{$opt{number}}})[0];
+    $synid = $SynGraph->{synnumber}->{$opt{number}}
 }
 
 # 同義グループに所属する語を出力
 print "# S-ID:$synid\n";
-print $SynGraph->{syndb}->{$synid}, "\n";
+my $result = $SynGraph->{syndb}->{$synid};
+$result =~ s/\|/  \|  /g;
+print $result, "\n";
 
 if ($opt{print_syngraph}) {
     # 同義グループに所属するSYNGRAPHを出力
-    foreach my $expression (split(/\s/, $SynGraph->{syndb}->{$synid})) {
-	next if ($expression =~ /\|/);
+    foreach my $expression (split(/\|/, $SynGraph->{syndb}->{$synid})) {
 	print "########################################################\n";
 	my $key = "$synid,$expression";
 	print "$key\n";

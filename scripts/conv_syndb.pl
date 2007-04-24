@@ -188,8 +188,8 @@ if ($opt{convert_file}) {
 
 	    # 同義グループ作成
 	    my $key_num = (split(/:/, $synid))[0];
-	    $synnum{$key_num}{$synid} = 1;
-	    $syndb{$synid} .= $syndb{$synid} ? " | $expression" : "$expression";
+	    $synnum{$key_num} = $synid;
+	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
 
             # 出力
             print CF "# S-ID:$synid,$expression\n";
