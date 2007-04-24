@@ -28,6 +28,16 @@ while (<FILE>) {
 	    }
 	    next if ($flag);
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+
+	    # 振り仮名ついてない用
+	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
+		if ($_ eq $word) {
+		    $flag = 1;
+		    last;
+		}
+	    }
+	    next if ($flag);
+	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
 	}
     }
 }
@@ -50,6 +60,16 @@ while (<FILE>) {
 	    }
 	    next if ($flag);
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+
+	    # 振り仮名ついてない用
+	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
+		if ($_ eq $word) {
+		    $flag = 1;
+		    last;
+		}
+	    }
+	    next if ($flag);
+	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
 	}
     }
 }
@@ -72,6 +92,16 @@ while (<FILE>) {
 	    }
 	    next if ($flag);	    
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+
+	    # 振り仮名ついてない用
+	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
+		if ($_ eq $word) {
+		    $flag = 1;
+		    last;
+		}
+	    }
+	    next if ($flag);	    
+	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
 	}
     }
 }
@@ -92,15 +122,25 @@ while (<FILE>) {
 		    last;
 		}
 	    }
-	    next if ($flag);
-	    
+	    next if ($flag);	    
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+
+	    # 振り仮名ついてない用
+	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
+		if ($_ eq $word) {
+		    $flag = 1;
+		    last;
+		}
+	    }
+	    next if ($flag);	    
+	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
 	}
     }
 }
 close(FILE);
 
-#Dumpvalue->new->dumpValue(\%wordid);
+# チェック用
+# Dumpvalue->new->dumpValue(\%wordid);
 
 open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
 open(CHANGE, '>:encoding(euc-jp)', $opt{synonym_change}) or die;
