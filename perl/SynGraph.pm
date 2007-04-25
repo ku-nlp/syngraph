@@ -1828,11 +1828,11 @@ sub tie_syndb {
 #
 sub tie_forsyndbcheck {
     my ($this, $syndb, $synnumber) = @_;
-    $syndb = 'syndb.mldbm' unless ($syndb);
-    $synnumber = 'synnumber.mldbm' unless ($synnumber);
+    $syndb = '../i686/syndb.db' unless ($syndb);
+    $synnumber = '../i686/synnumber.db' unless ($synnumber);
 
-    &tie_mldbm($syndb, $this->{syndb});
-    &tie_mldbm($synnumber, $this->{synnumber});
+    &tie_db($syndb, $this->{syndb});
+    &tie_db($synnumber, $this->{synnumber});
 }
 
 
