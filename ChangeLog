@@ -2,13 +2,15 @@
 
 	* perl/SynGraph.pm:
 	CGI用に、Rcfile, JumanCommandなどを指定できるようにした
-
+	
 2007-04-25  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm
 	mtでのlog表示
 	* scripts/conv_syndb.pl, build.sh, check_syndb.pl
 	DBチェック用のDBの種類をBerkeleyDBに変更
+	* scripts/build.sh, conv_syndb.pl, syndb/i686/syndb.db, syndb/x86_64, syndb.db
+	syndb.dbに<定義文>付与
 	
 2007-04-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
