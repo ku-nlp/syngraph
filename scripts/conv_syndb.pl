@@ -92,7 +92,8 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 	    
             # 定義文がある場合も登録
             if ($definition{$syn}) {
-		push (@{$syn_group{$synid}}, $definition{$syn});
+		my $key = $definition{$syn} . "<定義文>";
+		push (@{$syn_group{$synid}}, $key);
                 push (@{$syn_hash{$definition{$syn}}}, $synid);
 		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
 	    }
@@ -149,7 +150,6 @@ if ($opt{isa}) {
 # 余った定義文は同義グループを作って登録
 #
 foreach my $midasi (keys %definition) {
-
     next if($def_delete{$midasi});
 
     # SYNIDの作成
@@ -157,7 +157,8 @@ foreach my $midasi (keys %definition) {
     $syn_number++;
 
     push (@{$syn_group{$synid}}, $midasi);
-    push (@{$syn_group{$synid}}, $definition{$midasi});
+    my $key = $definition{$midasi} . "<定義文>";
+    push (@{$syn_group{$synid}}, $key);
     push (@{$syn_hash{$midasi}}, $synid);
     push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
@@ -167,17 +168,19 @@ foreach my $midasi (keys %definition) {
 # 同義グループをファイルに書き出す
 #
 if ($opt{convert_file}) {
-    open(CF, '>:encoding(euc-jp)', $opt{convert_file}) or die;
+    open(CF, '>:encoding(euc-jp)', $opt{convert_file}) or die;    
 
-#    foreach my $synid (keys %syn_group) {
-#	foreach my $expression (keys %{$syn_group{$synid}->{entry}}) {
     foreach my $synid (keys %syn_group) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
-            # :1/1:1/1:1/1などを取る
-            $expression = (split(/:/, $expression))[0];
+	    # <定義文>
+	    my $def_flag;
+	    if ($expression =~ /<定義文>/) {
+		$def_flag = 1;
+		$expression =~ s/<定義文>//g;
+	    }
 
-	    # ふり仮名をとる
+	    # /（ふり仮名）:1/1:1/1:1/1などを取る
 	    $expression = (split(/\//, $expression))[0];
 
             # 2文字以下のひらがなは無視
@@ -186,10 +189,7 @@ if ($opt{convert_file}) {
             # 全角に変換
             $expression = &SynGraph::h2z($expression);
 
-	    # 同義グループ作成
-	    my $key_num = (split(/:/, $synid))[0];
-	    $synnum{$key_num} = $synid;
-	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
+	    # 大文字に変換 ★小谷0425
 
             # 出力
             print CF "# S-ID:$synid,$expression\n";
@@ -201,6 +201,12 @@ if ($opt{convert_file}) {
                 print CF "# S-ID:$synid,$expression\n";
                 print CF "$expression\n";
             }
+
+	    # 同義グループ情報
+	    my $key_num = (split(/:/, $synid))[0];
+	    $synnum{$key_num} = $synid;
+	    $expression = $expression . "<定義文>" if ($def_flag);
+	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
         }
     }
     close(CF);
@@ -249,6 +255,8 @@ sub get_synid {
 
         # 定義文があるとき
         if ($definition{$word}) {
+	    my $key = $definition{$word} . "<定義文>";
+	    push (@{$syn_group{$synid}}, $key);
 	    push (@{$syn_group{$synid}}, $definition{$word});
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
