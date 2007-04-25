@@ -22,14 +22,14 @@ my $syndbdir = !$opt{orchid} ? '../syndb/i686' : '../syndb/x86_64';
 my $SynGraph = new SynGraph($syndbdir, $knp_option);
 
 # syndb用DBをtie
-$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.mldbm", "$syndbdir/synnumber.mldbm");
+$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.db", "$syndbdir/synnumber.db");
 
 my $synid;
 if ($opt{synid}) {
     $synid = decode('euc-jp', $opt{synid});
 }
 elsif ($opt{number}) {
-    $synid = $SynGraph->{synnumber}->{$opt{number}}
+    $synid = $SynGraph->{synnumber}->{$opt{number}};
 }
 
 # 同義グループに所属する語を出力

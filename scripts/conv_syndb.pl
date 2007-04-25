@@ -220,12 +220,12 @@ if ($opt{convert_file}) {
 #
 # 同義グループの保存
 #
-&SynGraph::store_mldbm("$dir/syndb.mldbm", \%syndb);
+&SynGraph::store_db("$dir/syndb.db", \%syndb);
 
 #
 # 同義グループ番号の保存
 #
-&SynGraph::store_mldbm("$dir/synnumber.mldbm", \%synnum);
+&SynGraph::store_db("$dir/synnumber.db", \%synnum);
 
 
 #
