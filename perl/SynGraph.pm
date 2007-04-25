@@ -63,6 +63,9 @@ sub new {
 
     # CGI用
     $knp_pm_args{'-Command'} = $option->{knpcommand} if defined $option->{knpcommand};
+    $knp_pm_args{'-Rcfile'} = $option->{knprcfile} if defined $option->{knprcfile};
+    $knp_pm_args{'-JumanCommand'} = $option->{jumancommand} if defined $option->{jumancommand};
+    $knp_pm_args{'-JumanRcfile'} = $option->{jumanrcfile} if defined $option->{jumanrcfile};
 
     $this = {
         mode       => '',
