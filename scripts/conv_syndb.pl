@@ -14,13 +14,14 @@ binmode DB::OUT, ':encoding(euc-jp)';
 my %opt; GetOptions(\%opt, 'synonym=s', 'synonym_ne=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
-my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
+my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
 
 
 my %definition;                       # 語ID => 定義文の配列
 my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ
 my %relation_parent;                  # 上位下位関係情報
+my %relation_child;                   # 下位上位？関係情報
 my %antonym;			      # 反義関係情報
 my %syndb;                            # 同義グループ
 my %synnum;                           # 同義グループ番号情報
@@ -54,31 +55,15 @@ if ($opt{definition}) {
 }
 
 #
-# 同義語の読み込み
+# 同義語<RSK>の読み込み
 #
-if ($opt{synonym} or $opt{synonym_ne}) {
-    my @lines;
-
-    if ($opt{synonym}) {
-	open(SYN, '<:encoding(euc-jp)', $opt{synonym}) or die;
-	while (<SYN>) {
-	    push @lines, $_;
-	}
-	close(SYN);
-    }
-    if ($opt{synonym_ne}) {
-	open(SYN_NE, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
-	while (<SYN_NE>) {
-	    push @lines, $_;
-	}
-	close(SYN_NE);
-    }
-
-    foreach (@lines) {
+if ($opt{synonym}) {
+    open(SYN, '<:encoding(euc-jp)', $opt{synonym}) or die;
+    while (<SYN>) {
         chomp;
-	
-        # 数が多いのは使わない
 	my @syn_list = split(/\s/, $_);
+
+        # 数が多いのは使わない
 	next if (@syn_list > 40);
 	
         # SYNIDの獲得
@@ -87,18 +72,54 @@ if ($opt{synonym} or $opt{synonym_ne}) {
 
         # 同義グループを作る
         foreach my $syn (@syn_list) {
-	    push (@{$syn_group{$synid}}, $syn);
+	    my $syn_key = $syn . "<RSK>";
+	    push (@{$syn_group{$synid}}, $syn_key);
             push (@{$syn_hash{$syn}}, $synid);
 	    
             # 定義文がある場合も登録
             if ($definition{$syn}) {
-		my $key = $definition{$syn} . "<定義文>";
-		push (@{$syn_group{$synid}}, $key);
+		my $def_key = $definition{$syn} . "<定義文>";
+		push (@{$syn_group{$synid}}, $def_key);
                 push (@{$syn_hash{$definition{$syn}}}, $synid);
 		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
 	    }
         }
     }
+    close(SYN);
+}
+
+#
+# 同義語<Web>の読み込み
+#
+if ($opt{synonym_ne}) {
+    open(SYN_NE, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
+    while (<SYN_NE>) {
+        chomp;
+	my @syn_list = split(/\s/, $_);
+
+        # 数が多いのは使わない
+	next if (@syn_list > 40);
+	
+        # SYNIDの獲得
+	my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
+	$syn_number++;
+
+        # 同義グループを作る
+        foreach my $syn (@syn_list) {
+	    my $syn_key = $syn . "<Web>";
+	    push (@{$syn_group{$synid}}, $syn_key);
+            push (@{$syn_hash{$syn}}, $synid);
+	    
+            # 定義文がある場合も登録
+            if ($definition{$syn}) {
+		my $def_key = $definition{$syn} . "<定義文>";
+		push (@{$syn_group{$synid}}, $def_key);
+                push (@{$syn_hash{$definition{$syn}}}, $synid);
+		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
+	    }
+        }
+    }
+    close(SYN_NE);
 }
 
 #
@@ -128,8 +149,8 @@ if ($opt{antonym}) {
 # (上下関係は全てSYNIDで扱う)
 #
 if ($opt{isa}) {
-    open(REL, '<:encoding(euc-jp)', $opt{isa}) or die;
-    while (<REL>) {
+    open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
+    while (<ISA>) {
         chomp;
 	my ($child, $parent) = split(/ /, $_);
 
@@ -139,10 +160,11 @@ if ($opt{isa}) {
 	foreach my $parent_synid (@$parent) {
 	    foreach my $child_synid (@$child) {
 		$relation_parent{$child_synid}{$parent_synid} = 1;
+		$relation_child{$parent_synid}{$child_synid} = 1;
 	    }
 	}
     }
-    close(REL);
+    close(ISA);
 }
 
 
@@ -156,9 +178,10 @@ foreach my $midasi (keys %definition) {
     my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
     $syn_number++;
 
-    push (@{$syn_group{$synid}}, $midasi);
-    my $key = $definition{$midasi} . "<定義文>";
-    push (@{$syn_group{$synid}}, $key);
+    my $midasi_key = $midasi . "<RSK>";
+    my $def_key = $definition{$midasi} . "<定義文>";
+    push (@{$syn_group{$synid}}, $midasi_key);
+    push (@{$syn_group{$synid}}, $def_key);
     push (@{$syn_hash{$midasi}}, $synid);
     push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
@@ -175,11 +198,21 @@ if ($opt{convert_file}) {
 
 	    # <定義文>
 	    my $def_flag;
+	    my $RSK_flag;
+	    my $Web_flag;
 	    if ($expression =~ /<定義文>/) {
 		$def_flag = 1;
 		$expression =~ s/<定義文>//g;
 	    }
-
+	    elsif ($expression =~ /<RSK>/) {
+		$RSK_flag = 1;
+		$expression =~ s/<RSK>//g;
+	    }
+	    elsif ($expression =~ /<Web>/) {
+		$Web_flag = 1;
+		$expression =~ s/<Web>//g;
+	    }
+	    
 	    # /（ふり仮名）:1/1:1/1:1/1などを取る
 	    $expression = (split(/\//, $expression))[0];
 
@@ -198,14 +231,16 @@ if ($opt{convert_file}) {
             # いちばん
             if ($expression =~ /いちばん/) {
                 $expression =~ s/いちばん/一番/;
-                print CF "# S-ID:$synid,$expression\n";
-                print CF "$expression\n";
+#                print CF "# S-ID:$synid,$expression\n";
+#                print CF "$expression\n";
             }
 
 	    # 同義グループ情報
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
 	    $expression = $expression . "<定義文>" if ($def_flag);
+	    $expression = $expression . "<RSK>" if ($RSK_flag);
+	    $expression = $expression . "<Web>" if ($Web_flag);
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
         }
     }
@@ -219,20 +254,24 @@ if ($opt{convert_file}) {
 &SynGraph::store_mldbm("$dir/synparent.mldbm", \%relation_parent);
 
 #
-# 反義語の保存
+# 反義関係の保存
 #
 &SynGraph::store_mldbm("$dir/synantonym.mldbm", \%antonym);
 
 #
-# 同義グループの保存
+# 同義グループの保存（CGI用）
 #
 &SynGraph::store_db("$dir/syndb.db", \%syndb);
 
 #
-# 同義グループ番号の保存
+# 同義グループ番号の保存（CGI用）
 #
 &SynGraph::store_db("$dir/synnumber.db", \%synnum);
 
+#
+# 下位・上位関係？の保存（CGI用）
+#
+#&SynGraph::store_mldbm("$dir/synchild.mldbm", \%relation_child);
 
 #
 # SYNIDを取得、なければ同義グループを作る
@@ -250,14 +289,14 @@ sub get_synid {
 	$syn_number++;
 
         # グループに登録
-	push (@{$syn_group{$synid}}, $word);
+	my $word_key = $word . "<RSK>";
+	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
 
         # 定義文があるとき
         if ($definition{$word}) {
-	    my $key = $definition{$word} . "<定義文>";
-	    push (@{$syn_group{$synid}}, $key);
-	    push (@{$syn_group{$synid}}, $definition{$word});
+	    my $def_key = $definition{$word} . "<定義文>";
+	    push (@{$syn_group{$synid}}, $def_key);
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
 	}
