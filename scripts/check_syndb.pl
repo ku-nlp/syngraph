@@ -50,11 +50,27 @@ if (defined $SynGraph->{synantonym}->{$synid}) {
 
 if ($opt{print_syngraph}) {
     # 同義グループに所属するSYNGRAPHを出力
+    my %expression_cash;
     foreach my $expression (split(/\|/, $SynGraph->{syndb}->{$synid})) {
+
+	if ($expression =~ /<定義文>/) {
+	    $expression =~ s/<定義文>//g;
+	}
+	elsif ($expression =~ /<RSK>/) {
+	    $expression =~ s/<RSK>//g;
+	}
+	elsif ($expression =~ /<Web>/) {
+	    $expression =~ s/<Web>//g;
+	}
+	
+	next if $expression_cash{$expression};
+
 	print "########################################################\n";
 	my $key = "$synid,$expression";
 	print "$key\n";
 	print @{$SynGraph->format_syngraph($SynGraph->{syndata}->{$key})};
+
+	$expression_cash{$expression} = 1;
     }
     print "########################################################\n";
 }    
