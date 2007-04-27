@@ -6,7 +6,9 @@
 	cashを用いてSYNGRAPHの表示のかぶりを訂正
 	* scripts/check_syndb.pl, conv_syndb.pl, build.sh, perl/SynGraph.pm, syndb//synchild.mldbm
 	DBチェックのときに下位関係も出力できるように変更
-
+	* cgi/index.cgi
+	同義グループ表示の色分け
+	
 2007-04-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi:
