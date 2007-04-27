@@ -74,6 +74,7 @@ sub new {
         syndatacache    => {},
         synhead    => {},
         synparent  => {},
+        synchild  => {},
         synantonym  => {},
         syndb  => {},
         synnumber  => {},
@@ -1830,12 +1831,14 @@ sub tie_syndb {
 # syndbチェック用のDBをtie
 #
 sub tie_forsyndbcheck {
-    my ($this, $syndb, $synnumber) = @_;
+    my ($this, $syndb, $synnumber, $synchild) = @_;
     $syndb = '../i686/syndb.db' unless ($syndb);
     $synnumber = '../i686/synnumber.db' unless ($synnumber);
+    $synnumber = '../i686/synchild.mldbm' unless ($synchild);
 
     &tie_db($syndb, $this->{syndb});
     &tie_db($synnumber, $this->{synnumber});
+    &tie_mldbm($synchild, $this->{synchild});
 }
 
 

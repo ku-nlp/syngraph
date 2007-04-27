@@ -22,7 +22,7 @@ my $syndbdir = !$opt{orchid} ? '../syndb/i686' : '../syndb/x86_64';
 my $SynGraph = new SynGraph($syndbdir, $knp_option);
 
 # syndb用DBをtie
-$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.db", "$syndbdir/synnumber.db");
+$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.db", "$syndbdir/synnumber.db", "$syndbdir/synchild.mldbm");
 
 my $synid;
 if ($opt{synid}) {
@@ -40,6 +40,11 @@ print $result, "\n";
 if (defined $SynGraph->{synparent}->{$synid}) {
     foreach my $pid (keys %{$SynGraph->{synparent}->{$synid}}) {
 	print "上位：$pid\n";
+    }
+}
+if (defined $SynGraph->{synchild}->{$synid}) {
+    foreach my $cid (keys %{$SynGraph->{synchild}->{$synid}}) {
+	print "下位：$cid\n";
     }
 }
 if (defined $SynGraph->{synantonym}->{$synid}) {

@@ -231,8 +231,8 @@ if ($opt{convert_file}) {
             # いちばん
             if ($expression =~ /いちばん/) {
                 $expression =~ s/いちばん/一番/;
-#                print CF "# S-ID:$synid,$expression\n";
-#                print CF "$expression\n";
+                print CF "# S-ID:$synid,$expression\n";
+                print CF "$expression\n";
             }
 
 	    # 同義グループ情報
@@ -271,7 +271,7 @@ if ($opt{convert_file}) {
 #
 # 下位・上位関係？の保存（CGI用）
 #
-#&SynGraph::store_mldbm("$dir/synchild.mldbm", \%relation_child);
+&SynGraph::store_mldbm("$dir/synchild.mldbm", \%relation_child);
 
 #
 # SYNIDを取得、なければ同義グループを作る
