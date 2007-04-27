@@ -1,3 +1,12 @@
+2007-04-27  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/conv_syndb.pl, check_syndb, syndb//syndb.db
+	syndbに<RSK><Web>を付与
+	* scripts/check_syndb.pl
+	cashを用いてSYNGRAPHの表示のかぶりを訂正
+	* scripts/check_syndb.pl, conv_syndb.pl, build.sh, perl/SynGraph.pm, syndb//synchild.mldbm
+	DBチェックのときに下位関係も出力できるように変更
+
 2007-04-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi:
