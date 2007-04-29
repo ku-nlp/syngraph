@@ -1,3 +1,10 @@
+2007-04-30  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/build.sh, conv_syndb.pl, check_syndb.pl, perl/SynGraph.pm
+	isa.txtのログを表示
+	* syndb//log_antonym.mldbm, log_isa.mldbm
+	add
+	
 2007-04-28  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/check_duplicate_entry.pl:
@@ -30,7 +37,7 @@
 	mtでのlog表示
 	* scripts/conv_syndb.pl, build.sh, check_syndb.pl
 	DBチェック用のDBの種類をBerkeleyDBに変更
-	* scripts/build.sh, conv_syndb.pl, syndb/i686/syndb.db, syndb/x86_64, syndb.db
+	* scripts/build.sh, conv_syndb.pl, syndb//syndb.db
 	syndb.dbに<定義文>付与
 	
 2007-04-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
