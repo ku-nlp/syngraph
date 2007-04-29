@@ -51,6 +51,7 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 rm -v $SYM_DIR/antonym_change.txt $SYM_DIR/synonym_change.txt $SYM_DIR/isa_change.txt
 rm -v $SYNDB_DIR/synparent.mldbm $SYNDB_DIR/synantonym.mldbm
 rm -v $SYNDB_DIR/synnumber.db $SYNDB_DIR/syndb.db $SYNDB_DIR/synchild.mldbm
+rm -v  $SYNDB_DIR/log_antonym.mldbm $SYNDB_DIR/log_isa.mldbm
 rm -v $SYNDB_DIR/syndb.convert $SYNDB_DIR/syndb.parse
 rm -v $SYNDB_DIR/synhead.mldbm $SYNDB_DIR/syndata.mldbm
 rm -v df.db doclen.db
@@ -66,6 +67,7 @@ perl -I$PERL_DIR change_dic.pl --synonym=$SIM_DIR/synonym.txt --definition=$SIM_
 # 類義表現を変換
 perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_DIR/synonym_change.txt --synonym_ne=$SIM_DIR/synonym_ne.txt --definition=$SIM_DIR/definition.txt --isa=$SIM_DIR/isa_change.txt --antonym=$SIM_DIR/antonym_change.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR
 
+exit
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
 # コンパイル

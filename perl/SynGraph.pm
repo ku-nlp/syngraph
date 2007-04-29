@@ -78,6 +78,8 @@ sub new {
         synantonym  => {},
         syndb  => {},
         synnumber  => {},
+	log_isa => {},
+	log_antonym => {},
         filehandle => undef,
         db_type    => '',
         db_name    => '',
@@ -1831,14 +1833,18 @@ sub tie_syndb {
 # syndbチェック用のDBをtie
 #
 sub tie_forsyndbcheck {
-    my ($this, $syndb, $synnumber, $synchild) = @_;
+    my ($this, $syndb, $synnumber, $synchild, $log_isa, $log_antonym) = @_;
     $syndb = '../i686/syndb.db' unless ($syndb);
     $synnumber = '../i686/synnumber.db' unless ($synnumber);
-    $synnumber = '../i686/synchild.mldbm' unless ($synchild);
+    $synchild = '../i686/synchild.mldbm' unless ($synchild);
+    $log_isa = '../i686/log_isa.mldbm' unless ($log_isa);
+    $log_antonym = '../i686/log_antonym.mldbm' unless ($log_antonym);
 
     &tie_db($syndb, $this->{syndb});
     &tie_db($synnumber, $this->{synnumber});
     &tie_mldbm($synchild, $this->{synchild});
+    &tie_mldbm($log_isa, $this->{log_isa});
+    &tie_mldbm($log_antonym, $this->{log_antonym});
 }
 
 

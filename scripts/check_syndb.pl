@@ -22,7 +22,8 @@ my $syndbdir = !$opt{orchid} ? '../syndb/i686' : '../syndb/x86_64';
 my $SynGraph = new SynGraph($syndbdir, $knp_option);
 
 # syndb用DBをtie
-$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.db", "$syndbdir/synnumber.db", "$syndbdir/synchild.mldbm");
+$SynGraph->tie_forsyndbcheck("$syndbdir/syndb.db", "$syndbdir/synnumber.db", "$syndbdir/synchild.mldbm", 
+			     "$syndbdir/log_isa.mldbm", "$syndbdir/log_antonym.mldbm");
 
 my $synid;
 if ($opt{synid}) {
@@ -37,19 +38,24 @@ print "# S-ID:$synid\n";
 my $result = $SynGraph->{syndb}->{$synid};
 $result =~ s/\|/  \|  /g;
 print $result, "\n";
-if (defined $SynGraph->{synparent}->{$synid}) {
-    foreach my $pid (keys %{$SynGraph->{synparent}->{$synid}}) {
-	print "上位：$pid\n";
-    }
-}
-if (defined $SynGraph->{synchild}->{$synid}) {
-    foreach my $cid (keys %{$SynGraph->{synchild}->{$synid}}) {
-	print "下位：$cid\n";
-    }
-}
-if (defined $SynGraph->{synantonym}->{$synid}) {
-    foreach my $aid (keys %{$SynGraph->{synantonym}->{$synid}}) {
-	print "反義：$aid\n";
+
+# 上位、下位、反義グループを表示
+my %Check_relation = ('synparent'=>'上位', 
+		      'synchild'=>'下位',
+		      'synantonym'=>'反義');
+my %Log =  ('synparent'=>'log_isa', 
+	    'synchild'=>'log_isa',
+	    'synantonym'=>'log_antonym');
+foreach my $rel (keys %Check_relation) {
+    if (defined $SynGraph->{$rel}->{$synid}) {
+	foreach my $rid (keys %{$SynGraph->{$rel}->{$synid}}) {
+	    my $log;
+	    my $key = ($rel eq 'synchild') ? "$rid-$synid" : "$synid-$rid";
+	    foreach (keys %{$SynGraph->{$Log{$rel}}->{$key}}) {
+		$log .= "<$_>";
+	    }
+	    print "$Check_relation{$rel}：$rid$log\n";
+	}
     }
 }
 
@@ -57,17 +63,8 @@ if ($opt{print_syngraph}) {
     # 同義グループに所属するSYNGRAPHを出力
     my %expression_cash;
     foreach my $expression (split(/\|/, $SynGraph->{syndb}->{$synid})) {
+	$expression =~ s/<定義文>|<RSK>|<Web>//g;
 
-	if ($expression =~ /<定義文>/) {
-	    $expression =~ s/<定義文>//g;
-	}
-	elsif ($expression =~ /<RSK>/) {
-	    $expression =~ s/<RSK>//g;
-	}
-	elsif ($expression =~ /<Web>/) {
-	    $expression =~ s/<Web>//g;
-	}
-	
 	next if $expression_cash{$expression};
 
 	print "########################################################\n";

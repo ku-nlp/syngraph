@@ -22,6 +22,8 @@ my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ
 my %relation_parent;                  # 上位下位関係情報
 my %relation_child;                   # 下位上位？関係情報
+my %log_relation;                       # 上位下位ログ
+my %log_antonym;                      # 反義ログ
 my %antonym;			      # 反義関係情報
 my %syndb;                            # 同義グループ
 my %synnum;                           # 同義グループ番号情報
@@ -132,13 +134,17 @@ if ($opt{antonym}) {
         my ($word1, $word2) = split(/ /, $_);
 
 	# SYNIDを獲得
-	$word1 = &get_synid($word1);
-	$word2 = &get_synid($word2);
-	foreach my $word1_synid (@$word1) {
-	    foreach my $word2_synid (@$word2) {
+	my $word1_synlist = &get_synid($word1);
+	my $word2_synlist = &get_synid($word2);
+	foreach my $word1_synid (@$word1_synlist) {
+	    foreach my $word2_synid (@$word2_synlist) {
 		$antonym{$word1_synid}{$word2_synid} = 1;
 		$antonym{$word2_synid}{$word1_synid} = 1;
-	    }    
+		my $key_1 = (split(/:/, $word1))[0];
+		my $key_2 = (split(/:/, $word2))[0];
+		$log_antonym{"$word1_synid-$word2_synid"}{"$key_1-$key_2"} = 1;
+		$log_antonym{"$word2_synid-$word1_synid"}{"$key_2-$key_1"} = 1;
+	    }
 	}
     }
     close(ANT);
@@ -155,12 +161,15 @@ if ($opt{isa}) {
 	my ($child, $parent) = split(/ /, $_);
 
 	# SYNIDを獲得
-        $parent = &get_synid($parent);
-	$child = &get_synid($child);
-	foreach my $parent_synid (@$parent) {
-	    foreach my $child_synid (@$child) {
+        my $parent_list = &get_synid($parent);
+	my $child_list = &get_synid($child);
+	foreach my $parent_synid (@$parent_list) {
+	    foreach my $child_synid (@$child_list) {
 		$relation_parent{$child_synid}{$parent_synid} = 1;
 		$relation_child{$parent_synid}{$child_synid} = 1;
+		my $key_p = (split(/:/, $parent))[0];
+		my $key_c = (split(/:/, $child))[0];
+		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
 	    }
 	}
     }
@@ -196,22 +205,8 @@ if ($opt{convert_file}) {
     foreach my $synid (keys %syn_group) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
-	    # <定義文>
-	    my $def_flag;
-	    my $RSK_flag;
-	    my $Web_flag;
-	    if ($expression =~ /<定義文>/) {
-		$def_flag = 1;
-		$expression =~ s/<定義文>//g;
-	    }
-	    elsif ($expression =~ /<RSK>/) {
-		$RSK_flag = 1;
-		$expression =~ s/<RSK>//g;
-	    }
-	    elsif ($expression =~ /<Web>/) {
-		$Web_flag = 1;
-		$expression =~ s/<Web>//g;
-	    }
+	    # タグを取る
+	    my $tag = $1 if $expression =~ s/<(定義文|RSK|Web)>$//g;
 	    
 	    # /（ふり仮名）:1/1:1/1:1/1などを取る
 	    $expression = (split(/\//, $expression))[0];
@@ -238,9 +233,7 @@ if ($opt{convert_file}) {
 	    # 同義グループ情報
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
-	    $expression = $expression . "<定義文>" if ($def_flag);
-	    $expression = $expression . "<RSK>" if ($RSK_flag);
-	    $expression = $expression . "<Web>" if ($Web_flag);
+	    $expression = $expression . "<$tag>" if $tag; # タグ付け
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
         }
     }
@@ -272,6 +265,16 @@ if ($opt{convert_file}) {
 # 下位・上位関係？の保存（CGI用）
 #
 &SynGraph::store_mldbm("$dir/synchild.mldbm", \%relation_child);
+
+#
+# 上位下位関係のログ保存（CGI用）
+#
+&SynGraph::store_mldbm("$dir/log_isa.mldbm", \%log_isa);
+
+#
+# 反義関係のログ保存（CGI用）
+#
+&SynGraph::store_mldbm("$dir/log_antonym.mldbm", \%log_antonym);
 
 #
 # SYNIDを取得、なければ同義グループを作る
