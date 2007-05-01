@@ -22,7 +22,7 @@ my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ
 my %relation_parent;                  # 上位下位関係情報
 my %relation_child;                   # 下位上位？関係情報
-my %log_relation;                       # 上位下位ログ
+my %log_isa;                          # 上位下位ログ
 my %log_antonym;                      # 反義ログ
 my %antonym;			      # 反義関係情報
 my %syndb;                            # 同義グループ
