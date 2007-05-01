@@ -33,7 +33,7 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 # 全部削除する
 rm -v $SYNDB_DIR/log_dic.db
-rm -v $SYM_DIR/antonym_change.txt $SYM_DIR/synonym_change.txt $SYM_DIR/isa_change.txt
+rm -v $SYM_C_DIR/antonym_change.txt $SYM_C_DIR/synonym_change.txt $SYM_C_DIR/isa_change.txt
 
 
 ########################################################
