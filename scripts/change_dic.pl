@@ -3,7 +3,9 @@
 use strict;
 use Dumpvalue;
 use Getopt::Long;
-use encoding 'euc-jp'; # •Ω°º•π•≥°º•…√Ê§Œ ∏ª˙ŒÛ§Àeuc•’•È•∞§Ú…’Õø§π§Î°£•Ω°º•π§œeuc§«ΩÒ§Ø§≥§»°™°™° C-x Return f°À
+use utf8;
+binmode STDIN, ':encoding(euc-jp)';
+binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
@@ -11,9 +13,9 @@ my %wordid;
 
 my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'synonym_change=s', 'isa_change=s', 'antonym_change=s');
 
-open (FILE, '<:encoding(euc-jp)', $opt{definition}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{definition}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     
@@ -29,7 +31,7 @@ while (<FILE>) {
 	    next if ($flag);
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
 
-	    # ø∂§Í≤æÃæ§ƒ§§§∆§ §§Õ—
+	    # ÊåØ„Çä‰ªÆÂêç„Å§„ÅÑ„Å¶„Å™„ÅÑÁî®
 	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
 		if ($_ eq $word) {
 		    $flag = 1;
@@ -43,9 +45,9 @@ while (<FILE>) {
 }
 close(FILE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     
@@ -61,7 +63,7 @@ while (<FILE>) {
 	    next if ($flag);
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
 
-	    # ø∂§Í≤æÃæ§ƒ§§§∆§ §§Õ—
+	    # ÊåØ„Çä‰ªÆÂêç„Å§„ÅÑ„Å¶„Å™„ÅÑÁî®
 	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
 		if ($_ eq $word) {
 		    $flag = 1;
@@ -75,9 +77,9 @@ while (<FILE>) {
 }
 close(FILE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     
@@ -93,7 +95,7 @@ while (<FILE>) {
 	    next if ($flag);	    
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
 
-	    # ø∂§Í≤æÃæ§ƒ§§§∆§ §§Õ—
+	    # ÊåØ„Çä‰ªÆÂêç„Å§„ÅÑ„Å¶„Å™„ÅÑÁî®
 	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
 		if ($_ eq $word) {
 		    $flag = 1;
@@ -107,9 +109,9 @@ while (<FILE>) {
 }
 close(FILE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     
@@ -125,7 +127,7 @@ while (<FILE>) {
 	    next if ($flag);	    
 	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
 
-	    # ø∂§Í≤æÃæ§ƒ§§§∆§ §§Õ—
+	    # ÊåØ„Çä‰ªÆÂêç„Å§„ÅÑ„Å¶„Å™„ÅÑÁî®
 	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
 		if ($_ eq $word) {
 		    $flag = 1;
@@ -139,13 +141,13 @@ while (<FILE>) {
 }
 close(FILE);
 
-# •¡•ß•√•ØÕ—
+# „ÉÅ„Çß„ÉÉ„ÇØÁî®
 # Dumpvalue->new->dumpValue(\%wordid);
 
-open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 open(CHANGE, '>:encoding(euc-jp)', $opt{synonym_change}) or die;
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     
@@ -169,10 +171,10 @@ while (<FILE>) {
 close(FILE);
 close(CHANGE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 open(CHANGE, '>:encoding(euc-jp)', $opt{isa_change}) or die;
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     my @word0_list;
@@ -215,10 +217,10 @@ while (<FILE>) {
 close(FILE);
 close(CHANGE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIO•Ï•§•‰§ÚªÿƒÍ§π§Î°£æÂ§«¿Î∏¿§∑§ø•Ï•§•‰§œª»Õ—§µ§Ï§ §§°£
+open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIO„É¨„Ç§„É§„ÇíÊåáÂÆö„Åô„Çã„ÄÇ‰∏ä„ÅßÂÆ£Ë®Ä„Åó„Åü„É¨„Ç§„É§„ÅØ‰ΩøÁî®„Åï„Çå„Å™„ÅÑ„ÄÇ
 open(CHANGE, '>:encoding(euc-jp)', $opt{antonym_change}) or die;
 while (<FILE>) {
-
+    chomp;
     my $sent = $_;
     my @words = split (/\s/, $sent);
     my @word0_list;

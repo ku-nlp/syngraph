@@ -129,6 +129,7 @@ if ($opt{synonym_ne}) {
 #
 if ($opt{antonym}) {
     open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
+    my $ant_num;
     while (<ANT>) {
         chomp;
         my ($word1, $word2) = split(/ /, $_);
@@ -143,9 +144,12 @@ if ($opt{antonym}) {
 		my $key_1 = (split(/:/, $word1))[0];
 		my $key_2 = (split(/:/, $word2))[0];
 		$log_antonym{"$word1_synid-$word2_synid"}{"$key_1-$key_2"} = 1;
-		$log_antonym{"$word2_synid-$word1_synid"}{"$key_2-$key_1"} = 1;
+		$log_antonym{"$word2_synid-$word1_synid"}{"$key_1-$key_2"} = 1;
+#		$log_antonym{"$word1_synid-$word2_synid"}{"l.$ant_num\@isa.txt:$word1-$word2"} = 1;
+#		$log_antonym{"$word2_synid-$word1_synid"}{"l.$ant_num\@isa.txt:$word1-$word2"} = 1;
 	    }
 	}
+	$ant_num++;
     }
     close(ANT);
 }
@@ -156,6 +160,7 @@ if ($opt{antonym}) {
 #
 if ($opt{isa}) {
     open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
+    my $isa_num;
     while (<ISA>) {
         chomp;
 	my ($child, $parent) = split(/ /, $_);
@@ -170,8 +175,10 @@ if ($opt{isa}) {
 		my $key_p = (split(/:/, $parent))[0];
 		my $key_c = (split(/:/, $child))[0];
 		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
+#		$log_isa{"$child_synid-$parent_synid"}{"l.$isa_num\@isa.txt:$child-$parent"} = 1;
 	    }
 	}
+	$isa_num++;
     }
     close(ISA);
 }
