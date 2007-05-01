@@ -6,7 +6,9 @@
 	added	
 	* scripts/build.sh
 	辞書の整形部分をmerge.shにゆずる 
-
+	* syndb
+	synonym_neにおいてA=B, B=Aをマージ・代表表記が同じものを削除
+	
 2007-04-30  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh, conv_syndb.pl, check_syndb.pl, perl/SynGraph.pm
