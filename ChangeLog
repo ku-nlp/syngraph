@@ -1,9 +1,18 @@
+2007-05-01  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/make_logdic.pl, syndb//log_dic.db
+	added
+	* scripts/merge_dic.sh, dic_change/
+	added	
+	* scripts/build.sh
+	辞書の整形部分をmerge.shにゆずる 
+
 2007-04-30  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh, conv_syndb.pl, check_syndb.pl, perl/SynGraph.pm
 	isa.txtのログを表示
 	* syndb//log_antonym.mldbm, log_isa.mldbm
-	add
+	added
 	
 2007-04-28  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
