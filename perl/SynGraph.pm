@@ -54,8 +54,9 @@ sub new {
     my ($this, $syndbdir, $option) = @_;
 
     # knp option
-    my @knpoptions = ('-tab');    
+    my @knpoptions = ('-tab');
     push @knpoptions, '-postprocess' if $option->{postprocess};
+    push @knpoptions, '-copula' if $option->{copula};
     push @knpoptions, '-dpnd' if $option->{no_case};
     my $knpoption = join(' ', @knpoptions);
     
