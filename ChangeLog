@@ -1,3 +1,10 @@
+2007-05-09  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/synonym_rsk.txt, synonym_web.txt, dic_change/synonym_rsk.txt, synonym_web.txt
+	added(名称変更)
+	* scripts/merg_dic.sh, conv_syndb.pl, build.sh
+	名称変更に対応
+	
 2007-05-01  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/make_logdic.pl, syndb//log_dic.db
