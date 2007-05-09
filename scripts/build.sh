@@ -61,7 +61,7 @@ rm -v $INDEX_FILE
 echo "STEP1 start\t`date`"
 ########################################################
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym=$SIM_C_DIR/synonym.txt --synonym_ne=$SIM_C_DIR/synonym_ne.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR conv_syndb.pl --synonym_rsk=$SIM_C_DIR/synonym_rsk.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR
 
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse

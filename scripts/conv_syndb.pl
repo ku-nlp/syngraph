@@ -11,7 +11,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym=s', 'synonym_ne=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
+my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -57,72 +57,42 @@ if ($opt{definition}) {
 }
 
 #
-# 同義語<RSK>の読み込み
+# 同義語グループの読み込み
 #
-if ($opt{synonym}) {
-    open(SYN, '<:encoding(euc-jp)', $opt{synonym}) or die;
-    while (<SYN>) {
-        chomp;
-	my @syn_list = split(/\s/, $_);
-
-        # 数が多いのは使わない
-	next if (@syn_list > 40);
-	
-        # SYNIDの獲得
-	my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
-	$syn_number++;
-
-        # 同義グループを作る
-        foreach my $syn (@syn_list) {
-	    my $syn_key = $syn . "<RSK>";
-	    push (@{$syn_group{$synid}}, $syn_key);
-            push (@{$syn_hash{$syn}}, $synid);
+my %file = ('synonym_rsk' => '<RSK>', 'synonym_web' => '<Web>');
+foreach my $file_type (keys %file) {
+    if ($opt{$file_type}) {
+	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	while (<SYN>) {
+	    chomp;
+	    my @syn_list = split(/\s/, $_);
 	    
-            # 定義文がある場合も登録
-            if ($definition{$syn}) {
-		my $def_key = $definition{$syn} . "<定義文>";
-		push (@{$syn_group{$synid}}, $def_key);
-                push (@{$syn_hash{$definition{$syn}}}, $synid);
-		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
+	    # 数が多いのは使わない
+	    next if (@syn_list > 40);
+	    
+	    # SYNIDの獲得
+	    my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
+	    $syn_number++;
+	    
+	    # 同義グループを作る
+	    foreach my $syn (@syn_list) {
+		my $syn_key = $syn . "$file{$file_type}";
+		push (@{$syn_group{$synid}}, $syn_key);
+		push (@{$syn_hash{$syn}}, $synid);
+		
+		# 定義文がある場合も登録
+		if ($definition{$syn}) {
+		    my $def_key = $definition{$syn} . "<定義文>";
+		    push (@{$syn_group{$synid}}, $def_key);
+		    push (@{$syn_hash{$definition{$syn}}}, $synid);
+		    $def_delete{$syn} = 1 if (!defined $def_delete{$syn});
+		}
 	    }
-        }
+	}
+	close(SYN);
     }
-    close(SYN);
 }
 
-#
-# 同義語<Web>の読み込み
-#
-if ($opt{synonym_ne}) {
-    open(SYN_NE, '<:encoding(euc-jp)', $opt{synonym_ne}) or die;
-    while (<SYN_NE>) {
-        chomp;
-	my @syn_list = split(/\s/, $_);
-
-        # 数が多いのは使わない
-	next if (@syn_list > 40);
-	
-        # SYNIDの獲得
-	my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
-	$syn_number++;
-
-        # 同義グループを作る
-        foreach my $syn (@syn_list) {
-	    my $syn_key = $syn . "<Web>";
-	    push (@{$syn_group{$synid}}, $syn_key);
-            push (@{$syn_hash{$syn}}, $synid);
-	    
-            # 定義文がある場合も登録
-            if ($definition{$syn}) {
-		my $def_key = $definition{$syn} . "<定義文>";
-		push (@{$syn_group{$synid}}, $def_key);
-                push (@{$syn_hash{$definition{$syn}}}, $synid);
-		$def_delete{$syn} = 1 if (!defined $def_delete{$syn});
-	    }
-        }
-    }
-    close(SYN_NE);
-}
 
 #
 # 反義語の読み込み
