@@ -9,60 +9,75 @@ README		このファイル
 
 perl/ : Perlモジュール
 
-  SynGraph.pm       	SYNGRAPHを扱うモジュール
-  Search.pm         	検索するためのモジュール
+  SynGraph.pm                           SYNGRAPHを扱うモジュール
+  Search.pm         			検索するためのモジュール
+  CalcSimWithSynGraph.pm         	検索するためのモジュール
 
 
 dic/ : 同義表現辞書
 
-  synonym.txt        	同義グループデータ
+  synonym_rsk.txt     	同義グループデータ
+  synonym_web.txt     	同義グループデータ
   definition.txt        定義文データ
-  relation.txt          シソーラスデータ
-  antonym.txt		反義語データ
+  isa.txt      		上位下位データ
+  antonym.txt		反義データ
+
+
+
+dic_change/ : 整形後の同義表現辞書
+
+  synonym_rsk.txt      	同義グループデータ
+  synonym_web.txt     	同義グループデータ
+  definition.txt        定義文データ
+  isa.txt      		上位下位データ
+  antonym.txt		反義データ
 
 
 scripts/ : スクリプト
 
-  build.sh        	コンパイル(+テスト用)のスクリプト
-  irex_build.sh  	IREX用のスクリプト
-  irex_build2.sh        IREX用のスクリプト(インデックスファイルを2つに分けるタイプ)
-  conv_syndb.pl  	コンパイルの前処理
-  compile.pl     	コンパイル(類義表現DBのSYNGRAPH化)
-  sort_synhead.pl	類義表現DBのヘッドハッシュをソート
-  make_sg.pl     	検索対象のSYNGRAPH化
-  cal_df.pl      	df，文書長を数える
-  indexing.pl    	インデックスファイルを作成
-  merge_db.pl    	インデックスファイルをマージ
-  irex_search.pl 	IREXの検索
-  print_hash.pl  	各種データベース内容の表示
-  teat.pl     		類似度計算のテストプログラム
-  search.pl      	検索
-  syndb.convert		辞書データを作る際の中間ファイル
-  syndb.parse		辞書データを作る際の中間ファイル
+  merg_dic.sh			辞書データ整形のスクリプト
+  build.sh        		コンパイル(DB作成)のスクリプト
+  irex_build.sh  		IREX用のスクリプト
+  irex_build2.sh        	IREX用のスクリプト(インデックスファイルを2つに分けるタイプ)
+  make_logdic.pl		辞書抽出のログ作成
+  change_dic.pl			RSK辞書の曖昧性の対応
+　check_duplicate_eentry.pl 	Web辞書の整形
+  conv_syndb.pl  		コンパイルの前処理
+  compile.pl     		コンパイル(類義表現DBのSYNGRAPH化) 
+  sort_synhead.pl		類義表現DBのヘッドハッシュをソート
+  make_sg.pl     		検索対象のSYNGRAPH化
+  cal_df.pl      		df，文書長を数える
+  indexing.pl    		インデックスファイルを作成
+  merge_db.pl    		インデックスファイルをマージ
+  irex_search.pl 		IREXの検索
+  print_hash.pl  		各種データベース内容の表示
+  teat.pl     			類似度計算のテストプログラム
+　knp_syn.pl			SYNGRAPH化のテストプログラム
+　check_syndb.pl		データベースのチェック用プログラム
+  search.pl      		検索
 
 
-syndb : 同義表現データベース
+syndb/(i686|x86_64) : 同義表現データベース
 
-  synhead.mldbm		
-  syndata.mldbm		
-  synparent.mldbm	シソーラスデータベース	
-  synantonym.mldbm	反義語データベース	
+  syndb.convert		類義表現DBを作る際の中間ファイル
+  syndb.parse		類義表現DBを作る際の中間ファイル
+  synhead.mldbm		類義表現DB(headから同義グループを呼ぶ)
+  syndata.mldbm		類義表現DB(同義グループに属すSYNGRAPHを呼ぶ)
+  synparent.mldbm	上位下位データベース	
+  synantonym.mldbm	反義データベース
+　synnumber.db		番号から同義グループを呼ぶ(CGI用)
+　syndb.db		同義グループの内容を保存(CGI用)
+　synchild.mldbm	下位グループを保存(CGI用)
+  log_dic.db		辞書からの情報抽出のLOG(CGI用)
+　log_isa.mldbm		DBの上位下位関係付与のLOG(CGI用)
+　log_antonym.mldbm	DBの反義関係付与のLOG(CGI用)
+
+
+cgi : CGIソース
+　index.cgi		SynGraphのDEBUG用CGIのソース
 
 
 sql : SQL文
   syngraph.sql         	mysqlの定義SQL
   merge.sql            	マージデータベースの作成のためのSQL
 
-
-
-[類似度計算のテストプログラムscript/test.plの使い方]
-
-入力した２文の類似度を計算する。
-
-オプション
-  -debug  		デバッグ
-  -match_print		文内のマッチしたペアとそのマッチの種類を表示
-  -case			KNPの格解析結果を利用
-  -postprocess		KNPのpostprocessを利用
-  -relation		シソーラスデータを使用する
-  -antonym		反義語データを使用する
