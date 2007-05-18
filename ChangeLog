@@ -1,3 +1,10 @@
+2007-05-18  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merg_di.sh, check_duplicate_entry.pl, build.sh
+	辞書整形のLOG作成
+	* scripts/conv_dic.pl
+	同義関係と上位下位、反義関係の矛盾チェック
+
 2007-05-09  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/synonym_rsk.txt, synonym_web.txt, dic_change/synonym_rsk.txt, synonym_web.txt
