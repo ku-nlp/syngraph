@@ -34,7 +34,7 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 # 全部削除する
 rm -v $SYNDB_DIR/log_dic.db
 rm -v $SIM_C_DIR/definition.txt $SIM_C_DIR/synonym_rsk.txt $SIM_C_DIR/isa.txt $SIM_C_DIR/antonym.txt $SIM_C_DIR/synonym_web.txt 
-
+rm -v $SIM_C_DIR/log_merge.txt
 
 ########################################################
 echo "STEP1 start\t`date`"
@@ -47,4 +47,6 @@ perl -I$PERL_DIR change_dic.pl --synonym=$SIM_DIR/synonym_rsk.txt --definition=$
 
 cp $SIM_DIR/definition.txt $SIM_C_DIR/definition.txt
 
-perl check_duplicate_entry.pl -rnsame < $SIM_DIR/synonym_web.txt > $SIM_C_DIR/synonym_web.txt
+# Webからの辞書の整理
+# perl check_duplicate_entry.pl -rnsame < $SIM_DIR/synonym_web.txt > $SIM_C_DIR/synonym_web.txt
+perl check_duplicate_entry.pl -rnsame --synonym_web=$SIM_DIR/synonym_web.txt --log_merge=$SIM_C_DIR/log_merge.txt --change=$SIM_C_DIR/synonym_web.txt
