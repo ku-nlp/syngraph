@@ -294,8 +294,6 @@ sub st_make_bp {
 		    }
 		}
 
-		print $this->Log_bp($result, $stid) if($option->{log_bp}) ;
-
 		my $newid =
 		    # シソーラス、反義語データベースは使用しない
 		    $this->_regnode({ref            => $ref,
@@ -319,6 +317,9 @@ sub st_make_bp {
 				     weight         => $result->{SYN}{weight}
 				     });
 
+		if ($option->{log_bp} && $newid) {
+		    $newid->{log_bp} = $this->Log_bp($result, $stid);
+		}
 		$newid->{matchid}   = $result->{MATCH}{matchid} if ($newid);
 		$newid->{match}     = $result->{MATCH}{match} if ($newid);
 		$newid->{matchpair} = $result->{MATCH}{matchpair} if ($newid);
