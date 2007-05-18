@@ -11,7 +11,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s');
+my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -95,6 +95,45 @@ foreach my $file_type (keys %file) {
 
 
 #
+# 上位・下位の読み込み
+# (上下関係は全てSYNIDで扱う)
+#
+if ($opt{isa}) {
+    open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
+    my $isa_num;
+    while (<ISA>) {
+        chomp;
+	my ($child, $parent) = split(/ /, $_);
+
+	# SYNIDを獲得
+        my $parentsyn_list = &get_synid($parent);
+	my $childsyn_list = &get_synid($child);
+	if (&contradiction_check($parentsyn_list, $childsyn_list)) {
+	    if ($opt{log_merge}) {
+		open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;    
+		print LM "X contradiction isa $child, $parent\n";
+		close(LM);
+	    }
+	    next;
+	}
+
+	foreach my $parent_synid (@$parentsyn_list) {
+	    foreach my $child_synid (@$childsyn_list) {
+		$relation_parent{$child_synid}{$parent_synid} = 1;
+		$relation_child{$parent_synid}{$child_synid} = 1;
+		my $key_p = (split(/:/, $parent))[0];
+		my $key_c = (split(/:/, $child))[0];
+		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
+#		$log_isa{"$child_synid-$parent_synid"}{"l.$isa_num\@isa.txt:$child-$parent"} = 1;
+	    }
+	}
+	$isa_num++;
+    }
+    close(ISA);
+}
+
+
+#
 # 反義語の読み込み
 #
 if ($opt{antonym}) {
@@ -105,10 +144,19 @@ if ($opt{antonym}) {
         my ($word1, $word2) = split(/ /, $_);
 
 	# SYNIDを獲得
-	my $word1_synlist = &get_synid($word1);
-	my $word2_synlist = &get_synid($word2);
-	foreach my $word1_synid (@$word1_synlist) {
-	    foreach my $word2_synid (@$word2_synlist) {
+	my $word1syn_list = &get_synid($word1);
+	my $word2syn_list = &get_synid($word2);
+	if (&contradiction_check($word1syn_list, $word2syn_list)) {
+	    if ($opt{log_merge}) {
+		open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;    
+		print LM "X contradiction isa $word1, $word2\n";
+		close(LM);
+	    }
+	    next;
+	}
+
+	foreach my $word1_synid (@$word1syn_list) {
+	    foreach my $word2_synid (@$word2syn_list) {
 		$antonym{$word1_synid}{$word2_synid} = 1;
 		$antonym{$word2_synid}{$word1_synid} = 1;
 		my $key_1 = (split(/:/, $word1))[0];
@@ -122,35 +170,6 @@ if ($opt{antonym}) {
 	$ant_num++;
     }
     close(ANT);
-}
-
-#
-# 上位・下位の読み込み
-# (上下関係は全てSYNIDで扱う)
-#
-if ($opt{isa}) {
-    open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
-    my $isa_num;
-    while (<ISA>) {
-        chomp;
-	my ($child, $parent) = split(/ /, $_);
-
-	# SYNIDを獲得
-        my $parent_list = &get_synid($parent);
-	my $child_list = &get_synid($child);
-	foreach my $parent_synid (@$parent_list) {
-	    foreach my $child_synid (@$child_list) {
-		$relation_parent{$child_synid}{$parent_synid} = 1;
-		$relation_child{$parent_synid}{$child_synid} = 1;
-		my $key_p = (split(/:/, $parent))[0];
-		my $key_c = (split(/:/, $child))[0];
-		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
-#		$log_isa{"$child_synid-$parent_synid"}{"l.$isa_num\@isa.txt:$child-$parent"} = 1;
-	    }
-	}
-	$isa_num++;
-    }
-    close(ISA);
 }
 
 
@@ -186,7 +205,8 @@ if ($opt{convert_file}) {
 	    my $tag = $1 if $expression =~ s/<(定義文|RSK|Web)>$//g;
 	    
 	    # /（ふり仮名）:1/1:1/1:1/1などを取る
-	    $expression = (split(/\//, $expression))[0];
+	    my $kana_id;
+	    ($expression, $kana_id) = split(/\//, $expression);
 
             # 2文字以下のひらがなは無視
             next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2);
@@ -210,7 +230,7 @@ if ($opt{convert_file}) {
 	    # 同義グループ情報
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
-	    $expression = $expression . "<$tag>" if $tag; # タグ付け
+	    $expression = $expression . $kana_id . "<$tag>" if $tag; # タグ付け
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
         }
     }
@@ -284,4 +304,25 @@ sub get_synid {
         # IDを返す
         return $syn_hash{$word};
     }
+}
+
+#
+# 同義グループ間の矛盾のチェック（同義関係を優先）
+#
+sub contradiction_check {
+    my ($list_1, $list_2) = @_;
+    my $flag = 0;
+
+    # $list_1$とlist_2に同じ同義グループがあるとだめ
+    foreach my $element_1 (@$list_1) {
+	last if ($flag);
+	foreach my $element_2 (@$list_2) {
+	    if ($element_1 eq $element_2) {
+		$flag = 1;
+		last;
+	    }
+	}
+    }
+    
+    return $flag;
 }
