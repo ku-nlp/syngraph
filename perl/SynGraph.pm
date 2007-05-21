@@ -74,9 +74,12 @@ sub new {
         syndata    => {},
         syndatacache    => {},
         synhead    => {},
+        synheadcache    => {},
         synparent  => {},
+        synparentcache  => {},
         synchild  => {},
         synantonym  => {},
+        synantonymcache  => {},
         syndb  => {},
         synnumber  => {},
 	log_isa => {},
@@ -199,8 +202,13 @@ sub make_bp {
     foreach my $node (@{$ref->{$sid}[$bp]}) {
         next if ($node->{weight} == 0);
 
-        if ($node->{id} and $this->{synhead}{$node->{id}}) {
-            foreach my $mid (@{$this->{synhead}{$node->{id}}}) {
+	# キャッシュしておく
+ 	if (!defined $this->{synheadcache}{$node->{id}}) {
+ 	    $this->{synheadcache}{$node->{id}} = $this->{synhead}->{$node->{id}};
+ 	}
+
+        if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
+            foreach my $mid (@{$this->{synheadcache}{$node->{id}}}) {
                 # SYNIDが同じものは調べない
                 my $synid1 = (split(/,/, $sid))[0];
                 my $synid2 = (split(/,/, $mid))[0];
@@ -841,9 +849,15 @@ sub _regnode {
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
 	if ($regnode_option->{relation}){
+
+	    # キャッシュしておく
+	    if ($this->{mode} ne 'compile' and $relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
+		$this->{synparentcache}{$id} = $this->{synparent}->{$id};
+	    }
+
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
-	    if ($this->{mode} ne 'compile' and $this->{synparent}{$id} and $relation != 1 and $antonym != 1) {
-		foreach my $pid (keys %{$this->{synparent}{$id}}) {
+	    if ($this->{mode} ne 'compile' and $this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
+		foreach my $pid (keys %{$this->{synparentcache}{$id}}) {
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
@@ -869,9 +883,15 @@ sub _regnode {
 	}
 
 	if ($regnode_option->{antonym}){
+
+	    # キャッシュしておく
+ 	    if ($this->{mode} ne 'compile' and $antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
+ 		$this->{synantonymcache}{$id} = $this->{synantonym}{$id};
+ 	    }
+
 	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
-	    if ($this->{mode} ne 'compile' and $this->{synantonym}{$id} and $antonym != 1 and $relation != 1) {
-		foreach my $aid (keys %{$this->{synantonym}{$id}}) {
+	    if ($this->{mode} ne 'compile' and $this->{synantonymcache}{$id} and $antonym != 1 and $relation != 1) {
+		foreach my $aid (keys %{$this->{synantonymcache}{$id}}) {
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
