@@ -320,6 +320,7 @@ sub st_make_bp {
 		if ($option->{log_bp} && $newid) {
 		    $newid->{log_bp} = $this->Log_bp($result, $stid);
 		}
+
 		$newid->{matchid}   = $result->{MATCH}{matchid} if ($newid);
 		$newid->{match}     = $result->{MATCH}{match} if ($newid);
 		$newid->{matchpair} = $result->{MATCH}{matchpair} if ($newid);
@@ -435,7 +436,9 @@ sub _get_keywords {
             next if ($mrph->{hinsi} eq '特殊' and $mrph->{bunrui} ne '記号');
 
             # 意味有
-            if ($mrph->{fstring} =~ /<意味有>/) {
+            if ($mrph->{fstring} =~ /<意味有>/ ||
+		# -copulaのとき、判定詞には<意味有>がないので、特別処理
+		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
 		# 可能動詞であれば戻す
 		if ($mrph->{fstring} =~ /<可能動詞:([^\s\">]+)/) {
 		    $nodename .= !$nodename ? "$1" : "+$1";
