@@ -1,3 +1,8 @@
+2007-05-22    <odani@reed.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl, perl/CalcSimWithSynGraph.pm, SynGraph.pm
+	上位グループを介したマッチングを許すオプション追加
+
 2007-05-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
