@@ -35,6 +35,7 @@ sub Match {
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
     $matching_option->{pa_matching} = 1 if $option->{pa_matching};
+    $matching_option->{wr_matching} = 1 if $option->{wr_matching};
     $option->{log_sg} = 1 if $option->{log_sg};
 
     my $SynGraph = new SynGraph($syndbdir, $knp_option);    

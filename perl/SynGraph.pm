@@ -938,7 +938,7 @@ sub syngraph_matching {
     my ($this, $mode, $graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash, $matching_option) = @_;
     
     # SYNGRAPHの近似マッチング
-    my $result = $this->approximate_matching($graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash);
+    my $result = $this->approximate_matching($graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash, $matching_option->{wr_matching});
     return 'unmatch' if ($result eq 'unmatch');
 
     # 述語項構造単位の違いの解消
@@ -961,7 +961,7 @@ sub syngraph_matching {
 # (graph_1が部分、graph_2が全体)
 # BPのマッチを調べて、マッチすれば子供に対して再帰的に呼び出す
 sub approximate_matching {
-    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash) = @_;
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $wr_matching_option) = @_;
     my $result;
 
     my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
@@ -980,7 +980,7 @@ sub approximate_matching {
 	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
 		and $node_1->{id} eq $node_2->{id} 
-		and !($node_1->{relation} and $node_2->{relation})
+		and (!($node_1->{relation} and $node_2->{relation}) or $wr_matching_option)
 		and !($node_1->{antonym} and $node_2->{antonym})) {
 
 		# スコア
@@ -1081,7 +1081,7 @@ sub approximate_matching {
 		foreach my $child_1 (@childbp_1) {
 		    next if ($child_1_check{$child_1});
 
-		    my $res = $this->approximate_matching($graph_1, $child_1, $graph_2, $child_2, $body_hash);
+		    my $res = $this->approximate_matching($graph_1, $child_1, $graph_2, $child_2, $body_hash, $wr_matching_option);
 		    next if ($res eq 'unmatch');
 
 		    foreach my $nodebp (keys %{$res->{NODE}}) {
