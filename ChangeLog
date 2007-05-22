@@ -1,10 +1,17 @@
+2007-05-22  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	既に張りつかないことのわかったノードの処理を工夫した高速化第3弾
+	* scripts/build.sh, conv_dic.pl, compile.pl, perl/SynGraph.pm
+	DBの種類変更(BerkeleyDBへ)	
+	
 2007-05-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi:
 	HTMLタグのbug fix
 	synidの行を字下げして見やすくした
 
-2007-05-22    <odani@reed.kuee.kyoto-u.ac.jp>
+2007-05-22  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/test.pl, perl/CalcSimWithSynGraph.pm, SynGraph.pm
 	上位グループを介したマッチングを許すオプション追加
