@@ -196,7 +196,7 @@ sub make_tree {
 #
 sub make_bp {
     my ($this, $ref, $sid, $bp, $regnode_option, $option) = @_;
-    my %synnodecache;
+    my %synnode_check;
 
     # 各SYNノードをチェック
     foreach my $node (@{$ref->{$sid}[$bp]}) {
@@ -218,7 +218,7 @@ sub make_bp {
  		if (!defined $this->{syndatacache}{$mid}) {
 		    $this->{syndatacache}{$mid} = $this->{syndata}{$mid};
  		}
-#		defined $synnodecache{$mid} ? next : ($synnodecache{$mid} = 1);
+		defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
 #		print "$node->{id}=>$mid\n";
 
                 my $headbp = @{$this->{syndatacache}{$mid}} - 1;
