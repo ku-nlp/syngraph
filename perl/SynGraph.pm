@@ -9,7 +9,7 @@ use KNP;
 use BerkeleyDB;
 use Storable qw(freeze thaw);
 use MLDBM qw(BerkeleyDB::Hash Storable);
-
+use CDB_File;
 
 #
 # 定数
@@ -100,7 +100,7 @@ sub new {
 
     if (defined $syndbdir) {
 	# 類義表現DBをtie
-	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.mldbm", "$syndbdir/synparent.mldbm", "$syndbdir/synantonym.mldbm");
+	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.db", "$syndbdir/synparent.db", "$syndbdir/synantonym.db");
     }
     
     return $this;
@@ -204,11 +204,11 @@ sub make_bp {
 
 	# キャッシュしておく
  	if (!defined $this->{synheadcache}{$node->{id}}) {
- 	    $this->{synheadcache}{$node->{id}} = $this->{synhead}->{$node->{id}};
+ 	    $this->{synheadcache}{$node->{id}} = $this->{synhead}{$node->{id}};
  	}
 
         if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
-            foreach my $mid (@{$this->{synheadcache}{$node->{id}}}) {
+            foreach my $mid (split(/\|/, $this->{synheadcache}{$node->{id}})) {
                 # SYNIDが同じものは調べない
                 my $synid1 = (split(/,/, $sid))[0];
                 my $synid2 = (split(/,/, $mid))[0];
@@ -219,7 +219,6 @@ sub make_bp {
 		    $this->{syndatacache}{$mid} = $this->{syndata}{$mid};
  		}
 		defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
-#		print "$node->{id}=>$mid\n";
 
                 my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
@@ -857,7 +856,7 @@ sub _regnode {
 
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
 	    if ($this->{mode} ne 'compile' and $this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
-		foreach my $pid (keys %{$this->{synparentcache}{$id}}) {
+		foreach my $pid (split(/\|/, $this->{synparentcache}{$id})) {
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
@@ -891,7 +890,7 @@ sub _regnode {
 
 	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
 	    if ($this->{mode} ne 'compile' and $this->{synantonymcache}{$id} and $antonym != 1 and $relation != 1) {
-		foreach my $aid (keys %{$this->{synantonymcache}{$id}}) {
+		foreach my $aid (split(/\|/, $this->{synantonymcache}{$id})) {
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
@@ -917,11 +916,17 @@ sub _regnode {
 	}
 
         # head登録（末尾のノードのidが変わったときの対処、コンパイル用）
+#         if ($this->{mode} eq 'repeat' and
+#             $newid->{id} and
+#             $bp == @{$ref->{$sid}} - 1 and
+#             !grep($sid eq $_, @{$this->{synhead}{$newid->{id}}})) {
+#             push(@{$this->{synhead}{$newid->{id}}}, $sid);
+#             $this->{regnode} = $sid;
+#         }
         if ($this->{mode} eq 'repeat' and
             $newid->{id} and
-            $bp == @{$ref->{$sid}} - 1 and
-            !grep($sid eq $_, @{$this->{synhead}{$newid->{id}}})) {
-            push(@{$this->{synhead}{$newid->{id}}}, $sid);
+            $bp == @{$ref->{$sid}} - 1) {
+	    $this->{synhead}{$newid->{id}} .= $this->{synhead}{$newid->{id}} ? "|$sid" : $sid unless ($this->{synhead}{$newid->{id}} =~ /$sid/);
             $this->{regnode} = $sid;
         }
 
@@ -1826,7 +1831,7 @@ sub _mldbm_disconnect {
 # 類義表現DBの読み込み
 #
 sub retrieve_syndb {
-    my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
+    my ($this, $syndata, $synhead, $synparent, $synantonym, $rel_) = @_;
     $syndata = 'syndata.mldbm' unless ($syndata);
     $synhead = 'synhead.mldbm' unless ($synhead);
     $synparent = 'synparent.mldbm' unless ($synparent);
@@ -1844,15 +1849,15 @@ sub retrieve_syndb {
 #
 sub tie_syndb {
     my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
-    $syndata = 'syndata.mldbm' unless ($syndata);
-    $synhead = 'synhead.mldbm' unless ($synhead);
-    $synparent = 'synparent.mldbm' unless ($synparent);
-    $synantonym = 'synantonym.mldbm' unless ($synantonym);
+    $syndata = '../syndb/i686/syndata.mldbm' unless ($syndata);
+    $synhead = '../syndb/i686/synhead.db' unless ($synhead);
+    $synparent = '../syndb/i686/synparent.db' unless ($synparent);
+    $synantonym = '../syndb/i686/synantonym.db' unless ($synantonym);
 
     &tie_mldbm($syndata, $this->{syndata});
-    &tie_mldbm($synhead, $this->{synhead});
-    &tie_mldbm($synparent, $this->{synparent});
-    &tie_mldbm($synantonym, $this->{synantonym});
+    &tie_db($synhead, $this->{synhead});
+    &tie_db($synparent, $this->{synparent});
+    &tie_db($synantonym, $this->{synantonym});
 }
 
 #
@@ -1863,15 +1868,15 @@ sub tie_forsyndbcheck {
 
     $syndb = '../i686/syndb.db' unless ($syndb);
     $synnumber = '../i686/synnumber.db' unless ($synnumber);
-    $synchild = '../i686/synchild.mldbm' unless ($synchild);
-    $log_isa = '../i686/log_isa.mldbm' unless ($log_isa);
-    $log_antonym = '../i686/log_antonym.mldbm' unless ($log_antonym);
+    $synchild = '../i686/synchild.db' unless ($synchild);
+    $log_isa = '../i686/log_isa.db' unless ($log_isa);
+    $log_antonym = '../i686/log_antonym.db' unless ($log_antonym);
 
     &tie_db($syndb, $this->{syndb});
     &tie_db($synnumber, $this->{synnumber});
-    &tie_mldbm($synchild, $this->{synchild});
-    &tie_mldbm($log_isa, $this->{log_isa});
-    &tie_mldbm($log_antonym, $this->{log_antonym});
+    &tie_db($synchild, $this->{synchild});
+    &tie_db($log_isa, $this->{log_isa});
+    &tie_db($log_antonym, $this->{log_antonym});
 }
 
 
@@ -1918,6 +1923,20 @@ sub store_db {
     untie %hash;
 }
 
+#
+# DBの読み込み (前もって全部読み込んでおく)
+#
+sub retrieve_db {
+    my ($filename, $hash_ref) = @_;
+    my %hash;
+
+    &tie_db($filename, \%hash);
+    while (my ($key, $value) = each %hash) {
+        $hash_ref->{$key} = $value;
+    }
+    untie %hash;
+}
+
 
 #
 # BerkeleyDBをtie
@@ -1933,6 +1952,7 @@ sub tie_db {
     $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
     $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
 }
+
 
 
 
@@ -1995,6 +2015,74 @@ sub tie_mldbm {
     my ($filename, $hash_ref) = @_;
 
     my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_RDONLY or die;
+
+    # filter setting
+    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_value(sub{});
+    $db->filter_store_value(sub{});
+}
+
+
+################################################################################
+#                                                                              #
+#                                  CDB 関係                                    #
+#                                                                              #
+################################################################################
+
+#
+# CDBに保存 (全部一括して保存)
+#
+sub store_cdb {
+    my ($filename, $hash_ref) = @_;
+    my %hash;
+
+    &create_cdb($filename, \%hash);
+    while (my ($key, $value) = each %$hash_ref) {
+        $hash{$key} = $value;
+    }
+    untie %hash;
+}
+
+
+#
+# CDBの読み込み (前もって全部読み込んでおく)
+#
+sub retrieve_cdb {
+    my ($filename, $hash_ref) = @_;
+    my %hash;
+
+    &tie_cdb($filename, \%hash);
+    while (my ($key, $value) = each %hash) {
+        $hash_ref->{$key} = $value;
+    }
+    untie %hash;
+}
+
+
+#
+# CDBを保存用にtie
+#
+sub create_cdb {
+    my ($filename, $hash_ref) = @_;
+
+    my $db = tie %$hash_ref, 'CDB_File', -Filename => $filename, -Flags => DB_CREATE or die;
+
+    # filter setting
+    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_value(sub{});
+    $db->filter_store_value(sub{});
+}
+
+
+#
+# CDBを読み込み専用でtie
+#
+sub tie_cdb {
+    my ($filename, $hash_ref) = @_;
+
+    my $db = tie %$hash_ref, 'CDB_File', -Filename => $filename, -Flags => DB_RDONLY or die;
 
     # filter setting
     $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});

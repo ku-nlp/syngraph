@@ -18,10 +18,12 @@ my $sgh = new SynGraph( undef, undef);
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 # 上位・下位関係の読み込み
-&SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
+# &SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
+&SynGraph::retrieve_db("$dir/synparent.db", $sgh->{synparent});
 
 # 反義関係の読み込み
-&SynGraph::retrieve_mldbm("$dir/synantonym.mldbm", $sgh->{synantonym});
+# &SynGraph::retrieve_mldbm("$dir/synantonym.mldbm", $sgh->{synantonym});
+&SynGraph::retrieve_db("$dir/synantonym.db", $sgh->{synantonym});
 
 # KNP結果ファイルを開く
 $sgh->open_parsed_file($opt{knp_result}) or die;
@@ -38,10 +40,10 @@ while (my $knp_result = $sgh->read_parsed_data) {
     if ($sgh->{syndata}->{$sid}) {
         foreach my $node (@{$sgh->{syndata}->{$sid}->[(@{$sgh->{syndata}->{$sid}}-1)]}) {
             if ($node->{id}) {
-                unless ($sgh->{synhead}->{$node->{id}} and
-                        grep($sid eq $_, @{$sgh->{synhead}->{$node->{id}}})) {
-                    push(@{$sgh->{synhead}->{$node->{id}}}, $sid);
-                }
+# 		unless ($sgh->{synhead}->{$node->{id}} and
+# 			grep($sid eq $_, @{$sgh->{synhead}->{$node->{id}}})) {
+# 		    push(@{$sgh->{synhead}->{$node->{id}}}, $sid);
+		$sgh->{synhead}{$node->{id}} .= $sgh->{synhead}{$node->{id}} ? "|$sid" : $sid unless ($sgh->{synhead}{$node->{id}} =~ /$sid/);
             }
         }
     }
@@ -69,6 +71,6 @@ while (keys %{$sgh->{syndata}}) {
 # コンパイルした類義表現DBの保存
 COMPILE_END:
 {
-    &SynGraph::store_mldbm("$dir/synhead.mldbm", $sgh->{synhead});
+    &SynGraph::store_db("$dir/synhead.db", $sgh->{synhead});
     &SynGraph::store_mldbm("$dir/syndata.mldbm", $sgh->{syndata});
 }

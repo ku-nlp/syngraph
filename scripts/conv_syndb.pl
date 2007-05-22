@@ -22,6 +22,7 @@ my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ
 my %relation_parent;                  # 上位下位関係情報
 my %relation_child;                   # 下位上位？関係情報
+my %rel_num;                          # 上位下位のレベル（下位語の数）
 my %log_isa;                          # 上位下位ログ
 my %log_antonym;                      # 反義ログ
 my %antonym;			      # 反義関係情報
@@ -103,7 +104,8 @@ if ($opt{isa}) {
     my $isa_num;
     while (<ISA>) {
         chomp;
-	my ($child, $parent) = split(/ /, $_);
+	my ($child, $parent, $number) = split(/ /, $_);
+	$number = 3; # ★
 
 	# SYNIDを獲得
         my $parentsyn_list = &get_synid($parent);
@@ -119,11 +121,15 @@ if ($opt{isa}) {
 
 	foreach my $parent_synid (@$parentsyn_list) {
 	    foreach my $child_synid (@$childsyn_list) {
-		$relation_parent{$child_synid}{$parent_synid} = 1;
-		$relation_child{$parent_synid}{$child_synid} = 1;
+#		$relation_parent{$child_synid}{$parent_synid} = 1;
+#		$relation_child{$parent_synid}{$child_synid} = 1;
+		$relation_parent{$child_synid} .= $relation_parent{$child_synid} ? "|$parent_synid" : $parent_synid unless ($relation_parent{$child_synid} =~ /$parent_synid/);
+		$relation_child{$parent_synid} .= $relation_child{$parent_synid} ? "|$child_synid" : $child_synid unless ($relation_child{$parent_synid} =~ /$child_synid/);
 		my $key_p = (split(/:/, $parent))[0];
 		my $key_c = (split(/:/, $child))[0];
-		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
+#		$log_isa{"$child_synid-$parent_synid"}{"$key_c-$key_p"} = 1;
+		$rel_num{"$child_synid-$parent_synid"} = $number if $rel_num{"$child_synid-$parent_synid"} < $number;
+		$log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c-$key_p" : "$key_c-$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c-$key_p/;
 #		$log_isa{"$child_synid-$parent_synid"}{"l.$isa_num\@isa.txt:$child-$parent"} = 1;
 	    }
 	}
@@ -157,12 +163,16 @@ if ($opt{antonym}) {
 
 	foreach my $word1_synid (@$word1syn_list) {
 	    foreach my $word2_synid (@$word2syn_list) {
-		$antonym{$word1_synid}{$word2_synid} = 1;
-		$antonym{$word2_synid}{$word1_synid} = 1;
+#		$antonym{$word1_synid}{$word2_synid} = 1;
+#		$antonym{$word2_synid}{$word1_synid} = 1;
+		$antonym{$word1_synid} .= $antonym{$word1_synid} ? "|$word2_synid" : $word2_synid unless ($antonym{$word1_synid} =~ /$word2_synid/);
+		$antonym{$word2_synid} .= $antonym{$word2_synid} ? "|$word1_synid" : $word1_synid unless ($antonym{$word2_synid} =~ /$word1_synid/);
 		my $key_1 = (split(/:/, $word1))[0];
 		my $key_2 = (split(/:/, $word2))[0];
-		$log_antonym{"$word1_synid-$word2_synid"}{"$key_1-$key_2"} = 1;
-		$log_antonym{"$word2_synid-$word1_synid"}{"$key_1-$key_2"} = 1;
+#		$log_antonym{"$word1_synid-$word2_synid"}{"$key_1-$key_2"} = 1;
+#		$log_antonym{"$word2_synid-$word1_synid"}{"$key_1-$key_2"} = 1;
+		$log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
+		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_1-$key_2/;
 #		$log_antonym{"$word1_synid-$word2_synid"}{"l.$ant_num\@isa.txt:$word1-$word2"} = 1;
 #		$log_antonym{"$word2_synid-$word1_synid"}{"l.$ant_num\@isa.txt:$word1-$word2"} = 1;
 	    }
@@ -199,14 +209,19 @@ if ($opt{convert_file}) {
     open(CF, '>:encoding(euc-jp)', $opt{convert_file}) or die;    
 
     foreach my $synid (keys %syn_group) {
+	my %check; # 曖昧性のある語の展開をチェック
+	my $flag;
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
 	    my $tag = $1 if $expression =~ s/<(定義文|RSK|Web)>$//g;
 	    
 	    # /（ふり仮名）:1/1:1/1:1/1などを取る
-	    my $kana_id;
-	    ($expression, $kana_id) = split(/\//, $expression);
+	    ($expression, my $kana, my $word_id) = split(/\/|:/, $expression);
+
+	    # 曖昧性のある語の展開したものは一回しか数えない
+	    next if $check{$expression};
+	    $check{$expression} = 1;
 
             # 2文字以下のひらがなは無視
             next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2);
@@ -221,17 +236,19 @@ if ($opt{convert_file}) {
             print CF "$expression\n";
             
             # いちばん
-            if ($expression =~ /いちばん/) {
-                $expression =~ s/いちばん/一番/;
-                print CF "# S-ID:$synid,$expression\n";
-                print CF "$expression\n";
-            }
+#             if ($expression =~ /いちばん/) {
+#                 $expression =~ s/いちばん/一番/;
+#                 print CF "# S-ID:$synid,$expression\n";
+#                 print CF "$expression\n";
+#             }
 
 	    # 同義グループ情報
+	    # １個目の語は正しいword_idがついている。２語目以降は展開の結果（暫定）
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
-	    $expression = $expression . $kana_id . "<$tag>" if $tag; # タグ付け
+	    $expression .= $flag ? $kana . "<$tag>" : $kana . $word_id . "<$tag>";
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
+	    $flag = 1;
         }
     }
     close(CF);
@@ -241,13 +258,17 @@ if ($opt{convert_file}) {
 #
 # 上位・下位関係の保存
 #
-&SynGraph::store_mldbm("$dir/synparent.mldbm", \%relation_parent);
+&SynGraph::store_db("$dir/synparent.db", \%relation_parent);
 
 #
 # 反義関係の保存
 #
-&SynGraph::store_mldbm("$dir/synantonym.mldbm", \%antonym);
+&SynGraph::store_db("$dir/synantonym.db", \%antonym);
 
+#
+# 上位下位のレベル（下位語の数）
+#
+&SynGraph::store_db("$dir/synrel_num.db", \%rel_num);
 #
 # 同義グループの保存（CGI用）
 #
@@ -261,17 +282,17 @@ if ($opt{convert_file}) {
 #
 # 下位・上位関係？の保存（CGI用）
 #
-&SynGraph::store_mldbm("$dir/synchild.mldbm", \%relation_child);
+&SynGraph::store_db("$dir/synchild.db", \%relation_child);
 
 #
 # 上位下位関係のログ保存（CGI用）
 #
-&SynGraph::store_mldbm("$dir/log_isa.mldbm", \%log_isa);
+&SynGraph::store_db("$dir/log_isa.db", \%log_isa);
 
 #
 # 反義関係のログ保存（CGI用）
 #
-&SynGraph::store_mldbm("$dir/log_antonym.mldbm", \%log_antonym);
+&SynGraph::store_db("$dir/log_antonym.db", \%log_antonym);
 
 #
 # SYNIDを取得、なければ同義グループを作る

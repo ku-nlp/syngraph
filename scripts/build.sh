@@ -48,11 +48,11 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 
 # 全部削除する
-rm -v $SYNDB_DIR/synparent.mldbm $SYNDB_DIR/synantonym.mldbm
-rm -v $SYNDB_DIR/synnumber.db $SYNDB_DIR/syndb.db $SYNDB_DIR/synchild.mldbm
-rm -v $SYNDB_DIR/log_antonym.mldbm $SYNDB_DIR/log_isa.mldbm
+rm -v $SYNDB_DIR/synparent.db $SYNDB_DIR/synantonym.db
+rm -v $SYNDB_DIR/synnumber.db $SYNDB_DIR/syndb.db $SYNDB_DIR/synchild.db
+rm -v $SYNDB_DIR/log_antonym.db $SYNDB_DIR/log_isa.db
 rm -v $SYNDB_DIR/syndb.convert $SYNDB_DIR/syndb.parse
-rm -v $SYNDB_DIR/synhead.mldbm $SYNDB_DIR/syndata.mldbm
+rm -v $SYNDB_DIR/synhead.db $SYNDB_DIR/syndata.mldbm
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
 
