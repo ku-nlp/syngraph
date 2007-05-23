@@ -1,3 +1,12 @@
+2007-05-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/(コンパイル関係)
+	CDB化、辞書更新に対応
+	* perl/SynGraph.pm
+	CDB化に対応
+	* syndb
+	辞書更新(iwanami追加、isaに下位語数追加など)
+
 2007-05-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm, scripts/build.sh, scripts/compile.pl, scripts/conv_syndb.pl, scripts/knp_syn.pl:
