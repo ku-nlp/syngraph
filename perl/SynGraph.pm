@@ -88,8 +88,6 @@ sub new {
         db_type    => '',
         db_name    => '',
         db_table   => '',
-	dbext      => $option->{dbtype} eq 'cdb' ? 'cdb' : 'db',
-	dbtype      => $option->{dbtype},
         dbh        => undef,
         sth        => undef,
         st_head    => {},
@@ -101,10 +99,8 @@ sub new {
     bless $this;
 
     if (defined $syndbdir) {
-	my $db_option;
-	$db_option = { 'dbtype' => 'cdb' } if $option->{dbtype} eq 'cdb';
 	# 類義表現DBをtie
-	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead." . $this->{dbext}, "$syndbdir/synparent." . $this->{dbext}, "$syndbdir/synantonym." . $this->{dbext}, $db_option);
+	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
     }
     
     return $this;
@@ -208,8 +204,13 @@ sub make_bp {
 
 	# キャッシュしておく
  	if (!defined $this->{synheadcache}{$node->{id}}) {
- 	    $this->{synheadcache}{$node->{id}} = $this->GetValue($this->{synhead}{$node->{id}});
- 	}
+	    if ($this->{mode} eq 'repeat') { # コンパイル時
+		$this->{synheadcache}{$node->{id}} = $this->{synhead}{$node->{id}};
+	    }
+	    else {
+		$this->{synheadcache}{$node->{id}} = $this->GetValue($this->{synhead}{$node->{id}});
+	    }
+	}
 
         if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
             foreach my $mid (split(/\|/, $this->{synheadcache}{$node->{id}})) {
@@ -224,7 +225,7 @@ sub make_bp {
  		}
 		defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
 
-                my $headbp = @{$this->{syndatacache}{$mid}} - 1;
+		my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
  		# マッチ調べる（SYNモードではpa_matching行わない）
 		my $result = $this->syngraph_matching('SYN', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
@@ -790,6 +791,7 @@ sub _regnode {
     my $score                 = $args_hash->{score};
     my $weight                = $args_hash->{weight};
     my $relation              = $args_hash->{relation};
+    my $hypo_num              = $args_hash->{hypo_num};
     my $antonym               = $args_hash->{antonym};
     my $wnum                  = $args_hash->{wnum};
     my $regnode_option        = $args_hash->{regnode_option};
@@ -847,6 +849,7 @@ sub _regnode {
         $newid->{score}    = $score;
         $newid->{weight}   = $weight;
         $newid->{relation} = $relation if ($relation);
+        $newid->{hypo_num} = $hypo_num if ($hypo_num);
         $newid->{wnum}     = $wnum if($wnum);
         $newid->{antonym}  = $antonym if ($antonym);
         push(@{$ref->{$sid}->[$bp]}, $newid);
@@ -860,7 +863,8 @@ sub _regnode {
 
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
 	    if ($this->{mode} ne 'compile' and $this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
-		foreach my $pid (split(/\|/, $this->{synparentcache}{$id})) {
+		foreach my $pid_num (split(/\|/, $this->{synparentcache}{$id})) {
+		    my ($pid, $number) = split(/,/, $pid_num);
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
@@ -880,7 +884,9 @@ sub _regnode {
 				     score          => $score * $relation_penalty,
 				     weight         => $weight,
 				     regnode_option => $regnode_option,
-				     relation       => 1});
+				     relation       => 1,
+				     hypo_num       => $number
+				 });
 		}
 	    }
 	}
@@ -1402,6 +1408,7 @@ sub format_syngraph {
 	    $synnode_string->{$matchbp} .= " <SYNID:$node->{id}><スコア:$node->{score}>";
 	    $synnode_string->{$matchbp} .= "<反義語>" if ($node->{antonym});
 	    $synnode_string->{$matchbp} .= "<上位語>" if ($node->{relation});
+	    $synnode_string->{$matchbp} .= "<下位語数$node->{hypo_num}>" if ($node->{hypo_num});
 	    $synnode_string->{$matchbp} .= "<否定>" if ($node->{negation});
 	    $synnode_string->{$matchbp} .= "<可能>" if ($node->{kanou});
 	    $synnode_string->{$matchbp} .= "<尊敬>" if ($node->{sonnkei});
@@ -1835,16 +1842,16 @@ sub _mldbm_disconnect {
 # 類義表現DBの読み込み
 #
 sub retrieve_syndb {
-    my ($this, $syndata, $synhead, $synparent, $synantonym, $rel_) = @_;
+    my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
     $syndata = 'syndata.mldbm' unless ($syndata);
-    $synhead = 'synhead.mldbm' unless ($synhead);
-    $synparent = 'synparent.mldbm' unless ($synparent);
-    $synantonym = 'synantonym.mldbm' unless ($synantonym);
+    $synhead = '../syndb/i686/synhead.cdb' unless ($synhead);
+    $synparent = '../syndb/i686/synparent.cdb' unless ($synparent);
+    $synantonym = '../syndb/i686/synantonym.cdb' unless ($synantonym);
 
     &retrieve_mldbm($syndata, $this->{syndata});
-    &retrieve_mldbm($synhead, $this->{synhead});
-    &retrieve_mldbm($synparent, $this->{synparent});
-    &retrieve_mldbm($synantonym, $this->{synantonym});
+    &retrieve_cdb($synhead, $this->{synhead});
+    &retrieve_cdb($synparent, $this->{synparent});
+    &retrieve_cdb($synantonym, $this->{synantonym});
 }
 
 
@@ -1852,16 +1859,16 @@ sub retrieve_syndb {
 # 類義表現DBをtie
 #
 sub tie_syndb {
-    my ($this, $syndata, $synhead, $synparent, $synantonym, $db_option) = @_;
+    my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
     $syndata = '../syndb/i686/syndata.mldbm' unless ($syndata);
-    $synhead = '../syndb/i686/synhead.' . $this->{dbext} unless ($synhead);
-    $synparent = '../syndb/i686/synparent.db' . $this->{dbext} unless ($synparent);
-    $synantonym = '../syndb/i686/synantonym.db' . $this->{dbext}  unless ($synantonym);
+    $synhead = '../syndb/i686/synhead.cdb' . $this->{dbext} unless ($synhead);
+    $synparent = '../syndb/i686/synparent.cdb' . $this->{dbext} unless ($synparent);
+    $synantonym = '../syndb/i686/synantonym.cdb' . $this->{dbext}  unless ($synantonym);
 
     &tie_mldbm($syndata, $this->{syndata});
-    &tie_db($synhead, $this->{synhead}, $db_option);
-    &tie_db($synparent, $this->{synparent}, $db_option);
-    &tie_db($synantonym, $this->{synantonym}, $db_option);
+    &tie_cdb($synhead, $this->{synhead});
+    &tie_cdb($synparent, $this->{synparent});
+    &tie_cdb($synantonym, $this->{synantonym});
 }
 
 #
@@ -1870,17 +1877,17 @@ sub tie_syndb {
 sub tie_forsyndbcheck {
     my ($this, $syndb, $synnumber, $synchild, $log_isa, $log_antonym) = @_;
 
-    $syndb = '../i686/syndb.db' unless ($syndb);
-    $synnumber = '../i686/synnumber.db' unless ($synnumber);
-    $synchild = '../i686/synchild.db' unless ($synchild);
-    $log_isa = '../i686/log_isa.db' unless ($log_isa);
-    $log_antonym = '../i686/log_antonym.db' unless ($log_antonym);
+    $syndb = '../i686/syndb.cdb' unless ($syndb);
+    $synnumber = '../i686/synnumber.cdb' unless ($synnumber);
+    $synchild = '../i686/synchild.cdb' unless ($synchild);
+    $log_isa = '../i686/log_isa.cdb' unless ($log_isa);
+    $log_antonym = '../i686/log_antonym.cdb' unless ($log_antonym);
 
-    &tie_db($syndb, $this->{syndb});
-    &tie_db($synnumber, $this->{synnumber});
-    &tie_db($synchild, $this->{synchild});
-    &tie_db($log_isa, $this->{log_isa});
-    &tie_db($log_antonym, $this->{log_antonym});
+    &tie_cdb($syndb, $this->{syndb});
+    &tie_cdb($synnumber, $this->{synnumber});
+    &tie_cdb($synchild, $this->{synchild});
+    &tie_cdb($log_isa, $this->{log_isa});
+    &tie_cdb($log_antonym, $this->{log_antonym});
 }
 
 
@@ -1901,55 +1908,41 @@ sub untie_syndb {
 
 ################################################################################
 #                                                                              #
-#                               BerkeleyDB, CDB 関係                           #
+#                               BerkeleyDB関係                                 #
 #                                                                              #
 ################################################################################
 
 #
-# BerkeleyDB/CDBに保存
+# BerkeleyDBに保存
 #
 sub store_db {
-    my ($filename, $hash_ref, $option) = @_;
+    my ($filename, $hash_ref) = @_;
     my %hash;
 
-    if ($option->{dbtype} eq 'cdb') {
-	my $db =  new CDB_File($filename, "$filename.$$") or die $!;
+    # ファイルを消して作りなおす
+    my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die;
 
-	while (my ($key, $value) = each %$hash_ref) {
-	    $db->insert($key, $value);
-	}
-	$db->finish;
+    # filter setting
+    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+    
+    while (my ($key, $value) = each %$hash_ref) {
+	$hash{$key} = $value;
     }
-    else {
-	# ファイルを消して作りなおす
-	my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die;
-
-	# filter setting
-	$db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-	$db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-	$db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-	$db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
-
-	while (my ($key, $value) = each %$hash_ref) {
-	    $hash{$key} = $value;
-	}
-	untie %hash;
-    }
+    untie %hash;
 }
 
 #
 # DBの読み込み (前もって全部読み込んでおく)
 #
 sub retrieve_db {
-    my ($filename, $hash_ref, $option) = @_;
+    my ($filename, $hash_ref) = @_;
     my %hash;
 
-    &tie_db($filename, \%hash, $option);
+    &tie_db($filename, \%hash);
     while (my ($key, $value) = each %hash) {
-	if ($option->{dbtype} eq 'cdb') {
-	    $key = &decode('utf8', $key);
-	    $value = &decode('utf8', $value);
-	}
         $hash_ref->{$key} = $value;
     }
     untie %hash;
@@ -1957,26 +1950,76 @@ sub retrieve_db {
 
 
 #
-# BerkeleyDB/CDBをtie
+# BerkeleyDBをtie
 #
 sub tie_db {
-    my ($filename, $hash_ref, $option) = @_;
+    my ($filename, $hash_ref) = @_;
 
-    if ($option->{dbtype} eq 'cdb') {
-	my $db = tie %$hash_ref, 'CDB_File', $filename or die;
-    }
-    else {
-	my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die;
+    my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die;
 
-	# filter setting
-	$db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-	$db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-	$db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-	$db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
-    }
+    # filter setting
+    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
+    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
 }
 
 
+################################################################################
+#                                                                              #
+#                                CDB 関係                                      #
+#                                                                              #
+################################################################################
+
+#
+# CDBに保存
+#
+sub store_cdb {
+    my ($filename, $hash_ref) = @_;
+    my %hash;
+    
+    my $db =  new CDB_File($filename, "$filename.$$") or die $!;
+    while (my ($key, $value) = each %$hash_ref) {
+	$db->insert($key, $value);
+    }
+    $db->finish;
+}
+
+#
+# CDBの読み込み (前もって全部読み込んでおく)
+#
+sub retrieve_cdb {
+    my ($filename, $hash_ref) = @_;
+    my %hash;
+
+    &tie_cdb($filename, \%hash);
+    while (my ($key, $value) = each %hash) {
+	$key = &decode('utf8', $key);
+	$value = &decode('utf8', $value);
+        $hash_ref->{$key} = $value;
+    }
+    untie %hash;
+}
+
+
+#
+# CDBをtie
+#
+sub tie_cdb {
+    my ($filename, $hash_ref) = @_;
+
+    my $db = tie %$hash_ref, 'CDB_File', $filename or die;
+
+}
+
+
+# データベースの値を得る
+# cdbの場合はdecodeする
+sub GetValue {
+    my ($this, $value) = @_;
+
+    return &decode('utf8', $value);
+}
 
 
 ################################################################################
@@ -2046,19 +2089,6 @@ sub tie_mldbm {
     $db->filter_store_value(sub{});
 }
 
-
-# データベースの値を得る
-# cdbの場合はdecodeする
-sub GetValue {
-    my ($this, $value) = @_;
-
-    if ($this->{dbtype} eq 'cdb') {
-	return &decode('utf8', $value);
-    }
-    else {
-	return $value;
-    }
-}
 
 ################################################################################
 #                                                                              #
