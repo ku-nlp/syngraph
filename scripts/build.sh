@@ -52,6 +52,9 @@ for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_a
     fi
 done
 
+# 全部削除する
+rm -v df.db doclen.db
+rm -v $INDEX_FILE
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
 
@@ -60,12 +63,12 @@ rm -v $INDEX_FILE
 echo "STEP1 start\t`date`"
 ########################################################
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym_rsk=$SIM_C_DIR/synonym_rsk.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt --dbtype cdb
+perl -I$PERL_DIR conv_syndb.pl --synonym_rsk=$SIM_C_DIR/synonym_rsk.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt
 
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
 # コンパイル
-perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR --dbtype cdb
+perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
 
 # synhead.mldbmのソート
 # syndataをtieできない(odani0116)

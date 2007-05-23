@@ -210,7 +210,7 @@ while (<FILE>) {
 
     foreach my $wordid0 (@word0_list) {
 	foreach my $wordid1 (@word1_list) {
-	    print CHANGE "$wordid0 $wordid1\n";
+	    print CHANGE "$wordid0 $wordid1 $words[2]\n";
 	}
     }
 }

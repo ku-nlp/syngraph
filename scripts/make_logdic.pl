@@ -32,4 +32,4 @@ close(FILE);
 #
 # 辞書抽出のログ保存（CGI用）
 #
-&SynGraph::store_db("$dir/log_dic.cdb", \%log_dic);
+&SynGraph::store_cdb("$dir/log_dic.cdb", \%log_dic);

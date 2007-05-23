@@ -12,24 +12,17 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s', 'dbtype=s');
+my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s');
 my $sgh = new SynGraph( undef, undef);
-
-my $dbext = $opt{dbtype} eq 'cdb' ? 'cdb' : 'db';
-
-my $db_option;
-$db_option = { 'dbtype' => 'cdb' } if $opt{dbtype} eq 'cdb';
 
 # synparent.mldbm、synantonym.mldbmがある場所(そこに出来た類義表現DBも出力する)
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 # 上位・下位関係の読み込み
-# &SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
-&SynGraph::retrieve_db("$dir/synparent.$dbext", $sgh->{synparent}, $db_option);
+&SynGraph::retrieve_cdb("$dir/synparent.cdb", $sgh->{synparent});
 
 # 反義関係の読み込み
-# &SynGraph::retrieve_mldbm("$dir/synantonym.mldbm", $sgh->{synantonym});
-&SynGraph::retrieve_db("$dir/synantonym.$dbext", $sgh->{synantonym}, $db_option);
+&SynGraph::retrieve_cdb("$dir/synantonym.cdb", $sgh->{synantonym});
 
 # KNP結果ファイルを開く
 $sgh->open_parsed_file($opt{knp_result}) or die;
@@ -58,15 +51,15 @@ while (my $knp_result = $sgh->read_parsed_data) {
 # 類義表現DB内のマッチング→IDの付与の繰り返し
 $sgh->{mode} = 'repeat';
 while (keys %{$sgh->{syndata}}) {
-    print STDERR scalar(localtime), "\n";
+    print STDERR scalar(localtime), "SYNノード付与開始\n";
 
     foreach my $sid (sort keys %{$sgh->{syndata}}) {
         # SYNノードがこれ以上追加されなくなると終了
         goto COMPILE_END if ($sgh->{regnode} eq $sid);
 
         # 1キーワードのものはコンパイルする必要なし
-        if (@{$sgh->{syndata}->{$sid}} > 1) {
-            for (my $bp_num = 0; $bp_num < @{$sgh->{syndata}->{$sid}}; $bp_num++) {
+        if (@{$sgh->{syndata}{$sid}} > 1) {
+            for (my $bp_num = 0; $bp_num < @{$sgh->{syndata}{$sid}}; $bp_num++) {
 		# 上位ID、反義語は張り付けない
                 $sgh->make_bp($sgh->{syndata}, $sid, $bp_num);
             }
@@ -77,6 +70,6 @@ while (keys %{$sgh->{syndata}}) {
 # コンパイルした類義表現DBの保存
 COMPILE_END:
 {
-    &SynGraph::store_db("$dir/synhead.$dbext", $sgh->{synhead}, $db_option);
+    &SynGraph::store_cdb("$dir/synhead.cdb", $sgh->{synhead});
     &SynGraph::store_mldbm("$dir/syndata.mldbm", $sgh->{syndata});
 }

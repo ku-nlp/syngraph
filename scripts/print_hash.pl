@@ -10,7 +10,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-die "Usage: print_db.pl db_name key\n" if (@ARGV < 1);
+die "Usage: print_hash.pl db_name key\n" if (@ARGV < 1);
 
 map {$_ = &decode('euc-jp', $_)} @ARGV;
 my $db_name = shift @ARGV;
@@ -45,6 +45,23 @@ elsif ($db_name =~ /mldbm$/) {
         while (my ($k, $v) = each %db) {
             print $k, "\n";
             Dumpvalue->new->dumpValue($v);
+        }
+    }
+    untie %db;
+}
+# CDBの場合
+elsif ($db_name =~ /cdb$/) {
+    &SynGraph::tie_cdb($db_name, \%db);
+    if (@key) {
+        foreach my $k (@key) {
+            print $k, "\n";
+            Dumpvalue->new->dumpValue(&SynGraph::GetValue($db{$k}));
+        }
+    }
+    else {
+        while (my ($k, $v) = each %db) {
+            print &SynGraph::GetValue($k), "\n";
+            Dumpvalue->new->dumpValue(&SynGraph::GetValue($v));
         }
     }
     untie %db;
