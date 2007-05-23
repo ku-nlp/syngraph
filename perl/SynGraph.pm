@@ -88,6 +88,8 @@ sub new {
         db_type    => '',
         db_name    => '',
         db_table   => '',
+	dbext      => $option->{dbtype} eq 'cdb' ? 'cdb' : 'db',
+	dbtype      => $option->{dbtype},
         dbh        => undef,
         sth        => undef,
         st_head    => {},
@@ -99,8 +101,10 @@ sub new {
     bless $this;
 
     if (defined $syndbdir) {
+	my $db_option;
+	$db_option = { 'dbtype' => 'cdb' } if $option->{dbtype} eq 'cdb';
 	# 類義表現DBをtie
-	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.db", "$syndbdir/synparent.db", "$syndbdir/synantonym.db");
+	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead." . $this->{dbext}, "$syndbdir/synparent." . $this->{dbext}, "$syndbdir/synantonym." . $this->{dbext}, $db_option);
     }
     
     return $this;
@@ -204,7 +208,7 @@ sub make_bp {
 
 	# キャッシュしておく
  	if (!defined $this->{synheadcache}{$node->{id}}) {
- 	    $this->{synheadcache}{$node->{id}} = $this->{synhead}{$node->{id}};
+ 	    $this->{synheadcache}{$node->{id}} = $this->GetValue($this->{synhead}{$node->{id}});
  	}
 
         if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
@@ -851,7 +855,7 @@ sub _regnode {
 
 	    # キャッシュしておく
 	    if ($this->{mode} ne 'compile' and $relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
-		$this->{synparentcache}{$id} = $this->{synparent}->{$id};
+		$this->{synparentcache}{$id} = $this->GetValue($this->{synparent}->{$id});
 	    }
 
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
@@ -885,7 +889,7 @@ sub _regnode {
 
 	    # キャッシュしておく
  	    if ($this->{mode} ne 'compile' and $antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
- 		$this->{synantonymcache}{$id} = $this->{synantonym}{$id};
+ 		$this->{synantonymcache}{$id} = $this->GetValue($this->{synantonym}{$id});
  	    }
 
 	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
@@ -1848,16 +1852,16 @@ sub retrieve_syndb {
 # 類義表現DBをtie
 #
 sub tie_syndb {
-    my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
+    my ($this, $syndata, $synhead, $synparent, $synantonym, $db_option) = @_;
     $syndata = '../syndb/i686/syndata.mldbm' unless ($syndata);
-    $synhead = '../syndb/i686/synhead.db' unless ($synhead);
-    $synparent = '../syndb/i686/synparent.db' unless ($synparent);
-    $synantonym = '../syndb/i686/synantonym.db' unless ($synantonym);
+    $synhead = '../syndb/i686/synhead.' . $this->{dbext} unless ($synhead);
+    $synparent = '../syndb/i686/synparent.db' . $this->{dbext} unless ($synparent);
+    $synantonym = '../syndb/i686/synantonym.db' . $this->{dbext}  unless ($synantonym);
 
     &tie_mldbm($syndata, $this->{syndata});
-    &tie_db($synhead, $this->{synhead});
-    &tie_db($synparent, $this->{synparent});
-    &tie_db($synantonym, $this->{synantonym});
+    &tie_db($synhead, $this->{synhead}, $db_option);
+    &tie_db($synparent, $this->{synparent}, $db_option);
+    &tie_db($synantonym, $this->{synantonym}, $db_option);
 }
 
 #
@@ -1897,41 +1901,55 @@ sub untie_syndb {
 
 ################################################################################
 #                                                                              #
-#                               BerkeleyDB 関係                                #
+#                               BerkeleyDB, CDB 関係                           #
 #                                                                              #
 ################################################################################
 
 #
-# BerkeleyDBに保存
+# BerkeleyDB/CDBに保存
 #
 sub store_db {
-    my ($filename, $hash_ref) = @_;
+    my ($filename, $hash_ref, $option) = @_;
     my %hash;
 
-    # ファイルを消して作りなおす
-    my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die;
+    if ($option->{dbtype} eq 'cdb') {
+	my $db =  new CDB_File($filename, "$filename.$$") or die $!;
 
-    # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
-
-    while (my ($key, $value) = each %$hash_ref) {
-        $hash{$key} = $value;
+	while (my ($key, $value) = each %$hash_ref) {
+	    $db->insert($key, $value);
+	}
+	$db->finish;
     }
-    untie %hash;
+    else {
+	# ファイルを消して作りなおす
+	my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die;
+
+	# filter setting
+	$db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+	$db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+	$db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
+	$db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+
+	while (my ($key, $value) = each %$hash_ref) {
+	    $hash{$key} = $value;
+	}
+	untie %hash;
+    }
 }
 
 #
 # DBの読み込み (前もって全部読み込んでおく)
 #
 sub retrieve_db {
-    my ($filename, $hash_ref) = @_;
+    my ($filename, $hash_ref, $option) = @_;
     my %hash;
 
-    &tie_db($filename, \%hash);
+    &tie_db($filename, \%hash, $option);
     while (my ($key, $value) = each %hash) {
+	if ($option->{dbtype} eq 'cdb') {
+	    $key = &decode('utf8', $key);
+	    $value = &decode('utf8', $value);
+	}
         $hash_ref->{$key} = $value;
     }
     untie %hash;
@@ -1939,18 +1957,23 @@ sub retrieve_db {
 
 
 #
-# BerkeleyDBをtie
+# BerkeleyDB/CDBをtie
 #
 sub tie_db {
-    my ($filename, $hash_ref) = @_;
+    my ($filename, $hash_ref, $option) = @_;
 
-    my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die;
+    if ($option->{dbtype} eq 'cdb') {
+	my $db = tie %$hash_ref, 'CDB_File', $filename or die;
+    }
+    else {
+	my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die;
 
-    # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+	# filter setting
+	$db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
+	$db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
+	$db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
+	$db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+    }
 }
 
 
@@ -2024,74 +2047,18 @@ sub tie_mldbm {
 }
 
 
-################################################################################
-#                                                                              #
-#                                  CDB 関係                                    #
-#                                                                              #
-################################################################################
+# データベースの値を得る
+# cdbの場合はdecodeする
+sub GetValue {
+    my ($this, $value) = @_;
 
-#
-# CDBに保存 (全部一括して保存)
-#
-sub store_cdb {
-    my ($filename, $hash_ref) = @_;
-    my %hash;
-
-    &create_cdb($filename, \%hash);
-    while (my ($key, $value) = each %$hash_ref) {
-        $hash{$key} = $value;
+    if ($this->{dbtype} eq 'cdb') {
+	return &decode('utf8', $value);
     }
-    untie %hash;
-}
-
-
-#
-# CDBの読み込み (前もって全部読み込んでおく)
-#
-sub retrieve_cdb {
-    my ($filename, $hash_ref) = @_;
-    my %hash;
-
-    &tie_cdb($filename, \%hash);
-    while (my ($key, $value) = each %hash) {
-        $hash_ref->{$key} = $value;
+    else {
+	return $value;
     }
-    untie %hash;
 }
-
-
-#
-# CDBを保存用にtie
-#
-sub create_cdb {
-    my ($filename, $hash_ref) = @_;
-
-    my $db = tie %$hash_ref, 'CDB_File', -Filename => $filename, -Flags => DB_CREATE or die;
-
-    # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{});
-    $db->filter_store_value(sub{});
-}
-
-
-#
-# CDBを読み込み専用でtie
-#
-sub tie_cdb {
-    my ($filename, $hash_ref) = @_;
-
-    my $db = tie %$hash_ref, 'CDB_File', -Filename => $filename, -Flags => DB_RDONLY or die;
-
-    # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{});
-    $db->filter_store_value(sub{});
-}
-
-
 
 ################################################################################
 #                                                                              #

@@ -45,14 +45,13 @@ INDEX_FILE='test_index.db'
 export PATH=$SRC_DIR:$PATH
 export PERL5LIB=$SRC_DIR:$PERL5LIB
 
-
-
 # 全部削除する
-rm -v $SYNDB_DIR/synparent.db $SYNDB_DIR/synantonym.db
-rm -v $SYNDB_DIR/synnumber.db $SYNDB_DIR/syndb.db $SYNDB_DIR/synchild.db
-rm -v $SYNDB_DIR/log_antonym.db $SYNDB_DIR/log_isa.db
-rm -v $SYNDB_DIR/syndb.convert $SYNDB_DIR/syndb.parse
-rm -v $SYNDB_DIR/synhead.db $SYNDB_DIR/syndata.mldbm
+for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synrel_num.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm; do
+    if [ -e $SYNDB_DIR/$f ] ; then
+	rm -v $SYNDB_DIR/$f
+    fi
+done
+
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
 
@@ -61,12 +60,13 @@ rm -v $INDEX_FILE
 echo "STEP1 start\t`date`"
 ########################################################
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym_rsk=$SIM_C_DIR/synonym_rsk.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt
+perl -I$PERL_DIR conv_syndb.pl --synonym_rsk=$SIM_C_DIR/synonym_rsk.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt --dbtype cdb
 
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
 # コンパイル
-perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR --dbtype cdb
+
 # synhead.mldbmのソート
 # syndataをtieできない(odani0116)
 #perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR

@@ -4,6 +4,7 @@
 
 use strict;
 use Getopt::Long;
+use CDB_File;
 use SynGraph;
 use utf8;
 binmode STDIN, ':encoding(euc-jp)';
@@ -11,11 +12,12 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s');
+my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'dbtype=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
 
+my $dbext = $opt{dbtype} eq 'cdb' ? 'cdb' : 'db';
 
 my %definition;                       # 語ID => 定義文の配列
 my %syn_hash;                         # 表現 => SYNID
@@ -30,6 +32,9 @@ my %syndb;                            # 同義グループ
 my %synnum;                           # 同義グループ番号情報
 my $syn_number = 1;                   # 同義グループ番号
 my %def_delete;
+
+my $db_option;
+$db_option = { 'dbtype' => 'cdb' } if $opt{dbtype} eq 'cdb';
 
 #
 # 定義文の読み込み
@@ -254,45 +259,44 @@ if ($opt{convert_file}) {
     close(CF);
 }
 
-
 #
 # 上位・下位関係の保存
 #
-&SynGraph::store_db("$dir/synparent.db", \%relation_parent);
+&SynGraph::store_db("$dir/synparent.$dbext", \%relation_parent, $db_option);
 
 #
 # 反義関係の保存
 #
-&SynGraph::store_db("$dir/synantonym.db", \%antonym);
+&SynGraph::store_db("$dir/synantonym.$dbext", \%antonym, $db_option);
 
 #
 # 上位下位のレベル（下位語の数）
 #
-&SynGraph::store_db("$dir/synrel_num.db", \%rel_num);
+&SynGraph::store_db("$dir/synrel_num.$dbext", \%rel_num, $db_option);
 #
 # 同義グループの保存（CGI用）
 #
-&SynGraph::store_db("$dir/syndb.db", \%syndb);
+&SynGraph::store_db("$dir/syndb.$dbext", \%syndb, $db_option);
 
 #
 # 同義グループ番号の保存（CGI用）
 #
-&SynGraph::store_db("$dir/synnumber.db", \%synnum);
+&SynGraph::store_db("$dir/synnumber.$dbext", \%synnum, $db_option);
 
 #
 # 下位・上位関係？の保存（CGI用）
 #
-&SynGraph::store_db("$dir/synchild.db", \%relation_child);
+&SynGraph::store_db("$dir/synchild.$dbext", \%relation_child, $db_option);
 
 #
 # 上位下位関係のログ保存（CGI用）
 #
-&SynGraph::store_db("$dir/log_isa.db", \%log_isa);
+&SynGraph::store_db("$dir/log_isa.$dbext", \%log_isa, $db_option);
 
 #
 # 反義関係のログ保存（CGI用）
 #
-&SynGraph::store_db("$dir/log_antonym.db", \%log_antonym);
+&SynGraph::store_db("$dir/log_antonym.$dbext", \%log_antonym, $db_option);
 
 #
 # SYNIDを取得、なければ同義グループを作る

@@ -14,7 +14,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym', 'dbtype=s');
 
 my $option;
 my $knp_option;
@@ -22,6 +22,7 @@ my $regnode_option;
 $option->{debug} = 1 if $opt{debug};
 $option->{orchid} = 1 if $opt{orchid};
 $option->{log_sg} = 1 if $opt{log_sg};
+$knp_option->{dbtype} = $opt{dbtype} if $opt{dbtype};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
 $knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};

@@ -5,25 +5,31 @@
 use strict;
 use Getopt::Long;
 use SynGraph;
+use CDB_File;
 use utf8;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s');
+my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s', 'dbtype=s');
 my $sgh = new SynGraph( undef, undef);
+
+my $dbext = $opt{dbtype} eq 'cdb' ? 'cdb' : 'db';
+
+my $db_option;
+$db_option = { 'dbtype' => 'cdb' } if $opt{dbtype} eq 'cdb';
 
 # synparent.mldbm、synantonym.mldbmがある場所(そこに出来た類義表現DBも出力する)
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 # 上位・下位関係の読み込み
 # &SynGraph::retrieve_mldbm("$dir/synparent.mldbm", $sgh->{synparent});
-&SynGraph::retrieve_db("$dir/synparent.db", $sgh->{synparent});
+&SynGraph::retrieve_db("$dir/synparent.$dbext", $sgh->{synparent}, $db_option);
 
 # 反義関係の読み込み
 # &SynGraph::retrieve_mldbm("$dir/synantonym.mldbm", $sgh->{synantonym});
-&SynGraph::retrieve_db("$dir/synantonym.db", $sgh->{synantonym});
+&SynGraph::retrieve_db("$dir/synantonym.$dbext", $sgh->{synantonym}, $db_option);
 
 # KNP結果ファイルを開く
 $sgh->open_parsed_file($opt{knp_result}) or die;
@@ -71,6 +77,6 @@ while (keys %{$sgh->{syndata}}) {
 # コンパイルした類義表現DBの保存
 COMPILE_END:
 {
-    &SynGraph::store_db("$dir/synhead.db", $sgh->{synhead});
+    &SynGraph::store_db("$dir/synhead.$dbext", $sgh->{synhead}, $db_option);
     &SynGraph::store_mldbm("$dir/syndata.mldbm", $sgh->{syndata});
 }
