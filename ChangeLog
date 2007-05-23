@@ -1,3 +1,8 @@
+2007-05-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm, scripts/build.sh, scripts/compile.pl, scripts/conv_syndb.pl, scripts/knp_syn.pl:
+	syndata以外のデータベースをCDBにして、高速化第4弾
+
 2007-05-22  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
