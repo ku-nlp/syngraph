@@ -1,3 +1,8 @@
+2007-05-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/print_hash.pl:
+	CDBに対応
+
 2007-05-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/(コンパイル関係)
