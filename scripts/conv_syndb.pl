@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_rsk=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -59,11 +59,11 @@ if ($opt{definition}) {
 #
 # 同義語グループの読み込み
 #
-my @file = ('synonym_rsk', 'synonym_web');
+my @file = ('synonym_dic', 'synonym_web');
 foreach my $file_type (@file) {
     my $file_tag;
-    if ($file_type eq 'synonym_rsk') {
-	$file_tag = '<RSK>';
+    if ($file_type eq 'synonym_dic') {
+	$file_tag = '<DIC>';
     }
     elsif ($file_type eq 'synonym_web') {
 	$file_tag = '<Web>';
@@ -117,7 +117,7 @@ if ($opt{isa}) {
         my $parentsyn_list = &get_synid($parent);
 	if (&contradiction_check($parentsyn_list, $childsyn_list)) {
 	    if ($opt{log_merge}) {
-		open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;    
+		open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
 		print LM "X contradiction isa $child, $parent\n";
 		close(LM);
 	    }
@@ -157,7 +157,7 @@ if ($opt{antonym}) {
 	my $word2syn_list = &get_synid($word2);
 	if (&contradiction_check($word1syn_list, $word2syn_list)) {
 	    if ($opt{log_merge}) {
-		open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;    
+		open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
 		print LM "X contradiction isa $word1, $word2\n";
 		close(LM);
 	    }
@@ -189,7 +189,7 @@ foreach my $midasi (keys %definition) {
     my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
     $syn_number++;
 
-    my $midasi_key = $midasi . "<RSK>";
+    my $midasi_key = $midasi . "<DIC>";
     my $def_key = $definition{$midasi} . "<定義文>";
     push (@{$syn_group{$synid}}, $midasi_key);
     push (@{$syn_group{$synid}}, $def_key);
@@ -210,7 +210,7 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/<(定義文|RSK|Web)>$//g;
+	    my $tag = $1 if $expression =~ s/<(定義文|DIC|Web)>$//g;
 	    
 	    # /（ふり仮名）:1/1:1/1:1/1などを取る
 	    ($expression, my $kana, my $word_id) = split(/\/|:/, $expression, 3);
@@ -237,7 +237,7 @@ if ($opt{convert_file}) {
 	    # １個目の語は正しいword_idがついている。２語目以降は展開の結果（暫定）
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
-	    if ($tag eq 'RSK') {
+	    if ($tag eq 'DIC') {
 		$expression .= $flag ? "$kana". "<$tag>" : "$kana" . "$word_id" . "<$tag>";
 		$flag = 1;
 	    }
@@ -303,7 +303,7 @@ sub get_synid {
 	$syn_number++;
 
         # グループに登録
-	my $word_key = $word . "<RSK>";
+	my $word_key = $word . "<DIC>";
 	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
 
