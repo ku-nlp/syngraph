@@ -284,6 +284,8 @@ sub st_make_bp {
 		# マッチ調べる
 		my $result = $this->syngraph_matching('Matching', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
 						      \%body, $matching_option);
+
+		delete $this->{tm_sg}{$tmid};
 		next if ($result eq 'unmatch');
 
 
