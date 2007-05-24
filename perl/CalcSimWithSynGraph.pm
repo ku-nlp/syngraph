@@ -34,22 +34,24 @@ sub Match {
     $knp_option->{postprocess} = 1 if $option->{postprocess};
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
+    $regnode_option->{hypocut_attachnode} = $option->{hypocut_attachnode} if $option->{hypocut_attachnode};
     $matching_option->{pa_matching} = 1 if $option->{pa_matching};
     $matching_option->{wr_matching} = 1 if $option->{wr_matching};
+    $matching_option->{hypocut_matching} = $option->{hypocut_matching} if $option->{hypocut_matching};
     $option->{log_sg} = 1 if $option->{log_sg};
 
-    my $SynGraph = new SynGraph($syndbdir, $knp_option);    
+    my $sgh = new SynGraph($syndbdir, $knp_option);    
 
     my $sid1 = "$id-1";
     my $sid2 = "$id-2";
     
     # SYNGRAPHを作成
     my $ref={};
-    $SynGraph->make_sg($str1, $ref, $sid1, $regnode_option, $option);
-    $SynGraph->make_sg($str2, $ref, $sid2, $regnode_option, $option);
+    $sgh->make_sg($str1, $ref, $sid1, $regnode_option, $option);
+    $sgh->make_sg($str2, $ref, $sid2, $regnode_option, $option);
     Dumpvalue->new->dumpValue($ref) if $option->{debug};
-#    $search->{sgh}->format_syngraph($search->{ref}->{$sid1}) if $option->{debug};
-#    $search->{sgh}->format_syngraph($search->{ref}->{$sid2}) if $option->{debug};
+#    $sgh->format_syngraph($ref->{$sid1}) if $option->{debug};
+#    $sgh->format_syngraph($ref->{$sid2}) if $option->{debug};
 
     my $graph_1 = $ref->{$sid1};
     my $headbp_1 = @{$ref->{$sid1}}-1;
@@ -58,7 +60,7 @@ sub Match {
     
     # SYNGRAPHのマッチング
     # garaph_1は部分、graph_2は完全マッチング
-    my $result = $SynGraph->syngraph_matching('Matching', $graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
+    my $result = $sgh->syngraph_matching('Matching', $graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
     
     if ($option->{debug} and $result ne 'unmatch') {
 	print "SYNGRAPHマッチング結果\n";

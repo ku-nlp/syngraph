@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'log_sg', 'match_print', 'no_case', 'postprocess', 'relation', 'antonym', 'pa_matching', 'wr_matching', 'orchid');
+my %opt; GetOptions(\%opt, 'debug', 'log_sg', 'match_print', 'no_case', 'postprocess', 'relation', 'antonym', 'hypocut_attachnode=s', 'pa_matching', 'wr_matching', 'hypocut_matching=s', 'orchid');
 
 my ($zenbun, $query);
 if ($ARGV[0] && $ARGV[1]) {
@@ -36,8 +36,10 @@ $option->{no_case} = 1 if $opt{no_case};
 $option->{postprocess} = 1 if $opt{postprocess};
 $option->{relation} = 1 if $opt{relation};
 $option->{antonym} = 1 if $opt{antonym};
+$option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 $option->{pa_matching} = 1 if $opt{pa_matching};
 $option->{wr_matching} = 1 if $opt{wr_matching};
+$option->{hypocut_matching} = $opt{hypocut_matching} if $opt{hypocut_matching};
 
 my $result = $calcsim->Match(1, $zenbun, $query, $option);
 
