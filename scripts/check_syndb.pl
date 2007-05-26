@@ -57,7 +57,6 @@ foreach my $rel (keys %Check_relation) {
 	    my ($flag, $rid_list);
 	    my $result = $sgh->GetValue($sgh->{syndb}{$rid});
 	    foreach my $expression (split (/\|/, $result)) {
-		$expression =~ s/<(定義文|RSK|Web)>$//;
 		$rid_list .= $flag ? "|$expression" : $expression;
 		$flag = 1;
 	    }
@@ -77,7 +76,10 @@ if ($opt{print_syngraph}) {
     # 同義グループに所属するSYNGRAPHを出力
     my %expression_cash;
     foreach my $expression (split(/\|/, $sgh->GetValue($sgh->{syndb}{$synid}))) {
-	$expression =~ s/<定義文>|<RSK>|<Web>//g;
+
+	# ふりがな, wordid, タグ
+	$expression =~ s/<定義文>|<DIC>|<Web>//g;
+	$expression = (split(/\//, $expression))[0];
 
 	next if $expression_cash{$expression};
 
