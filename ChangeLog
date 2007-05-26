@@ -1,3 +1,17 @@
+2007-05-26  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/dic_web
+	alphabet同士の対応を削除(Web辞書)
+	* scripts/build.sh, sort_synhead.pl, perl/SynGraph.pm
+	synheadをsort
+	* syndb
+	alphabet同士の対応を削除(Web辞書),<RSK>タグを<DIC>に,synheadをsort
+	
+2007-05-25  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl, knp_syn.pl, perl/CalcWithSynGraph.pl, SynGraph.pm
+	上位ノードの貼り付け、および上位ノードを介したマッチングにおいて下位語数のラベルで操作するoption付与
+	
 2007-05-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/print_hash.pl:
