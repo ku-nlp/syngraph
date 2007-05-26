@@ -74,6 +74,7 @@ sub new {
         syndata    => {},
         syndatacache    => {},
         synhead    => {},
+        synsort    => {},
         synheadcache    => {},
         synparent  => {},
         synparentcache  => {},
@@ -1847,7 +1848,7 @@ sub _mldbm_disconnect {
 #
 sub retrieve_syndb {
     my ($this, $syndata, $synhead, $synparent, $synantonym) = @_;
-    $syndata = 'syndata.mldbm' unless ($syndata);
+    $syndata = '../syndb/i686/syndata.mldbm' unless ($syndata);
     $synhead = '../syndb/i686/synhead.cdb' unless ($synhead);
     $synparent = '../syndb/i686/synparent.cdb' unless ($synparent);
     $synantonym = '../syndb/i686/synantonym.cdb' unless ($synantonym);

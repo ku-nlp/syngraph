@@ -71,10 +71,9 @@ juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $
 perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
 
 # synhead.mldbmのソート
-# syndataをtieできない(odani0116)
-#perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
+perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
 
-#mv $SYNDB_DIR/synhead_sort.mldbm $SYNDB_DIR/synhead.mldbm
+mv $SYNDB_DIR/synhead_sort.cdb $SYNDB_DIR/synhead.cdb
 echo "STEP1 end\t`date`"
 
 exit
