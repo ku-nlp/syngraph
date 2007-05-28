@@ -1,9 +1,16 @@
+2007-05-29  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/dic_web, dic_change, syndb
+	一方がもう一方に完全に含まれているもの削除(Web辞書)
+
 2007-05-26  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/dic_web
 	alphabet同士の対応を削除(Web辞書)
 	* scripts/build.sh, sort_synhead.pl, perl/SynGraph.pm
 	synheadをsort
+	* scripts/check_syndb.pl, cgi/index.cgi
+	<RSK>タグを<DIC>に
 	* syndb
 	alphabet同士の対応を削除(Web辞書),<RSK>タグを<DIC>に,synheadをsort
 	
