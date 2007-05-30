@@ -261,6 +261,82 @@ sub make_bp {
 
 
 #
+# BPにSYNノードを付与する
+#
+sub make_bp_new {
+    my ($this, $ref, $sid, $bp, $regnode_option, $option) = @_;
+    my %synnode_check;
+
+    # 各SYNノードをチェック
+    foreach my $node (@{$ref->{$sid}[$bp]}) {
+        next if ($node->{weight} == 0);
+
+	# キャッシュしておく
+ 	if (!defined $this->{synheadcache}{$node->{id}}) {
+	    if ($this->{mode} eq 'repeat') { # コンパイル時
+		$this->{synheadcache}{$node->{id}} = $this->{synhead}{$node->{id}};
+	    }
+	    else {
+		$this->{synheadcache}{$node->{id}} = $this->GetValue($this->{synhead}{$node->{id}});
+	    }
+	}
+
+        if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
+            foreach my $mid (split(/\|/, $this->{synheadcache}{$node->{id}})) {
+                # SYNIDが同じものは調べない
+                my $synid1 = (split(/,/, $sid))[0];
+                my $synid2 = (split(/,/, $mid))[0];
+                next if ($synid1 eq $synid2);
+
+		# キャッシュしておく
+ 		if (!defined $this->{syndatacache}{$mid}) {
+		    $this->{syndatacache}{$mid} = $this->{syndata}{$mid};
+ 		}
+		defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
+
+		my $headbp = @{$this->{syndatacache}{$mid}} - 1;
+
+ 		# マッチ調べる
+		my $mode = $this->{mode};
+		$this->{mode} = 'matching';
+		my $result = $this->syngraph_matching($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		next if ($this->{mode} eq 'unmatch');
+		$this->{mode} = $mode;
+		
+		#print $this->Log_bp($result, $synid2) if($option->{log_sg}) ;
+
+		# 新たなSYNノードとして貼り付けてよいかどうかをチェック
+		# SYNノードとしての要素を獲得
+		my $syn = $this->get_nodefac($ref->{$sid}, $bp, $this->{syndatacashe}{$mid}, $headbp, $result);
+		next if ($syn eq 'unmatch');
+		
+		$this->_regnode({ref            => $ref,
+				 sid            => $sid,
+				 bp             => $bp,
+				 id             => $synid2,
+				 fuzoku         => $syn->{fuzoku},
+				 midasi         => $syn->{midasi},
+				 matchbp        => $syn->{matchbp},
+				 childbp        => $syn->{childbp},
+				 parentbp       => $syn->{parentbp},
+				 kakari_type    => $syn->{kakari_type},
+				 case           => $syn->{case},
+				 kanou          => $syn->{kanou},
+				 sonnkei        => $syn->{sonnkei},
+				 ukemi          => $syn->{ukemi},
+				 shieki         => $syn->{shieki},
+				 negation       => $syn->{negation},
+				 level          => $syn->{level}, 
+				 score          => $syn->{score} * $synonym_penalty,
+				 weight         => $syn->{weight},
+				 regnode_option => $regnode_option});
+            }
+        }
+    }
+}
+
+
+#
 # BPにIDを付与する (部分木用)
 #
 sub st_make_bp {
@@ -860,12 +936,12 @@ sub _regnode {
 	if ($regnode_option->{relation}){
 
 	    # キャッシュしておく
-	    if ($this->{mode} ne 'compile' and $relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
+	    if ($relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
 		$this->{synparentcache}{$id} = $this->GetValue($this->{synparent}->{$id});
 	    }
 
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
-	    if ($this->{mode} ne 'compile' and $this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
+	    if ($this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
 		foreach my $pid_num (split(/\|/, $this->{synparentcache}{$id})) {
 		    my ($pid, $number) = split(/,/, $pid_num);
 		    next if ($regnode_option->{hypocut_attachnode} and $regnode_option->{hypocut_attachnode} < $number);
@@ -898,12 +974,12 @@ sub _regnode {
 	if ($regnode_option->{antonym}){
 
 	    # キャッシュしておく
- 	    if ($this->{mode} ne 'compile' and $antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
+ 	    if ($antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
  		$this->{synantonymcache}{$id} = $this->GetValue($this->{synantonym}{$id});
  	    }
 
 	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
-	    if ($this->{mode} ne 'compile' and $this->{synantonymcache}{$id} and $antonym != 1 and $relation != 1) {
+	    if ($this->{synantonymcache}{$id} and $antonym != 1 and $relation != 1) {
 		foreach my $aid (split(/\|/, $this->{synantonymcache}{$id})) {
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
@@ -1257,6 +1333,262 @@ sub pa_matching {
     return;
 }
 
+#
+# SYNGRAPHどうしのマッチング
+# (graph_1の部分とgraph_2の全体)
+#
+sub syngraph_matching_new {
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option) = @_;
+    
+    my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
+    my $matchnode_score = 0;
+    my $matchnode_1;
+    my $matchnode_2;
+    my $matchnodenum1;
+    my $matchnodenum2;
+    my $matchnode_unmatch;
+    my $matchnode_unmatch_num = @types;
+    
+    my $result;
+
+    # BP内でマッチするノードを探す
+    my $nodenum1 = -1;
+    foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
+	$nodenum1++;
+
+	# スコアが低いものは調べない。
+        next if ($node_1->{score} < $matchnode_score);
+
+	my $nodenum2 = -1;
+        foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
+	    $nodenum2++;
+	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
+            if ((!defined $body_hash or &st_check($node_2, $body_hash))
+		and $node_1->{id} eq $node_2->{id} 
+		and (!($node_1->{relation} and $node_2->{relation}) or $matching_option->{wr_matching})
+		and !($matching_option->{hypocut_matching} and (($node_1->{hypo_num} > $matching_option->{hypocut_matching}) or ($node_2->{hypo_num} > $matching_option->{hypocut_matching})))
+		and !($node_1->{antonym} and $node_2->{antonym})) {
+
+		# スコア
+                my $score = $node_1->{score} * $node_2->{score};
+		# スコアが低いものは調べない。同じスコアでも重みの小さなものは調べない。
+		next if ($matchnode_score > $score 
+			 or ($matchnode_score == $score 
+			     and ($matchnode_1->{weight} + $matchnode_2->{weight} > $node_1->{weight} + $node_2->{weight})));
+		
+		# 付属語、要素の違いのチェック
+		my $unmatch;
+		my $unmatch_num;
+		foreach my $type (@types) {
+		    if ($node_1->{$type} ne $node_2->{$type}) {
+			$unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
+			$unmatch_num +=1;
+		    }
+		}
+
+		# スコアが大きいペアを採用。同じスコアならば重みの大きいものを、重みが同じならば要素の違いが少ないものを。
+		if ($matchnode_score < $score
+		    or ($matchnode_1->{weight} + $matchnode_2->{weight} < $node_1->{weight} + $node_2->{weight})
+		    or ($matchnode_1->{weight} + $matchnode_2->{weight} == $node_1->{weight} + $node_2->{weight}
+			and $matchnode_unmatch_num > $unmatch_num)) {
+		    $matchnode_score = $score;
+		    $matchnode_1 = $node_1;
+		    $matchnode_2 = $node_2;
+		    $matchnodenum1 = $nodenum1;
+		    $matchnodenum2 = $nodenum2;
+		    $matchnode_unmatch = $unmatch;
+		    $matchnode_unmatch_num = $unmatch_num;
+		}
+	    }		    
+	}
+    }
+    
+    # BPがマッチしない
+    if ($matchnode_score == 0){
+	$result->{$nodebp_2}{unmatch} = "no_matchnode";
+	$this->{mode} = 'unmatch';
+	return $result;
+    }
+    
+    # BPがマッチした
+    # 対応する基本句番号
+    my $matchbp_1 = join(',', ($matchnode_1->{matchbp} ? sort (keys %{$matchnode_1->{matchbp}}, $nodebp_1) : ($nodebp_1)));
+    my $matchbp_2 = join(',', ($matchnode_2->{matchbp} ? sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2) : ($nodebp_2)));
+    $result->{$matchbp_2}{matchbp} = {$matchbp_1};
+    # 対応する元の表現
+    my $matchmidasi_1;
+    my $matchmidasi_2;
+    foreach my $bp (split/,/, $matchbp_1) {
+	$matchmidasi_1 .= $graph_1->[$bp][0]{midasi};
+    }
+    foreach my $bp (split/,/, $matchbp_2) {
+	$matchmidasi_2 .= $graph_2->[$bp][0]{midasi};
+    }
+    $result->{$matchbp_2}{midasi} = $matchmidasi_1;
+    $result->{$matchbp_2}{matchmidasi} = $matchmidasi_2;
+    # マッチしたノードの情報の居場所
+    $result->{$matchbp_2}{nodedata1} = "$nodebp_1-$matchnodenum1";
+    $result->{$matchbp_2}{nodedata2} = "$nodebp_2-$matchnodenum2";
+    # マッチのスコア,id,素性の違い
+    $result->{$nodebp_2}{score} = $matchnode_score;
+    $result->{$matchbp_2}{matchid} = $matchnode_2->{id};
+    foreach my $type (keys %{$matchnode_unmatch}) {
+	$result->{$nodebp_2}{type_unmatch}{$type} = 1;
+    }
+
+    # $graph_2に子BPがあるかどうか
+    my @childbp_2;
+    if ($matchnode_2->{childbp}) {
+	if (defined $body_hash) {
+	    @childbp_2 = grep($body_hash->{$_}, sort keys %{$matchnode_2->{childbp}});
+	}
+	else {
+	    @childbp_2 = keys %{$matchnode_2->{childbp}};
+	}
+    }
+    if (@childbp_2 > 0) {
+	# $graph_1に子BPがあるかどうか
+	if ($matchnode_1->{childbp}) {
+	    my @childbp_1 = keys %{$matchnode_1->{childbp}};
+	    my %child_1_check;
+	    
+	    # bの各子供にマッチするaの子供を見つける
+	    if (@childbp_1 < @childbp_2) {
+		$result->{$nodebp_2}{unmatch} = "child_less";
+		$this->{mode} = 'unmatch';
+		return $result;
+	    }
+	    
+	    foreach my $child_2 (@childbp_2) {
+		my $match_flag = 0;
+		foreach my $child_1 (@childbp_1) {
+		    next if ($child_1_check{$child_1});
+		    
+		    my $mode = $this->{mode};
+		    $this->{mode} = 'matching';
+		    my $res = $this->syngraph_matching_new($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
+		    next if ($this->{mode} eq 'unmatch');
+		    $this->{mode} = $mode;
+	
+		    foreach my $nodebp (keys %{$res}) {
+			$result->{$nodebp}{matchbp} = $res->{$nodebp}{matchbp};
+			$result->{$nodebp}{midasi} = $res->{$nodebp}{midasi};
+			$result->{$nodebp}{matchmidasi} = $res->{$nodebp}{matchmidasi};			
+			$result->{$nodebp}{score} = $res->{$nodebp}{score};
+			$result->{$nodebp}{matchid} = $res->{$nodebp}{matchid};
+			foreach my $restype (keys %{$res->{$nodebp}{unmatch}}){
+			    $result->{$nodebp}{type_unmatch}{$restype} = 1;
+			}
+			foreach my $resc (keys %{$res->{$nodebp}{childbp}}) {
+			    $result->{$nodebp}{childbp}{$resc} = 1;
+			}
+		    }
+
+		    $child_1_check{$child_1} = 1;
+		    $match_flag = 1;
+		    last;
+		}
+
+		unless ($match_flag) {
+		    $result->{$nodebp_2}{unmatch} = "child_unmatch:$graph_2->[$child_2][0]{midasi}";
+		    $this->{mode} = 'unmatch';
+		    return $result;
+		}
+	    }
+
+	    return $result;
+	}
+	# Aに子BPがない
+	else {
+	    $result->{$nodebp_2}{unmatch} = "child_less";
+	    $this->{mode} = 'unmatch';
+	    return $result;
+	}
+    }
+    # Bに子BPがない
+    else {
+	return $result;
+    }
+}
+
+
+# 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがあってもgraph_2に引き継ぎ可能)
+# SYNノードとしての要素を獲得
+sub get_nodefac {
+    my ($this, $graph1, $bp1, $graph2, $bp2, $mres) = @_;
+    my $syn = {};
+    my $score;
+    my @match;
+    my @child;
+
+    my $num;
+    foreach my $matchkey (keys %{$mres}) {
+	$num++;
+
+	# マッチしたノード情報のありか
+	my ($bp1, $nodenum1) = sprit(/-/, $mres->{$matchkey}{nodedata1});
+	my ($bp2, $nodenum2) = sprit(/-/, $mres->{$matchkey}{nodedata2});
+
+	# ★headを早く見つけることで高速化可能★odani0529
+	# headでの処理
+	if ($matchkey =~ /$bp2/) {
+	    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
+	    foreach my $type ($mres->{$matchkey}{type_unmatch}) {
+		if ($type ne 'negation' and $graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
+		    return 'unmatch';
+		}
+	    }
+	    
+	    # headの要素を引き継ぐ
+	    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		if ($graph1->[$bp1][$nodenum1]{$type}) {
+		    $syn->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+		}
+	    }
+	    
+	    # スコア
+	    $score += $mres->{$matchkey}{score};
+
+	    # マッチした基本句
+	    push (@match, split(/,/, $mres->{$matchkey}{matchbp}));
+
+	    # SYNノードのその他の要素
+	    $syn->{parentbp} = $graph1->[$bp1][$nodenum1]{parentbp};
+	    $syn->{kakari_type} = $graph1->[$bp1][$nodenum1]{kakari_type};
+	}
+
+	# その他での処理
+	else {
+	    # スコア
+	    my $s;
+	    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		$s *= $penalty->{$type};
+	    }
+	    $score += $s;
+
+	    # マッチした基本句
+	    push (@match, split(/,/, $mres->{$matchkey}{matchbp}));
+	}
+    }
+
+    # SYNノードのスコア
+    $syn->{score} = $score / $num;
+
+    # SYNノードのその他の要素
+    @match = sort @match;
+    foreach my $matchbp1 (@match) {
+	$syn->{midasi} += $graph1->[$matchbp1][0]{midasi};	
+	$syn->{weight} += $graph1->[$matchbp1][0]{weight};
+	foreach my $childbp1 (keys %{$graph1->[$matchbp1][0]{childbp}}) {
+	    push (@child, $childbp1) unless grep($childbp1 eq $_, @match);
+	}
+	$syn->{matchbp}{$matchbp1} = 1 unless $matchbp1 == $bp1;
+    }
+    foreach my $childbp1 (@child) {
+	$syn->{childbp}{$childbp1} = 1;
+    }
+}
+    
 sub calc_sim {
     my ($this, $result, $mode, $headbp) = @_;
     my $score_sum;
@@ -1322,7 +1654,7 @@ sub calc_sim {
 
 ################################################################################
 #                                                                              #
-#                        SYNGRAPHのフォーマット 関係                           #
+#                        SYNGRAPHのtool関係                                     #
 #                                                                              #
 ################################################################################
 
@@ -1496,6 +1828,34 @@ sub key_sort_for_format{
 
     return $sort_key;
 }
+
+
+#
+# SYNIDを入力、それに含まれる複数の基本句からなるSYNGRAPHを出力
+#
+sub expansion{
+    my ($this, $synid) = @_;
+    my @result;
+
+    my %expression_cash;
+    foreach my $expression (split(/\|/, $this->GetValue($this->{syndb}{$synid}))) {
+	
+	# ふりがな, wordid, タグ
+	$expression =~ s/<定義文>|<DIC>|<Web>//g;
+	$expression = (split(/\//, $expression))[0];
+	
+	next if $expression_cash{$expression};
+	
+	my $key = "$synid,$expression";
+
+#	Dumpvalue->new->dumpValue($this->{syndata}{$key});
+	push (@result, $this->{syndata}{$key});
+	$expression_cash{$expression} = 1;
+    }    
+    
+    return @result;
+}
+
 
 ################################################################################
 #                                                                              #
