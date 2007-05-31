@@ -362,8 +362,11 @@ sub st_make_bp {
 		my $result = $this->syngraph_matching('Matching', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
 						      \%body, $matching_option);
 
-		delete $this->{tm_sg}{$tmid};
-		next if ($result eq 'unmatch');
+
+		if ($result eq 'unmatch') {
+		    delete $this->{tm_sg}{$tmid};
+		    next;
+		}
 
 
 		# 入力の文節番号集合
