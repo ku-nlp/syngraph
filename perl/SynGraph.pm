@@ -142,7 +142,7 @@ sub make_sg {
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
    if ($ref->{$sid}) {
        for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
+           $this->make_bp_new($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
    }
 }
@@ -299,21 +299,20 @@ sub make_bp_new {
  		# マッチ調べる
 		my $mode = $this->{mode};
 		$this->{mode} = 'matching';
-		my $result = $this->syngraph_matching($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		my $result = $this->syngraph_matching_new($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		next if ($this->{mode} eq 'unmatch');
 		$this->{mode} = $mode;
-		
-		#print $this->Log_bp($result, $synid2) if($option->{log_sg}) ;
 
 		# 新たなSYNノードとして貼り付けてよいかどうかをチェック
 		# SYNノードとしての要素を獲得
-		my $syn = $this->get_nodefac($ref->{$sid}, $bp, $this->{syndatacashe}{$mid}, $headbp, $result);
+		my $syn = $this->get_nodefac($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $result);
 		next if ($syn eq 'unmatch');
-		
+
 		$this->_regnode({ref            => $ref,
 				 sid            => $sid,
 				 bp             => $bp,
 				 id             => $synid2,
+				 log            => $result,
 				 fuzoku         => $syn->{fuzoku},
 				 midasi         => $syn->{midasi},
 				 matchbp        => $syn->{matchbp},
@@ -857,6 +856,7 @@ sub _regnode {
     my $sid                   = $args_hash->{sid};
     my $bp                    = $args_hash->{bp};
     my $id                    = $args_hash->{id};
+    my $log                   = $args_hash->{log};
     my $fuzoku                = $args_hash->{fuzoku};
     my $midasi                = $args_hash->{midasi};
     my $matchbp               = $args_hash->{matchbp};
@@ -908,6 +908,7 @@ sub _regnode {
 
         my $newid = {};
         $newid->{id} = $id;
+        $newid->{log} = $log if ($log);
         $newid->{fuzoku} = $fuzoku if ($fuzoku);
 	$newid->{midasi} = $midasi if ($midasi);
         foreach my $c (keys %{$childbp}) {
@@ -952,6 +953,7 @@ sub _regnode {
 				     sid            => $sid,
 				     bp             => $bp,
 				     id             => $pid,
+				     log            => "parent:$id",
 				     fuzoku         => $fuzoku,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
@@ -988,6 +990,7 @@ sub _regnode {
 				     sid            => $sid,
 				     bp             => $bp,
 				     id             => $aid,
+				     log            => "antonym:$id",
 				     fuzoku         => $fuzoku,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
@@ -1417,7 +1420,7 @@ sub syngraph_matching_new {
     # 対応する基本句番号
     my $matchbp_1 = join(',', ($matchnode_1->{matchbp} ? sort (keys %{$matchnode_1->{matchbp}}, $nodebp_1) : ($nodebp_1)));
     my $matchbp_2 = join(',', ($matchnode_2->{matchbp} ? sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2) : ($nodebp_2)));
-    $result->{$matchbp_2}{matchbp} = {$matchbp_1};
+    $result->{$matchbp_2}{matchbp} = $matchbp_1;
     # 対応する元の表現
     my $matchmidasi_1;
     my $matchmidasi_2;
@@ -1427,16 +1430,16 @@ sub syngraph_matching_new {
     foreach my $bp (split/,/, $matchbp_2) {
 	$matchmidasi_2 .= $graph_2->[$bp][0]{midasi};
     }
-    $result->{$matchbp_2}{midasi} = $matchmidasi_1;
-    $result->{$matchbp_2}{matchmidasi} = $matchmidasi_2;
+    $result->{$matchbp_2}{matchmidasi1} = $matchmidasi_1;
+    $result->{$matchbp_2}{matchmidasi2} = $matchmidasi_2;
     # マッチしたノードの情報の居場所
     $result->{$matchbp_2}{nodedata1} = "$nodebp_1-$matchnodenum1";
     $result->{$matchbp_2}{nodedata2} = "$nodebp_2-$matchnodenum2";
     # マッチのスコア,id,素性の違い
-    $result->{$nodebp_2}{score} = $matchnode_score;
+    $result->{$matchbp_2}{score} = $matchnode_score;
     $result->{$matchbp_2}{matchid} = $matchnode_2->{id};
     foreach my $type (keys %{$matchnode_unmatch}) {
-	$result->{$nodebp_2}{type_unmatch}{$type} = 1;
+	$result->{$matchbp_2}{type_unmatch}{$type} = 1;
     }
 
     # $graph_2に子BPがあるかどうか
@@ -1467,19 +1470,20 @@ sub syngraph_matching_new {
 		foreach my $child_1 (@childbp_1) {
 		    next if ($child_1_check{$child_1});
 		    
-		    my $mode = $this->{mode};
+		    # 子供同士のマッチング
 		    $this->{mode} = 'matching';
 		    my $res = $this->syngraph_matching_new($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
 		    next if ($this->{mode} eq 'unmatch');
-		    $this->{mode} = $mode;
 	
 		    foreach my $nodebp (keys %{$res}) {
 			$result->{$nodebp}{matchbp} = $res->{$nodebp}{matchbp};
-			$result->{$nodebp}{midasi} = $res->{$nodebp}{midasi};
-			$result->{$nodebp}{matchmidasi} = $res->{$nodebp}{matchmidasi};			
+			$result->{$nodebp}{matchmidasi1} = $res->{$nodebp}{matchmidasi1};
+			$result->{$nodebp}{matchmidasi2} = $res->{$nodebp}{matchmidasi2};
+			$result->{$nodebp}{nodedata1} = $res->{$nodebp}{nodedata1};
+			$result->{$nodebp}{nodedata2} = $res->{$nodebp}{nodedata2};
 			$result->{$nodebp}{score} = $res->{$nodebp}{score};
 			$result->{$nodebp}{matchid} = $res->{$nodebp}{matchid};
-			foreach my $restype (keys %{$res->{$nodebp}{unmatch}}){
+			foreach my $restype (keys %{$res->{$nodebp}{type_unmatch}}){
 			    $result->{$nodebp}{type_unmatch}{$restype} = 1;
 			}
 			foreach my $resc (keys %{$res->{$nodebp}{childbp}}) {
@@ -1518,7 +1522,7 @@ sub syngraph_matching_new {
 # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがあってもgraph_2に引き継ぎ可能)
 # SYNノードとしての要素を獲得
 sub get_nodefac {
-    my ($this, $graph1, $bp1, $graph2, $bp2, $mres) = @_;
+    my ($this, $graph1, $headbp1, $graph2, $headbp2, $mres) = @_;
     my $syn = {};
     my $score;
     my @match;
@@ -1526,29 +1530,34 @@ sub get_nodefac {
 
     my $num;
     foreach my $matchkey (keys %{$mres}) {
-	$num++;
 
 	# マッチしたノード情報のありか
-	my ($bp1, $nodenum1) = sprit(/-/, $mres->{$matchkey}{nodedata1});
-	my ($bp2, $nodenum2) = sprit(/-/, $mres->{$matchkey}{nodedata2});
+	my ($bp1, $nodenum1) = split(/-/, $mres->{$matchkey}{nodedata1});
+	my ($bp2, $nodenum2) = split(/-/, $mres->{$matchkey}{nodedata2});
 
 	# ★headを早く見つけることで高速化可能★odani0529
 	# headでの処理
-	if ($matchkey =~ /$bp2/) {
-	    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
-	    foreach my $type ($mres->{$matchkey}{type_unmatch}) {
-		if ($type ne 'negation' and $graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
-		    return 'unmatch';
+	if ($matchkey =~ /$headbp2/) {
+
+	    if ($mres->{$matchkey}{type_unmatch}) {
+		# 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
+		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		    if ($type ne 'negation' and $graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
+			return 'unmatch';
+		    }
 		}
-	    }
-	    
-	    # headの要素を引き継ぐ
-	    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-		if ($graph1->[$bp1][$nodenum1]{$type}) {
-		    $syn->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+		
+		# headの要素を引き継ぐ
+		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		    if ($type ne 'negation') {
+			$syn->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+		    }
+		    else {
+			$syn->{$type} = 1;
+		    }
 		}
-	    }
-	    
+	    }		
+
 	    # スコア
 	    $score += $mres->{$matchkey}{score};
 
@@ -1563,9 +1572,11 @@ sub get_nodefac {
 	# その他での処理
 	else {
 	    # スコア
-	    my $s;
-	    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-		$s *= $penalty->{$type};
+	    my $s = $mres->{$matchkey}{score};
+	    if ($mres->{$matchkey}{type_unmatch}) {
+		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		    $s *= $penalty->{$type};
+		}
 	    }
 	    $score += $s;
 
@@ -1575,21 +1586,26 @@ sub get_nodefac {
     }
 
     # SYNノードのスコア
+    my $num = (keys %{$mres});
     $syn->{score} = $score / $num;
 
     # SYNノードのその他の要素
     @match = sort @match;
     foreach my $matchbp1 (@match) {
-	$syn->{midasi} += $graph1->[$matchbp1][0]{midasi};	
+	$syn->{midasi} .= $graph1->[$matchbp1][0]{midasi};	
 	$syn->{weight} += $graph1->[$matchbp1][0]{weight};
-	foreach my $childbp1 (keys %{$graph1->[$matchbp1][0]{childbp}}) {
-	    push (@child, $childbp1) unless grep($childbp1 eq $_, @match);
+	if ($graph1->[$matchbp1][0]{childbp}) {
+	    foreach my $childbp1 (keys %{$graph1->[$matchbp1][0]{childbp}}) {
+		push (@child, $childbp1) unless grep($childbp1 eq $_, @match);
+	    }
 	}
-	$syn->{matchbp}{$matchbp1} = 1 unless $matchbp1 == $bp1;
+	$syn->{matchbp}{$matchbp1} = 1 unless $matchbp1 == $headbp1;
     }
     foreach my $childbp1 (@child) {
 	$syn->{childbp}{$childbp1} = 1;
     }
+
+    return $syn;
 }
     
 sub calc_sim {
@@ -1657,7 +1673,7 @@ sub calc_sim {
 
 ################################################################################
 #                                                                              #
-#                        SYNGRAPHのtool関係                                     #
+#                        SYNGRAPHのtool関係                                    #
 #                                                                              #
 ################################################################################
 
@@ -1736,7 +1752,7 @@ sub format_syngraph {
 	foreach my $node (@{$syn_bp}) { # ノード単位
 	    # ノードの対応する基本句番号
 	    my $matchbp;
-	    foreach (sort (keys %{$node->{matchbp}}, $bp)){
+	    foreach (sort {$a <=> $b} (keys %{$node->{matchbp}}, $bp)) {
 		$matchbp .= !defined $matchbp ? "$_" : ",$_";
 	    }
 	    
