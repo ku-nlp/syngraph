@@ -6,6 +6,7 @@ use utf8;
 use strict;
 use Encode;
 use KNP;
+use Dumpvalue;
 use BerkeleyDB;
 use Storable qw(freeze thaw);
 use MLDBM qw(BerkeleyDB::Hash Storable);
@@ -1739,113 +1740,100 @@ sub Log_bp {
 
 sub format_syngraph {
     my ($this, $syngraph) = @_;
-    my $syngraph_string; 
+    my $result;
 
-    my $co_hash; # $co_hash->{対応する基本句番号} = !!の行要素
-    my $synnode_string; # $synnode_string->{対応する基本句番号} = 対応する基本句が同じ!行の集合
-    my $co_string;
-    my $key; # $key->{基本句番号} = 1 （どんな大きさのノードがあるか）
-    my $sort_key; # $sort_key->[基本句番号] = headが同じノードの配列
+    my $syn_bp; # 同じ基本句に対応するノードの集まり
 
-    my $bp = 0;
-    foreach my $syn_bp (@{$syngraph}) { # 基本句(BP)単位
-	foreach my $node (@{$syn_bp}) { # ノード単位
+    # !!の数
+    for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
+	foreach my $node (@{$syngraph->[$bp_num]}) { # ノード単位
 	    # ノードの対応する基本句番号
 	    my $matchbp;
-	    foreach (sort {$a <=> $b} (keys %{$node->{matchbp}}, $bp)) {
+	    foreach (sort {$a <=> $b} ($node->{matchbp} ? (keys %{$node->{matchbp}}, $bp_num) : ($bp_num))) {
 		$matchbp .= !defined $matchbp ? "$_" : ",$_";
 	    }
-	    
-	    # ノードの種類（どんな大きさのノードがあるか）
-	    $key->{$matchbp} = 1 unless ($key->{$matchbp});
+	    foreach (split(/,/, $matchbp)) {
+		$syn_bp->{$_}{$matchbp} = 1;
+	    }
+	}
+    }
+
+    # 出力生成
+    for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
+	my $res;
+	foreach my $node (@{$syngraph->[$bp_num]}) { # ノード単位
+
+	    # ノードの対応する基本句番号
+	    my $matchbp;
+	    foreach (sort {$a <=> $b} ($node->{matchbp} ? (keys %{$node->{matchbp}}, $bp_num) : ($bp_num))) {
+		$matchbp .= !defined $matchbp ? "$_" : ",$_";
+	    }
+
+	    unless (grep($matchbp eq $_, keys %$res)) {
+
+		# 親
+		my $parent;
+		if ($syn_bp->{$node->{parentbp}}) {
+		    foreach my $parentbp (keys %{$syn_bp->{$node->{parentbp}}}) {
+			# 親ノードとして正しいかチェック
+			my $flag;
+			foreach my $a (split(/,/, $parentbp)) {
+			    foreach my $b (split(/,/, $matchbp)) {
+				if ($a == $b) {
+				    $flag = 1;
+				    last;
+				}
+			    }
+			    last if ($flag);
+			}
+			next if ($flag);
+			
+			$parent .= !defined $parent ? "$parentbp" : "/$parentbp";
+			}
+
+		}
+		else { # 親が-1
+		    $parent = $node->{parentbp};
+		}
+
+		# !!行の出力を格納
+		$res->{$matchbp} = "!! $matchbp $parent$node->{kakari_type} <見出し:$node->{midasi}>";
+		$res->{$matchbp} .= "<格解析結果:$node->{case}格>" if ($node->{case});
+		$res->{$matchbp} .= "\n";
+	    }
 
 	    # !行の出力を格納
-	    $synnode_string->{$matchbp} .= "! $matchbp";
-	    $synnode_string->{$matchbp} .= " <SYNID:$node->{id}><スコア:$node->{score}>";
-	    $synnode_string->{$matchbp} .= "<反義語>" if ($node->{antonym});
-	    $synnode_string->{$matchbp} .= "<上位語>" if ($node->{relation});
-	    $synnode_string->{$matchbp} .= "<下位語数$node->{hypo_num}>" if ($node->{hypo_num});
-	    $synnode_string->{$matchbp} .= "<否定>" if ($node->{negation});
-	    $synnode_string->{$matchbp} .= "<可能>" if ($node->{kanou});
-	    $synnode_string->{$matchbp} .= "<尊敬>" if ($node->{sonnkei});
-	    $synnode_string->{$matchbp} .= "<受身>" if ($node->{ukemi});
-	    $synnode_string->{$matchbp} .= "<使役>" if ($node->{shieki});
-	    $synnode_string->{$matchbp} .= "\n";
-
-	    unless ($co_hash->{$matchbp}->{fstring}) {
-		$co_hash->{$matchbp}{kakari_type} = "$node->{kakari_type}";
-		$co_hash->{$matchbp}{fstring} .= "<見出し:$node->{midasi}>";
-		$co_hash->{$matchbp}{fstring} .= "<格解析結果:$node->{case}格>" if ($node->{case});
-	    }
-	    
-	    # ノード間の親子関係
-	    if ($node->{childbp}) {
-		foreach my $childbp (sort (keys %{$node->{childbp}})) {
-		    $co_hash->{$childbp}{parent}{$matchbp} = 1 unless ($co_hash->{$childbp}{parent}{$matchbp});
-		}
-	    }
+	    $res->{$matchbp} .= &get_nodestr($node, $matchbp);
 	}
-	$bp++;
-    }
-
-    $sort_key = $this->key_sort_for_format($key);
-
-    # !!行の出力
-    foreach my $num (keys %{$co_hash}) {
-	$co_string->{$num} = "!! $num";
-	my $check;
-	foreach (split/,/, $num) {
-	    if ($co_hash->{$_}->{parent}) {
-		foreach (keys %{$co_hash->{$_}->{parent}}) {
-		    next if ($num =~ /$_/);
-		    unless ($check){
-			$co_string->{$num} .= " $_"; 
-			$check++;
-		    }
-		    else {
-			$co_string->{$num} .= "/$_"; 
-		    }
-		}
-	    }
-	}
-	unless ($check) {
-	    $co_string->{$num} .= " -1";	    			
-	}	
-	$co_string->{$num} .= "$co_hash->{$num}{kakari_type} $co_hash->{$num}{fstring}"; 
-    }
-    
-    # SYNGRAPH情報の出力
-    foreach my $num (sort keys %{$sort_key}) {
-	foreach my $num2 (@{$sort_key->{$num}}) {
-	    $syngraph_string->[$num] .= "$co_string->{$num2}\n" . "$synnode_string->{$num2}";
+	foreach my $matchbp (sort {(split(/,/, $b))[0] <=> (split(/,/, $a))[0]} (keys %{$res})) {
+	    $result->[$bp_num] .= $res->{$matchbp};
 	}
     }
-   
-    return $syngraph_string;
+
+    return $result;
 }
 
+
 #
-# SYNGRAPHの出力順に
+# !行の生成
 #
-sub key_sort_for_format{    
-    my ($this, $key) = @_;
-    my $sort_key;
+sub get_nodestr {
+    my ($node, $bp) = @_;
+    my $string;
 
-    my $begin; # 先頭を格納
-    my $last; # おしりを格納
-    foreach (keys %{$key}) {
-	my @array = (split/,/, $_);
-	$begin->{$_} = $array[0];
-	$last->{$array[@array-1]}{$_} = 1;    
-    }
+    # !行の出力を格納
+    $string = "! $bp <SYNID:$node->{id}><スコア:$node->{score}>";
+    $string .= "<反義語>" if ($node->{antonym});
+    $string .= "<上位語>" if ($node->{relation});
+    $string .= "<下位語数$node->{hypo_num}>" if ($node->{hypo_num});
+    $string .= "<否定>" if ($node->{negation});
+    $string .= "<可能>" if ($node->{kanou});
+    $string .= "<尊敬>" if ($node->{sonnkei});
+    $string .= "<受身>" if ($node->{ukemi});
+    $string .= "<使役>" if ($node->{shieki});
+    $string .= "\n";
 
-    foreach my $num (sort (keys %{$begin})) {
-	foreach (sort {$begin->{$b} <=> $begin->{$a}} keys %{$last->{$num}}) {
-	    push (@{$sort_key->{$num}}, $_);
-	}
-    }
-
-    return $sort_key;
+    return $string;
 }
 
 
@@ -2487,19 +2475,6 @@ sub h2z {
     $string =~ tr/0-9A-Za-z !\"\#$%&\'()*+,-.\/:;<=>?@[\\]^_\`{|}~/０-９Ａ-Ｚａ-ｚ　！”＃＄％＆’（）＊＋，−．／：；＜＝＞？＠［￥］＾＿‘｛｜｝〜/;
 
     return $string;
-}
-
-
-################################################################################
-#                                                                              #
-#                                時間測定                                      #
-#                                                                              #
-################################################################################
-
-sub recursive {
-    my ($number) = @_;
-
-    &recursive(--$number) if ($number);
 }
 
 
