@@ -408,7 +408,8 @@ sub st_make_bp {
 				     negation       => $result->{SYN}{negation},
 				     level          => $result->{SYN}{level}, 
 				     score          => $result->{CALC}{score} * $synonym_penalty,
-				     weight         => $result->{SYN}{weight}
+				     weight         => $result->{SYN}{weight},
+				     hypo_num       => $node->{hypo_num}
 				     });
 
 		if ($option->{log_bp} && $newid) {
