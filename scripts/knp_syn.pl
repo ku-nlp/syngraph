@@ -14,18 +14,21 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log_sg', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s');
 
 my $option;
 my $knp_option;
 my $regnode_option;
 $option->{debug} = 1 if $opt{debug};
 $option->{orchid} = 1 if $opt{orchid};
-$option->{log_sg} = 1 if $opt{log_sg};
+$option->{log} = 1 if $opt{log};
+$option->{cgi} = 1 if $opt{cgi};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
 $knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};
 $regnode_option->{antonym} = 1 if $opt{antonym};
+$regnode_option->{cgi} = 1 if $opt{cgi};
+$regnode_option->{log} = 1 if $opt{log};
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 
 my $syndbdir = !$option->{orchid} ? '../syndb/i686' : '../syndb/x86_64';

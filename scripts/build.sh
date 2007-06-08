@@ -11,10 +11,14 @@ SIM_C_DIR=../dic_change
 # 同義表現データベース
 SYNDB_DIR=../syndb/i686
 
-while getopts oh OPT
+log=0
+
+while getopts ohl OPT
 do
   case $OPT in
       o)  SYNDB_DIR=../syndb/x86_64
+          ;;
+      l)  log=1
           ;;
       h)  usage
           ;;
@@ -67,8 +71,13 @@ perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synony
 
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
+
 # コンパイル
-perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
+if [ $log -eq 1 ]; then
+    perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR --option=log
+else
+    perl -I$PERL_DIR compile.pl --knp_result=$SYNDB_DIR/syndb.parse --syndbdir=$SYNDB_DIR
+fi
 
 # synhead.mldbmのソート
 perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
