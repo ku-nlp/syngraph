@@ -245,7 +245,7 @@ sub make_bp {
 
  		# マッチ調べる
 		$this->{matching} = 'matching';
-		my $result = $this->syngraph_matching_new($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		my $result = $this->syngraph_matching($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		next if $this->{matching} eq 'unmatch';
 
 		# 新たなSYNノードとして貼り付けてよいかどうかをチェック
@@ -294,7 +294,7 @@ sub make_bp {
 #
 # BPにIDを付与する (部分木用)
 #
-sub st_make_bp {
+sub st_make_bp_old {
     my ($this, $ref, $sid, $bp, $max_tm_num, $option, $matching_option) = @_;
 
     foreach my $node (@{$ref->{$sid}[$bp]}) {
@@ -314,7 +314,7 @@ sub st_make_bp {
                 }
                 
 		# マッチ調べる
-		my $result = $this->syngraph_matching('Matching', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
+		my $result = $this->syngraph_matching_old('Matching', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
 						      \%body, $matching_option);
 
 
@@ -366,9 +366,6 @@ sub st_make_bp {
 				     weight         => $result->{SYN}{weight}
 				     });
 
-		if ($option->{log_bp} && $newid) {
-		    $newid->{log_bp} = $this->Log_bp($result, $stid);
-		}
 
 		$newid->{matchid}   = $result->{MATCH}{matchid} if ($newid);
 		$newid->{match}     = $result->{MATCH}{match} if ($newid);
@@ -383,7 +380,7 @@ sub st_make_bp {
 #
 # BPにIDを付与する (部分木用)
 #
-sub st_make_bp_new {
+sub st_make_bp {
     my ($this, $ref, $sid, $bp, $max_tm_num, $option, $matching_option) = @_;
 
     foreach my $node (@{$ref->{$sid}[$bp]}) {
@@ -404,7 +401,7 @@ sub st_make_bp_new {
                 
 		# マッチ調べる
 		$this->{matching} = 'matching';
-		my $result = $this->syngraph_matching_new($ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
+		my $result = $this->syngraph_matching($ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
 							  \%body, $matching_option);
 		if ($this->{matching} eq 'unmatch') {
 		    delete $this->{tm_sg}{$tmid};
@@ -446,11 +443,9 @@ sub st_make_bp_new {
 				     weight         => $nodefac->{weight}
 				     });
 
-
-		$newid->{matchid}   = $result->{MATCH}{matchid} if ($newid);
-		$newid->{match}     = $result->{MATCH}{match} if ($newid);
-		$newid->{matchpair} = $result->{MATCH}{matchpair} if ($newid);
-
+		$newid->{matchid}   = $nodefac->{matchid} if ($newid);
+		$newid->{match}     = $nodefac->{match} if ($newid);
+		$newid->{matchpair} = $nodefac->{matchpair} if ($newid);
 	    }
 	}
     }
@@ -1105,7 +1100,7 @@ sub _regnode {
 # SYNGRAPHどうしのマッチング
 # (graph_1の部分とgraph_2の全体)
 #
-sub syngraph_matching {
+sub syngraph_matching_old {
     my ($this, $mode, $graph_1, $headbp_1, $graph_2, $headbp_2, $body_hash, $matching_option) = @_;
     
     # SYNGRAPHの近似マッチング
@@ -1413,7 +1408,7 @@ sub pa_matching {
 # SYNGRAPHどうしのマッチング
 # (graph_1の部分とgraph_2の全体)
 #
-sub syngraph_matching_new {
+sub syngraph_matching {
     my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option) = @_;
     
     my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
@@ -1530,7 +1525,7 @@ sub syngraph_matching_new {
 		    
 		    # 子供同士のマッチング
 		    $this->{matching} = 'matching';
-		    my $res = $this->syngraph_matching_new($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
+		    my $res = $this->syngraph_matching($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
 		    next if ($this->{matching} eq 'unmatch');
 	
 		    foreach my $nodebp (keys %{$res}) {
@@ -1659,8 +1654,8 @@ sub get_nodefac {
 
 	# MTのアライメント用
 	if ($type eq 'Matching') {
-	    my @match1 = $graph1->[$bp1][$nodenum1]{matchbp} ? sort (keys %{$graph1->[$bp1][$nodenum1]{matchbp}}, $bp1) : ($bp1);
-	    my @match2 = $graph2->[$bp2][$nodenum2]{matchbp} ? sort (keys %{$graph2->[$bp2][$nodenum2]{matchbp}}, $bp2) : ($bp2);
+	    my @match1 = split(/,/, $mres->{$matchkey}{matchbp});
+	    my @match2 = split(/,/, $matchkey);
 	    push(@{$nodefac->{match}}, {graph_1 => \@match1, graph_2 => \@match2});
 	    push(@{$nodefac->{matchpair}}, {graph_1 => $graph1->[$bp1][$nodenum1]{midasi} , graph_2 => $graph2->[$bp2][$nodenum2]{midasi}});
 	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1][$nodenum1]{id}, graph_2 => $graph2->[$bp2][$nodenum2]{id}});
