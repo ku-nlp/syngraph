@@ -1,3 +1,8 @@
+2007-06-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/compile.pl, perl/SynGraph.pm
+	LOGの表示変更
+
 2007-06-08  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh, compile.pl, knp_syn.pl, perl/SynGraph.pm
