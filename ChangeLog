@@ -2,6 +2,8 @@
 
 	* scripts/compile.pl, perl/SynGraph.pm
 	LOGの表示変更
+	* perl/SynGraph.pm
+	make_bp, st_make_bpを新しいものに変更
 
 2007-06-08  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
