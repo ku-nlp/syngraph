@@ -37,7 +37,6 @@ while (my $knp_result = $sgh->read_parsed_data) {
     my $sid = $knp_result->id;
 
     # 木を作る
-    $option->{compile} = $sid if ($option);
     $sgh->make_tree($knp_result, $sgh->{syndata}, $option);
 
     # 文末BPのノードから文IDへのテーブル
@@ -60,14 +59,11 @@ while (keys %{$sgh->{syndata}}) {
         # SYNノードがこれ以上追加されなくなると終了
         goto COMPILE_END if ($sgh->{regnode} eq $sid);
 
-	# オプション
-	$option->{repeat} = $sid if ($option);
-
         # 1キーワードのものはコンパイルする必要なし
         if (@{$sgh->{syndata}{$sid}} > 1) {
             for (my $bp_num = 0; $bp_num < @{$sgh->{syndata}{$sid}}; $bp_num++) {
 		# 上位ID、反義語は張り付けない
-                $sgh->make_bp_new($sgh->{syndata}, $sid, $bp_num, undef, $option);
+                $sgh->make_bp($sgh->{syndata}, $sid, $bp_num, undef, $option);
             }
         }
     }
