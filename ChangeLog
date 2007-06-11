@@ -1,3 +1,10 @@
+2007-06-11  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm
+	[近い=>グゥ]のとき[一番近い=>一番グゥ]（反義も同じ）、LOGの表示変更
+	* cgi/index.cgi
+	LOG表示モード追加
+	
 2007-06-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/compile.pl, perl/SynGraph.pm
