@@ -128,7 +128,9 @@ if ($opt{isa}) {
 	    foreach my $parent_synid (@$parentsyn_list) {
 		$rel_synid{$child_synid}->{$parent_synid} = $number if $rel_synid{$child_synid}->{$parent_synid} < $number; # 最大数を記録,要相談
 		my $key_p = (split(/:/, $parent))[0];
+		$key_p = (split(/\//, $parent))[0];
 		my $key_c = (split(/:/, $child))[0];
+		$key_c = (split(/\//, $child))[0];
 		$log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c-$key_p" : "$key_c-$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c-$key_p/; # なければ保存
 	    }
 	}
@@ -169,9 +171,12 @@ if ($opt{antonym}) {
 		$antonym{$word1_synid} .= $antonym{$word1_synid} ? "|$word2_synid" : $word2_synid unless ($antonym{$word1_synid} =~ /$word2_synid/);
 		$antonym{$word2_synid} .= $antonym{$word2_synid} ? "|$word1_synid" : $word1_synid unless ($antonym{$word2_synid} =~ /$word1_synid/);
 		my $key_1 = (split(/:/, $word1))[0];
+		$key_1 = (split(/\//, $word1))[0];
 		my $key_2 = (split(/:/, $word2))[0];
+		$key_2 = (split(/\//, $word2))[0];
 		$log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
-		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_1-$key_2/;
+#		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_1-$key_2/;
+		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
 	    }
 	}
     }
