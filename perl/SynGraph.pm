@@ -713,7 +713,11 @@ sub _regnode {
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
 	if ($regnode_option->{relation}){
-
+	    
+	    if ($regnode_option->{log}) {
+		&tie_cdb("../syndb/i686/log_isa.cdb", $this->{log_isa});
+	    }
+	    
 	    # キャッシュしておく
 	    if ($relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
 		$this->{synparentcache}{$id} = $this->GetValue($this->{synparent}->{$id});
@@ -737,8 +741,24 @@ sub _regnode {
 				$log .= "$_\n";
 			    }
 			}
-			$log .= "parent : $childword\@$newid->{id} => $parentword\@$pid\n";
-
+			my @plog;
+			foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
+			    my ($child_bridge, $parent_bridge) = split(/-/, $_);
+			    my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
+			    my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
+			    push @plog, "$childside => $parentside";
+			}
+			my $flag;
+			foreach (@plog) {
+			    unless ($flag) {
+				$log .= "parent : $_";
+				$flag = 1;
+			    }
+			    else {
+				$log .= " or $_";
+			    }
+			}
+			$log .= "\n";
 		    }
 
 		    $this->_regnode({ref            => $ref,
@@ -771,6 +791,10 @@ sub _regnode {
 
 	if ($regnode_option->{antonym}){
 
+	    if ($regnode_option->{log}) {
+		&tie_cdb("../syndb/i686/log_antonym.cdb", $this->{log_antonym});
+	    }
+
 	    # キャッシュしておく
  	    if ($antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
  		$this->{synantonymcache}{$id} = $this->GetValue($this->{synantonym}{$id});
@@ -783,8 +807,8 @@ sub _regnode {
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{cgi} or $regnode_option->{log}) {
-			my ($word1) = $aid =~ /s\d+:([^\/]+)/;
-			my ($word2) = $newid->{id} =~ /s\d+:([^\/]+)/;
+			my ($word1) = $newid->{id} =~ /s\d+:([^\/]+)/;
+			my ($word2) = $aid =~ /s\d+:([^\/]+)/;
 			$log = "log : $newid->{midasi} <=> $word1\n";
 			if ($newid->{log}) {
 			    foreach (split(/\n/, $newid->{log})){
@@ -792,8 +816,24 @@ sub _regnode {
 				$log .= "$_\n";
 			    }
 			}
-			$log .= "antonym : $word2\@$newid->{id} <=> $word1\@$aid\n";
-
+			my @alog;
+			foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
+			    my ($word1_bridge, $word2_bridge) = split(/-/, $_);
+			    my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
+			    my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
+			    push @alog, "$word1_side <=> $word2_side";
+			}
+			my $flag;
+			foreach (@alog) {
+			    unless ($flag) {
+				$log .= "antonym : $_";
+				$flag = 1;
+			    }
+			    else {
+				$log .= " or $_";
+			    }
+			}
+			$log .= "\n";
 		    }
 		    
 		    $this->_regnode({ref            => $ref,
@@ -1027,7 +1067,7 @@ sub get_nodefac {
 
 	# ★headを早く見つけることで高速化可能★odani0529
 	# headでの処理
-	if ($matchkey =~ /[^\d]$headbp2$/) {
+	if ($matchkey == (split(/,/, $matchkey))[-1]) {
 
 	    if ($type eq 'syn') {
 		if ($mres->{$matchkey}{type_unmatch}) {
@@ -1190,20 +1230,22 @@ sub make_log {
 	my ($bp2, $num2) = split(/-/, $match->{$_}{nodedata2});
 	$expression_orig .= $graph1->[$bp1][$num1]{midasi};
 	
+	# マッチした表現からDBの中の表現まで
 	my $tmp2;
 	if ($graph2->[$bp2][$num1]{log}) {
 	    my @array = split(/\n/, $graph2->[$bp2][$num2]{log});
 	    for (my $num = @array - 1; $num > -1; $num--) {
 		next if $array[$num] =~ /^log/;
-		if ($array[$num] =~ s/^synonym :([^=]+)=([^@]+)//) {
-		    $tmp2 .=  "synonym :$2=$1$array[$num]\n";
+		if ($array[$num] =~ s/^synonym :([^=]+)=([^\(]+)//) {
+		    $tmp2 .=  "synonym :$2 = $1$array[$num]\n";
 		}
 		elsif ($array[$num] =~ s/^juman :([^=]+)=(.+)//) {
-		    $tmp2 .=  "juman :$2=$1$array[$num]\n";
+		    $tmp2 .=  "juman :$2 = $1$array[$num]\n";
 		}
 	    }
 	}
-	
+
+	# 入力の表現からマッチした表現まで
 	my $tmp1;
 	if ($graph1->[$bp1][$num1]{log}) {
 	    foreach (split(/\n/, $graph1->[$bp1][$num1]{log})) {
@@ -1211,7 +1253,30 @@ sub make_log {
 		$tmp1 .= "$_\n";
 	    }
 	}
+
+	# tmp1とtmp2のつなぎ（今後の課題）
+# 	if ($tmp1 and $tmp2) {
+# 	    my $tmp1last = (split(/\n/, $tmp1))[-1];
+# 	    my $tmp2first = (split(/\n/, $tmp2))[0];
+	    
+# 	    if ($tmp1last =~ /^parent/ and $tmp1last !=~ / or / and $tmp2first =~ /^synonym/) {
+# 		my @word1;
+# 		if ($tmp1last =~ s/([^=]+) = ([^\(]+)\(.?$//) {
+# 		    @word1 = ($1, $2);
+# 		}
+# 		my @word2;
+# 		if ($tmp2first =~ s/^synonym :([^=]+)=([^\(]+)//) {
+# 		    @word2 = ($1, $2);
+# 		}
+# 		if (($word1[0] eq $word2[1]) and ($word1[1] eq $word2[0])) {
+# 		    $tmp1 =~ s/$tmp1last//;
+# 		    $tmp2 =~ s/$tmp2first\n//;
+# 		}
+# 	    }
+	    
+# 	}
 	
+	# 入力の表現からDBの中の表現まで
 	$loglog .= $tmp1 . $tmp2;
     }
 
@@ -1220,9 +1285,11 @@ sub make_log {
     # LOG生成
     $result = "log : $expression_orig = $expression1\n";
     if ($loglog) {
+	# 入力の表現からDBの中の表現まで
 	$result .= $loglog;
     }
-    $result .= "synonym : $expression2 = $expression1 \@$synid\n" if ($expression1 ne $expression2);
+    # DBの中の表現からSYNIDに使用されている表現まで
+    $result .= "synonym : $expression2 = $expression1(\@$synid)\n" if ($expression1 ne $expression2);
 
     return $result;
 }
