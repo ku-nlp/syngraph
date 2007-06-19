@@ -7,34 +7,44 @@
 README		このファイル
 
 
-perl/ : Perlモジュール
-
-  SynGraph.pm                           SYNGRAPHを扱うモジュール
-  Search.pm         			検索するためのモジュール
-  CalcSimWithSynGraph.pm         	検索するためのモジュール
-
-
 dic/ : 同義表現辞書
 
-  synonym_rsk.txt     	同義グループデータ
-  synonym_web.txt     	同義グループデータ
-  definition.txt        定義文データ
-  isa.txt      		上位下位データ
-  antonym.txt		反義データ
+  rsk_iwanami/ : RSK、iwanamiからの知識抽出結果
 
+    README		抽出ルール
+    synonym.txt     	同義グループデータ
+    definition.txt      定義文データ
+    isa.txt      	上位下位データ
+    antonym.txt		反義データ
+
+  web_news/ : WEB、新聞記事からの知識抽出結果
+
+    README		
+    nation.txt		wikipediaの国名ページがら抽出
+    news.txt        	毎日新聞・読売新聞・朝日新聞中の括弧表現から抽出
+    www.txt 		WWW中の括弧表現から抽出(ゴミが入ってる可能性あり)
+    all.txt		上記のファイルをマージしたもの
 
 
 dic_change/ : 整形後の同義表現辞書
 
-  synonym_rsk.txt      	同義グループデータ
-  synonym_web.txt     	同義グループデータ
-  definition.txt        定義文データ
-  isa.txt      		上位下位データ
-  antonym.txt		反義データ
+  synonym_dic.txt      		辞書から取ってきた同義グループデータ
+  definition.txt        	辞書から取ってきた定義文データ
+  isa.txt      			辞書から取ってきた上位下位データ
+  antonym.txt			辞書から取ってきた反義データ
+  synonym_web_news.txt     	Webと新聞からとってきた同義グループデータ
+  log_merge.txt			整形のログ(build.shにおけるものもここに書く)
+
+perl/ : Perlモジュール
+
+  SynGraph.pm                   SYNGRAPHを扱うモジュール
+  Search.pm         		検索するためのモジュール
+  CalcSimWithSynGraph.pm        SYNGRAPHを用いてマッチングを行うモジュール
 
 
 scripts/ : スクリプト
 
+  EWADME			
   merg_dic.sh			辞書データ整形のスクリプト
   build.sh        		コンパイル(DB作成)のスクリプト
   irex_build.sh  		IREX用のスクリプト
@@ -57,20 +67,31 @@ scripts/ : スクリプト
   search.pl      		検索
 
 
-syndb/(i686|x86_64) : 同義表現データベース
+syndb/ : 同義表現データベース
 
-  syndb.convert		類義表現DBを作る際の中間ファイル
-  syndb.parse		類義表現DBを作る際の中間ファイル
-  synhead.mldbm		類義表現DB(headから同義グループを呼ぶ)
-  syndata.mldbm		類義表現DB(同義グループに属すSYNGRAPHを呼ぶ)
-  synparent.mldbm	上位下位データベース	
-  synantonym.mldbm	反義データベース
-　synnumber.db		番号から同義グループを呼ぶ(CGI用)
-　syndb.db		同義グループの内容を保存(CGI用)
-　synchild.mldbm	下位グループを保存(CGI用)
-  log_dic.db		辞書からの情報抽出のLOG(CGI用)
-　log_isa.mldbm		DBの上位下位関係付与のLOG(CGI用)
-　log_antonym.mldbm	DBの反義関係付与のLOG(CGI用)
+  i686/ : reedなどでSYNGRAPHを使用する場合に使うDB
+	
+    synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
+    syndata.mldbm		類義表現DB(同義グループに属すSYNGRAPHを呼ぶ)
+    synparent.cdb		上位データベース(上位グループを呼ぶ)
+    synantonym.cdb		反義データベース(反義グループを呼ぶ)
+　  syndb.cdb			同義グループの中身を保存
+
+  x86_64/ : orchidでSYNGRAPHを使用する場合に使うDB
+    
+    (i686/と同じ)
+
+  cgi/ : CGIで使用するDB
+    synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
+    synparent.cdb		上位データベース(上位グループを呼ぶ)
+    synantonym.cdb		反義データベース(反義グループを呼ぶ)
+    syndata.mldbm		SYNGRAPH化のLOG付syndata
+　  syndb.cdb			同義グループの中身を保存
+　  synnumber.cdb		番号から同義グループを呼ぶ
+　  synchild.cdb		下位データベース(下位グループを呼ぶ)
+    log_dic.cdb			辞書からの情報抽出のLOG
+　  log_isa.cdb			DBの上位下位関係付与のLOG
+　  log_antonym.cdb		DBの反義関係付与のLOG
 
 
 cgi : CGIソース
