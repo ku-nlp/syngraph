@@ -177,7 +177,19 @@ sub make_tree {
 		my $rep = (split(/\//,$node->{name}))[0];
 		if ($rep ne $node->{midasi}) {
 		    $log = "log : $node->{midasi} = $rep\n";
-		    $log .= "juman : $node->{midasi} = $rep\n";
+		    $log .= "abstract : $node->{midasi} => $rep";
+		    my %tag = ('kanou' => '可能', 'sonnkei' => '尊敬', 'ukemi' => '受身', 'shieki' => '使役', 'negation' => '否定');
+		    foreach my $type ('case', keys %tag) {
+			if ($node->{$type}) {
+			    if ($type eq 'case') {
+				$log .= "<$node->{case}格>";
+			    }
+			    else {
+				$log .= "<$tag{$type}>";
+			    }
+			}
+		    }
+		    $log .= "\n";
 		}
 	    }
 	    
@@ -1239,8 +1251,8 @@ sub make_log {
 		if ($array[$num] =~ s/^synonym :([^=]+)=([^\(]+)//) {
 		    $tmp2 .=  "synonym :$2 = $1$array[$num]\n";
 		}
-		elsif ($array[$num] =~ s/^juman :([^=]+)=(.+)//) {
-		    $tmp2 .=  "juman :$2 = $1$array[$num]\n";
+		elsif ($array[$num] =~ s/^abstract :([^=]+)=>(.+)//) {
+		    $tmp2 .=  "abstract :$2 <= $1$array[$num]\n";
 		}
 	    }
 	}
