@@ -31,8 +31,18 @@ $regnode_option->{cgi} = 1 if $opt{cgi};
 $regnode_option->{log} = 1 if $opt{log};
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 
-my $syndbdir = !$option->{orchid} ? '../syndb/i686' : '../syndb/x86_64';
-my $sgh = new SynGraph($syndbdir, $knp_option);
+my $syndbdir;
+if ($option->{orchid}) {
+    $syndbdir = '../syndb/x86_64';
+}
+elsif ($option->{cgi}) {
+    $syndbdir = '../syndb/cgi';
+}
+else {
+    $syndbdir = '../syndb/i686';
+}
+
+my $sgh = new SynGraph($syndbdir, $knp_option, $option);
 
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});

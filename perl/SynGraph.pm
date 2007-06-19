@@ -52,22 +52,22 @@ my @stop_words;
 # コンストラクタ
 #
 sub new {
-    my ($this, $syndbdir, $option) = @_;
+    my ($this, $syndbdir, $knp_option, $option) = @_;
 
     # knp option
-    my @knpoptions = ('-tab');
-    push @knpoptions, '-postprocess' if $option->{postprocess};
-    push @knpoptions, '-copula' if $option->{copula};
-    push @knpoptions, '-dpnd' if $option->{no_case};
-    my $knpoption = join(' ', @knpoptions);
+    my @knpoption_array = ('-tab');
+    push @knpoption_array, '-postprocess' if $knp_option->{postprocess};
+    push @knpoption_array, '-copula' if $knp_option->{copula};
+    push @knpoption_array, '-dpnd' if $knp_option->{no_case};
+    my $knpoptions = join(' ', @knpoption_array);
     
-    my %knp_pm_args = ( -Option => $knpoption );
+    my %knp_pm_args = ( -Option => $knpoptions );
 
     # CGI用
-    $knp_pm_args{'-Command'} = $option->{knpcommand} if defined $option->{knpcommand};
-    $knp_pm_args{'-Rcfile'} = $option->{knprcfile} if defined $option->{knprcfile};
-    $knp_pm_args{'-JumanCommand'} = $option->{jumancommand} if defined $option->{jumancommand};
-    $knp_pm_args{'-JumanRcfile'} = $option->{jumanrcfile} if defined $option->{jumanrcfile};
+    $knp_pm_args{'-Command'} = $knp_option->{knpcommand} if defined $knp_option->{knpcommand};
+    $knp_pm_args{'-Rcfile'} = $knp_option->{knprcfile} if defined $knp_option->{knprcfile};
+    $knp_pm_args{'-JumanCommand'} = $knp_option->{jumancommand} if defined $knp_option->{jumancommand};
+    $knp_pm_args{'-JumanRcfile'} = $knp_option->{jumanrcfile} if defined $knp_option->{jumanrcfile};
 
     $this = {
         mode       => '',
@@ -104,6 +104,12 @@ sub new {
     if (defined $syndbdir) {
 	# 類義表現DBをtie
 	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
+	
+	# CGI用
+	if (defined $option->{cgi}) {
+	    $this->tie_forsyndbcheck("$syndbdir/syndb.cdb", "$syndbdir/synnumber.cdb", "$syndbdir/synchild.cdb",
+				     "$syndbdir/log_isa.cdb", "$syndbdir/log_antonym.cdb");
+	}
     }
     
     return $this;
@@ -173,8 +179,11 @@ sub make_tree {
 	    
 	    # NODEのLOG作成
  	    my $log;
-	    if ($option->{cgi} or $option->{log}) {
-		my $rep = (split(/\//,$node->{name}))[0];
+	    if ($option->{log}) {
+		my $rep;
+		foreach (split(/\+/,$node->{name})) {
+		    $rep .= (split(/\//,$_))[0];
+		}
 		if ($rep ne $node->{midasi}) {
 		    $log = "log : $node->{midasi} = $rep\n";
 		    $log .= "abstract : $node->{midasi} => $rep";
@@ -267,7 +276,7 @@ sub make_bp {
 
 		# NODEのLOG
 		my $log;
-		if ($option->{cgi} or $option->{log}) {
+		if ($option->{log}) {
 		    if ($this->{mode} eq 'repeat') {
 			$log = $this->make_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $result);
 		    }
@@ -725,11 +734,6 @@ sub _regnode {
         push(@{$ref->{$sid}->[$bp]}, $newid);
 
 	if ($regnode_option->{relation}){
-	    
-	    if ($regnode_option->{log}) {
-		&tie_cdb("../syndb/i686/log_isa.cdb", $this->{log_isa});
-	    }
-	    
 	    # キャッシュしておく
 	    if ($relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
 		$this->{synparentcache}{$id} = $this->GetValue($this->{synparent}->{$id});
@@ -743,7 +747,7 @@ sub _regnode {
 		    
 		    # NODEのLOG
 		    my $log;
-		    if ($regnode_option->{cgi} or $regnode_option->{log}) {
+		    if ($regnode_option->{log}) {
 			my ($parentword) = $pid =~ /s\d+:([^\/]+)/;
 			my ($childword) = $newid->{id} =~ /s\d+:([^\/]+)/;
 			$log = "log : $newid->{midasi} = $parentword\n";
@@ -754,23 +758,25 @@ sub _regnode {
 			    }
 			}
 			my @plog;
-			foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
-			    my ($child_bridge, $parent_bridge) = split(/-/, $_);
-			    my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
-			    my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
-			    push @plog, "$childside => $parentside";
-			}
-			my $flag;
-			foreach (@plog) {
-			    unless ($flag) {
-				$log .= "parent : $_";
-				$flag = 1;
+			if ($this->{log_isa}) {
+			    foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
+				my ($child_bridge, $parent_bridge) = split(/-/, $_);
+				my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
+				my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
+				push @plog, "$childside => $parentside";
 			    }
-			    else {
-				$log .= " or $_";
+			    my $flag;
+			    foreach (@plog) {
+				unless ($flag) {
+				    $log .= "parent : $_";
+				    $flag = 1;
+				}
+				else {
+				    $log .= " or $_";
+				}
 			    }
+			    $log .= "\n";
 			}
-			$log .= "\n";
 		    }
 
 		    $this->_regnode({ref            => $ref,
@@ -802,11 +808,6 @@ sub _regnode {
 	}
 
 	if ($regnode_option->{antonym}){
-
-	    if ($regnode_option->{log}) {
-		&tie_cdb("../syndb/i686/log_antonym.cdb", $this->{log_antonym});
-	    }
-
 	    # キャッシュしておく
  	    if ($antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
  		$this->{synantonymcache}{$id} = $this->GetValue($this->{synantonym}{$id});
@@ -818,7 +819,7 @@ sub _regnode {
 		    
 		    # NODEのLOG
 		    my $log;
-		    if ($regnode_option->{cgi} or $regnode_option->{log}) {
+		    if ($regnode_option->{log}) {
 			my ($word1) = $newid->{id} =~ /s\d+:([^\/]+)/;
 			my ($word2) = $aid =~ /s\d+:([^\/]+)/;
 			$log = "log : $newid->{midasi} <=> $word1\n";
@@ -829,23 +830,25 @@ sub _regnode {
 			    }
 			}
 			my @alog;
-			foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
-			    my ($word1_bridge, $word2_bridge) = split(/-/, $_);
-			    my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
-			    my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
-			    push @alog, "$word1_side <=> $word2_side";
-			}
-			my $flag;
-			foreach (@alog) {
-			    unless ($flag) {
-				$log .= "antonym : $_";
-				$flag = 1;
+			if ($this->{log_antonym}) {
+			    foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
+				my ($word1_bridge, $word2_bridge) = split(/-/, $_);
+				my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
+				my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
+				push @alog, "$word1_side <=> $word2_side";
 			    }
-			    else {
-				$log .= " or $_";
+			    my $flag;
+			    foreach (@alog) {
+				unless ($flag) {
+				    $log .= "antonym : $_";
+				    $flag = 1;
+				}
+				else {
+				    $log .= " or $_";
+				}
 			    }
+			    $log .= "\n";
 			}
-			$log .= "\n";
 		    }
 		    
 		    $this->_regnode({ref            => $ref,
@@ -1415,7 +1418,7 @@ sub get_nodestr {
     $string .= "\n";
 
     # nodeのlog
-    if (($option->{log} or $option->{cgi}) and $node->{log}) {
+    if ($option->{log} or $node->{log}) {
 	if ($node->{log}) {
 	    my $log_flag;
 	    foreach (split(/\n/, $node->{log})) {
@@ -1849,11 +1852,11 @@ sub tie_syndb {
 sub tie_forsyndbcheck {
     my ($this, $syndb, $synnumber, $synchild, $log_isa, $log_antonym) = @_;
 
-    $syndb = '../i686/syndb.cdb' unless ($syndb);
-    $synnumber = '../i686/synnumber.cdb' unless ($synnumber);
-    $synchild = '../i686/synchild.cdb' unless ($synchild);
-    $log_isa = '../i686/log_isa.cdb' unless ($log_isa);
-    $log_antonym = '../i686/log_antonym.cdb' unless ($log_antonym);
+    $syndb = '../cgi/syndb.cdb' unless ($syndb);
+    $synnumber = '../cgi/synnumber.cdb' unless ($synnumber);
+    $synchild = '../cgi/synchild.cdb' unless ($synchild);
+    $log_isa = '../cgi/log_isa.cdb' unless ($log_isa);
+    $log_antonym = '../cgi/log_antonym.cdb' unless ($log_antonym);
 
     &tie_cdb($syndb, $this->{syndb});
     &tie_cdb($synnumber, $this->{synnumber});

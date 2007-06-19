@@ -13,7 +13,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'rnsame', 'debug', 'synonym_web=s', 'log_merge=s', 'change=s');
+my %opt; GetOptions(\%opt, 'rnsame', 'debug', 'synonym_web_news=s', 'log_merge=s', 'change=s');
 
 my $knp = new KNP(-Option => '-tab -dpnd');
 
@@ -23,7 +23,7 @@ my $same_counter = 0;
 my $dup_counter = 0;
 my $rnsame_counter = 0;
 
-open(SYN, '<:encoding(euc-jp)', $opt{synonym_web}) or die;
+open(SYN, '<:encoding(euc-jp)', $opt{synonym_web_news}) or die;
 open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;    
 open(CH, '>:encoding(euc-jp)', $opt{change}) or die;
 while (<SYN>) {
@@ -31,7 +31,7 @@ while (<SYN>) {
     my ($word1, $word2) = split;
 
     if ($word1 eq $word2) {
-	print LM "★same entry synonym_web: $word1, $word2\n";
+	print LM "★same entry synonym_web_news: $word1, $word2\n";
 	$same_counter++;
 	next;
     }
@@ -43,7 +43,7 @@ while (<SYN>) {
     }
 
     if (defined $data{$word1}{$word2}) {
-	print LM "★duplicate entry synonym_web: $word1, $word2\n";
+	print LM "★duplicate entry synonym_web_news: $word1, $word2\n";
 	$dup_counter++;
     }
     else {
@@ -51,7 +51,7 @@ while (<SYN>) {
 
 	# 代表表記が同じ
 	if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
-	    print LM "☆REPNAME SAME synonym_web: $word1, $word2\n";
+	    print LM "☆REPNAME SAME synonym_web_news: $word1, $word2\n";
 	    $rnsame_counter++;
 	    next;
 	}

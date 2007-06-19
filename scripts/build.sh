@@ -19,6 +19,7 @@ do
       o)  SYNDB_DIR=../syndb/x86_64
           ;;
       l)  log=1
+	  SYNDB_DIR=../syndb/cgi
           ;;
       h)  usage
           ;;
@@ -50,7 +51,7 @@ export PATH=$SRC_DIR:$PATH
 export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 # 全部削除する
-for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synrel_num.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm; do
+for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm; do
     if [ -e $SYNDB_DIR/$f ] ; then
 	rm -v $SYNDB_DIR/$f
     fi
@@ -67,7 +68,11 @@ rm -v $INDEX_FILE
 echo "STEP1 start\t`date`"
 ########################################################
 # 類義表現を変換
-perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web=$SIM_C_DIR/synonym_web.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt
+if [ $log -eq 1 ]; then
+    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt --option=log
+else
+    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt
+fi
 
 # Juman & KNP
 juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse

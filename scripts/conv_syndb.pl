@@ -12,10 +12,14 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
+
+# option
+my %option;
+$option{$opt{option}}=1 if (defined $opt{option});
 
 my %definition;                       # 語ID => 定義文の配列
 my %syn_hash;                         # 表現 => SYNID
@@ -59,13 +63,13 @@ if ($opt{definition}) {
 #
 # 同義語グループの読み込み
 #
-my @file = ('synonym_dic', 'synonym_web');
+my @file = ('synonym_dic', 'synonym_web_news');
 foreach my $file_type (@file) {
     my $file_tag;
     if ($file_type eq 'synonym_dic') {
 	$file_tag = '<DIC>';
     }
-    elsif ($file_type eq 'synonym_web') {
+    elsif ($file_type eq 'synonym_web_news') {
 	$file_tag = '<Web>';
     }
     if ($opt{$file_type}) {
@@ -108,6 +112,12 @@ foreach my $file_type (@file) {
 if ($opt{isa}) {
     open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
     my %rel_synid;
+
+    # 矛盾解消のログ
+    if ($option{log} and $opt{log_merge}) {
+	open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;
+    }
+
     while (<ISA>) {
         chomp;
 	my ($child, $parent, $number) = split(/ /, $_);
@@ -116,10 +126,8 @@ if ($opt{isa}) {
 	my $childsyn_list = &get_synid($child);
         my $parentsyn_list = &get_synid($parent);
 	if (&contradiction_check($parentsyn_list, $childsyn_list)) {
-	    if ($opt{log_merge}) {
-		open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
+	    if ($option{log} and $opt{log_merge}) {
 		print LM "X contradiction isa $child, $parent\n";
-		close(LM);
 	    }
 	    next;
 	}
@@ -127,20 +135,32 @@ if ($opt{isa}) {
 	foreach my $child_synid (@$childsyn_list) {
 	    foreach my $parent_synid (@$parentsyn_list) {
 		$rel_synid{$child_synid}->{$parent_synid} = $number if $rel_synid{$child_synid}->{$parent_synid} < $number; # 最大数を記録,要相談
-		my $key_p = (split(/:/, $parent))[0];
-		$key_p = (split(/\//, $parent))[0];
-		my $key_c = (split(/:/, $child))[0];
-		$key_c = (split(/\//, $child))[0];
-		$log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c-$key_p" : "$key_c-$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c-$key_p/; # なければ保存
+		# 上位下位のログ
+		if ($option{log}) {
+		    my $key_p = (split(/:/, $parent))[0];
+		    $key_p = (split(/\//, $parent))[0];
+		    my $key_c = (split(/:/, $child))[0];
+		    $key_c = (split(/\//, $child))[0];
+		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c-$key_p" : "$key_c-$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c-$key_p/; # なければ保存
+		}
 	    }
 	}
     }
     foreach my $child_synid (keys %rel_synid) {
 	foreach my $parent_synid (keys %{$rel_synid{$child_synid}}) {
+	    # 上位グループ
 	    $relation_parent{$child_synid} .= ($relation_parent{$child_synid} ? "|$parent_synid" : $parent_synid) . ",$rel_synid{$child_synid}->{$parent_synid}";
-	    $relation_child{$parent_synid} .= ($relation_child{$parent_synid} ? "|$child_synid" : $child_synid);
+	    # 下位グループ(CGI用)
+	    if ($option{log}) {
+		$relation_child{$parent_synid} .= ($relation_child{$parent_synid} ? "|$child_synid" : $child_synid);
+	    }
 	}
     }
+
+    if ($option{log} and $opt{log_merge}) {
+	close(LM);
+    }
+
     close(ISA);
 }
 
@@ -150,6 +170,12 @@ if ($opt{isa}) {
 #
 if ($opt{antonym}) {
     open(ANT, '<:encoding(euc-jp)', $opt{antonym}) or die;
+
+    # 矛盾解消のログ
+    if ($option{log} and $opt{log_merge}) {
+	open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
+    }
+
     while (<ANT>) {
         chomp;
         my ($word1, $word2) = split(/ /, $_);
@@ -158,10 +184,8 @@ if ($opt{antonym}) {
 	my $word1syn_list = &get_synid($word1);
 	my $word2syn_list = &get_synid($word2);
 	if (&contradiction_check($word1syn_list, $word2syn_list)) {
-	    if ($opt{log_merge}) {
-		open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
+	    if ($option{log} and $opt{log_merge}) {
 		print LM "X contradiction isa $word1, $word2\n";
-		close(LM);
 	    }
 	    next;
 	}
@@ -170,16 +194,24 @@ if ($opt{antonym}) {
 	    foreach my $word2_synid (@$word2syn_list) {
 		$antonym{$word1_synid} .= $antonym{$word1_synid} ? "|$word2_synid" : $word2_synid unless ($antonym{$word1_synid} =~ /$word2_synid/);
 		$antonym{$word2_synid} .= $antonym{$word2_synid} ? "|$word1_synid" : $word1_synid unless ($antonym{$word2_synid} =~ /$word1_synid/);
-		my $key_1 = (split(/:/, $word1))[0];
-		$key_1 = (split(/\//, $word1))[0];
-		my $key_2 = (split(/:/, $word2))[0];
-		$key_2 = (split(/\//, $word2))[0];
-		$log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
-#		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_1-$key_2/;
-		$log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
+
+		# 反義関係のログ
+		if ($option{log}) {
+		    my $key_1 = (split(/:/, $word1))[0];
+		    $key_1 = (split(/\//, $word1))[0];
+		    my $key_2 = (split(/:/, $word2))[0];
+		    $key_2 = (split(/\//, $word2))[0];
+		    $log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
+		    $log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
+		}
 	    }
 	}
     }
+
+    if ($option{log} and $opt{log_merge}) {
+	close(LM);
+    }
+
     close(ANT);
 }
 
@@ -273,22 +305,30 @@ if ($opt{convert_file}) {
 #
 # 同義グループ番号の保存（CGI用）
 #
-&SynGraph::store_cdb("$dir/synnumber.cdb", \%synnum);
+if ($option{log}) {
+    &SynGraph::store_cdb("$dir/synnumber.cdb", \%synnum);
+}
 
 #
 # 下位・上位関係？の保存（CGI用）
 #
-&SynGraph::store_cdb("$dir/synchild.cdb", \%relation_child);
+if ($option{log}) {
+    &SynGraph::store_cdb("$dir/synchild.cdb", \%relation_child);
+}
 
 #
 # 上位下位関係のログ保存（CGI用）
 #
-&SynGraph::store_cdb("$dir/log_isa.cdb", \%log_isa);
+if ($option{log}) {
+    &SynGraph::store_cdb("$dir/log_isa.cdb", \%log_isa);
+}
 
 #
 # 反義関係のログ保存（CGI用）
 #
-&SynGraph::store_cdb("$dir/log_antonym.cdb", \%log_antonym);
+if ($option{log}) {
+    &SynGraph::store_cdb("$dir/log_antonym.cdb", \%log_antonym);
+}
 
 print STDERR scalar(localtime), "辞書のコンバート終了\n";
 
