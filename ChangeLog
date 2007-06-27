@@ -1,3 +1,18 @@
+2007-06-27  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm
+	コンパイル時に文末の「。」をとる。
+	headでの処理におけるバグ修正。
+	ログ改定。
+	* scripts/build.sh, scripts/conv_syndb.pl, scripts/compile.pl
+	コンパイル時にSYNGRAPH化してから「。」をとる。
+	コンパイル時に辞書抽出用の辞書を用いれるように変更。
+	
+	* syndb
+	コンパイル時にSYNGRAPH化してから「。」をとる。
+	コンパイル時に辞書抽出用の辞書を用いれるように変更。
+	コンパイル時の上位下位の矛盾解消追加。
+	
 2007-06-19  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* .
