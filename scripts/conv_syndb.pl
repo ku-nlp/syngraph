@@ -268,7 +268,7 @@ if ($opt{convert_file}) {
 
             # 出力
             print CF "# S-ID:$synid,$expression\n";
-            print CF "$expression\n";
+            print CF "$expression。\n"; # 解析精度をあげるため「。」
             
 	    # 同義グループ情報
 	    # １個目の語は正しいword_idがついている。２語目以降は展開の結果（暫定）

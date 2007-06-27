@@ -12,6 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
+print STDERR scalar(localtime), "SYNGRAPH化開始\n";
 my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s', 'option=s');
 my $sgh = new SynGraph( undef, undef);
 

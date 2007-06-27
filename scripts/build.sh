@@ -11,15 +11,20 @@ SIM_C_DIR=../dic_change
 # 同義表現データベース
 SYNDB_DIR=../syndb/i686
 
+# JUMAN
+JUMAN=juman
+
 log=0
 
-while getopts ohl OPT
+while getopts ohlj: OPT
 do
   case $OPT in
       o)  SYNDB_DIR=../syndb/x86_64
           ;;
       l)  log=1
 	  SYNDB_DIR=../syndb/cgi
+          ;;
+      j)  JUMAN=$OPTARG
           ;;
       h)  usage
           ;;
@@ -58,6 +63,9 @@ for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_a
 done
 
 # 全部削除する
+if [ $log -eq 1 ]; then
+    rm -v $SIM_C_DIR/log_merge2.txt
+fi
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
 rm -v df.db doclen.db
@@ -69,13 +77,13 @@ echo "STEP1 start\t`date`"
 ########################################################
 # 類義表現を変換
 if [ $log -eq 1 ]; then
-    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt --option=log
+    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log
 else
-    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge.txt
+    perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR
 fi
 
 # Juman & KNP
-juman -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
+$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
 
 # コンパイル
 if [ $log -eq 1 ]; then
