@@ -187,17 +187,17 @@ sub make_tree {
 		if ($rep ne $node->{midasi}) {
 		    $log = "log : $node->{midasi} = $rep\n";
 		    $log .= "abstract : $node->{midasi} => $rep";
-		    my %tag = ('kanou' => '可能', 'sonnkei' => '尊敬', 'ukemi' => '受身', 'shieki' => '使役', 'negation' => '否定');
-		    foreach my $type ('case', keys %tag) {
-			if ($node->{$type}) {
-			    if ($type eq 'case') {
-				$log .= "<$node->{case}格>";
-			    }
-			    else {
-				$log .= "<$tag{$type}>";
-			    }
-			}
-		    }
+#		    my %tag = ('kanou' => '可能', 'sonnkei' => '尊敬', 'ukemi' => '受身', 'shieki' => '使役', 'negation' => '否定');
+#		    foreach my $type ('case', keys %tag) {
+#			if ($node->{$type}) {
+#			    if ($type eq 'case') {
+#				$log .= "<$node->{case}格>";
+#			    }
+#			    else {
+#				$log .= "<$tag{$type}>";
+#			    }
+#			}
+#		    }
 		    $log .= "\n";
 		}
 	    }
@@ -224,6 +224,14 @@ sub make_tree {
                              score       => 1,
                              weight      => $weight});
         }
+    }
+    
+    # コンパイル時「。」をとる
+    if ($this->{mode} eq 'compile') {
+	if ($tree_ref->{$sid}[-1][0]{id} eq '。/。') {
+	    pop (@{$tree_ref->{$sid}});
+	    $tree_ref->{$sid}[-1][0]{parentbp} = -1;
+	}
     }
 }
 
@@ -1082,22 +1090,21 @@ sub get_nodefac {
 
 	# ★headを早く見つけることで高速化可能★odani0529
 	# headでの処理
-	if ($matchkey == (split(/,/, $matchkey))[-1]) {
-
+	if ($headbp2 == (split(/,/, $matchkey))[-1]) {
+	    
 	    if ($type eq 'syn') {
 		if ($mres->{$matchkey}{type_unmatch}) {
 		    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
-		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-			if ($type ne 'negation' and $graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
-			    $this->{matching} = 'unmatch';
-			    return;
-			}
-		    }
-		    
 		    # headの要素を引き継ぐ
 		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
 			if ($type ne 'negation') {
-			    $nodefac->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+			    if ($graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
+				$this->{matching} = 'unmatch';
+				return;
+			    }
+			    else {
+				$nodefac->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+			    }
 			}
 			else {
 			    $nodefac->{$type} = 1;
@@ -1105,17 +1112,8 @@ sub get_nodefac {
 		    }
 		}
 	    }
-	    elsif($type eq 'Matching') { # MTでアライメントをとるときはheadでの{fuzoku,case}の違いはみない。
-		if ($mres->{$matchkey}{type_unmatch}) {
-		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-			if (($type eq 'case') or ($type eq 'fuzoku')){
-			    next;
-			}
-			else {
-			    $mres->{$matchkey}{score} *= $penalty->{$type};
-			}
-		    }
-		}
+	    elsif($type eq 'Matching') {
+		# MTでアライメントをとるときはheadでの違いはみない。		
 	    }
 
 	    # スコア
