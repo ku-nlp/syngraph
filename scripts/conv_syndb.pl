@@ -141,7 +141,7 @@ if ($opt{isa}) {
 		    $key_p = (split(/\//, $parent))[0];
 		    my $key_c = (split(/:/, $child))[0];
 		    $key_c = (split(/\//, $child))[0];
-		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c-$key_p" : "$key_c-$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c-$key_p/; # なければ保存
+		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c->$key_p" : "$key_c->$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c->$key_p/; # なければ保存
 		}
 	    }
 	}
@@ -202,7 +202,7 @@ if ($opt{antonym}) {
 		    my $key_2 = (split(/:/, $word2))[0];
 		    $key_2 = (split(/\//, $word2))[0];
 		    $log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
-		    $log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
+#		    $log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
 		}
 	    }
 	}
@@ -370,18 +370,23 @@ sub get_synid {
 #
 sub contradiction_check {
     my ($list_1, $list_2) = @_;
-    my $flag = 0;
 
     # $list_1$とlist_2に同じ同義グループがあるとだめ
+    # $list_1$とlist_2に語の多義性による同義グループがあるとだめ(s134:扱う/あつかう、s135:扱う/あつかう)
     foreach my $element_1 (@$list_1) {
-	last if ($flag);
 	foreach my $element_2 (@$list_2) {
 	    if ($element_1 eq $element_2) {
-		$flag = 1;
-		last;
+		return 1;
+	    }
+	    else {
+		my $word1 = (split(/:/,$element_1))[1];
+		my $word2 = (split(/:/,$element_2))[1];
+		if ($word1 eq $word2) {
+		    return 1;
+		}
 	    }
 	}
     }
     
-    return $flag;
+    return 0;
 }
