@@ -186,7 +186,7 @@ sub make_tree {
 		}
 		if ($rep ne $node->{midasi}) {
 		    $log = "log : $node->{midasi} = $rep\n";
-		    $log .= "abstract : $node->{midasi} => $rep";
+		    $log .= "extract : $node->{midasi} => $rep";
 #		    my %tag = ('kanou' => '可能', 'sonnkei' => '尊敬', 'ukemi' => '受身', 'shieki' => '使役', 'negation' => '否定');
 #		    foreach my $type ('case', keys %tag) {
 #			if ($node->{$type}) {
@@ -768,7 +768,7 @@ sub _regnode {
 			my @plog;
 			if ($this->{log_isa}) {
 			    foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
-				my ($child_bridge, $parent_bridge) = split(/-/, $_);
+				my ($child_bridge, $parent_bridge) = split(/->/, $_);
 				my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
 				my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
 				push @plog, "$childside => $parentside";
@@ -830,32 +830,41 @@ sub _regnode {
 		    if ($regnode_option->{log}) {
 			my ($word1) = $newid->{id} =~ /s\d+:([^\/]+)/;
 			my ($word2) = $aid =~ /s\d+:([^\/]+)/;
-			$log = "log : $newid->{midasi} <=> $word1\n";
+			$log = "log : $newid->{midasi} <=> $word2\n";
 			if ($newid->{log}) {
 			    foreach (split(/\n/, $newid->{log})){
 				next if $_ =~ /^log/;
 				$log .= "$_\n";
 			    }
 			}
-			my @alog;
 			if ($this->{log_antonym}) {
-			    foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
-				my ($word1_bridge, $word2_bridge) = split(/-/, $_);
-				my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
-				my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
-				push @alog, "$word1_side <=> $word2_side";
+			    my @alog;
+			    if ($this->{log_antonym}{"$newid->{id}-$aid"}) {
+				foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
+				    my ($word1_bridge, $word2_bridge) = split(/-/, $_);
+				    my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
+				    my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
+				    push @alog, "$word1_side <=> $word2_side";
+				}
 			    }
-			    my $flag;
+			    if ($this->{log_antonym}{"$aid-$newid->{id}"}) {
+				foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$aid-$newid->{id}"}))) {
+				    my ($word2_bridge, $word1_bridge) = split(/-/, $_);
+				    my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
+				    my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
+				    push @alog, "$word1_side <=> $word2_side" if (!grep("$word1_side <=> $word2_side" eq $_, @alog));
+				}
+			    }
+			    my $alog_str;
 			    foreach (@alog) {
-				unless ($flag) {
-				    $log .= "antonym : $_";
-				    $flag = 1;
+				if ($alog_str) {
+				    $alog_str .= " or $_";
 				}
 				else {
-				    $log .= " or $_";
+				    $alog_str .= "antonym : $_";
 				}
 			    }
-			    $log .= "\n";
+			    $log .= "$alog_str\n";
 			}
 		    }
 		    
@@ -884,15 +893,6 @@ sub _regnode {
 		}
 	    }
 	}
-
-        # head登録（末尾のノードのidが変わったときの対処、コンパイル用）
-#         if ($this->{mode} eq 'repeat' and
-#             $newid->{id} and
-#             $bp == @{$ref->{$sid}} - 1 and
-#             !grep($sid eq $_, @{$this->{synhead}{$newid->{id}}})) {
-#             push(@{$this->{synhead}{$newid->{id}}}, $sid);
-#             $this->{regnode} = $sid;
-#         }
 
         if ($this->{mode} eq 'repeat' and
             $newid->{id} and
@@ -1252,8 +1252,8 @@ sub make_log {
 		if ($array[$num] =~ s/^synonym :([^=]+)=([^\(]+)//) {
 		    $tmp2 .=  "synonym :$2 = $1$array[$num]\n";
 		}
-		elsif ($array[$num] =~ s/^abstract :([^=]+)=>(.+)//) {
-		    $tmp2 .=  "abstract :$2 <= $1$array[$num]\n";
+		elsif ($array[$num] =~ s/^extract :([^=]+)=>(.+)//) {
+		    $tmp2 .=  "extract :$2 <= $1$array[$num]\n";
 		}
 	    }
 	}
