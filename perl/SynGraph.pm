@@ -350,11 +350,15 @@ sub st_make_bp {
 		}
 
 		# ノードとしての要素を獲得
-		my $nodefac = $this->get_nodefac('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $result);
+		my $nodefac = $this->get_nodefac('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $result, $option);
+		if ($this->{matching} eq 'unmatch') {
+		    delete $this->{tm_sg}{$tmid};
+		    next;
+		}
 
 		# 入力の文節番号集合
 		my @s_body;
-		foreach my $i (@{$result->{MATCH}{match}}) {
+		foreach my $i (@{$nodefac->{match}}) {
 		    push(@s_body, @{$i->{graph_1}});
 		}
 		my $s_pattern = join(" ", sort(@s_body));
@@ -1079,7 +1083,7 @@ sub syngraph_matching {
 # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがあってもgraph_2に引き継ぎ可能)
 # SYNノードとしての要素を獲得
 sub get_nodefac {
-    my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $mres) = @_;
+    my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $mres, $option) = @_;
     my $nodefac = {};
     my $score;
     my @match;
@@ -1117,7 +1121,7 @@ sub get_nodefac {
 		}
 	    }
 	    elsif($mode eq 'MT') {
-		# MTでアライメントをとるときはheadでの違いはみない。		
+		# MTでアライメントをとるときはheadでの違いはみない。
 	    }
 
 	    # スコア
@@ -1136,9 +1140,13 @@ sub get_nodefac {
 	    # スコア
 	    if ($mres->{$matchkey}{type_unmatch}) {
 		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-		    if ($type eq 'case'){
+		    if ($type eq 'case') {
 			next if (!$graph1->[$bp1][$nodenum1]{$type}
 				 or !$graph2->[$bp2][$nodenum2]{$type});
+		    }
+		    elsif ($type eq 'fuzoku' and $option->{fuzoku_cut}) {
+			$this->{matching} = 'unmatch';
+			return;			
 		    }
 		    $mres->{$matchkey}{score} *= $penalty->{$type};
 		}
