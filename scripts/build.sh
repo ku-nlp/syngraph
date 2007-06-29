@@ -71,7 +71,6 @@ rm -v $INDEX_FILE
 rm -v df.db doclen.db
 rm -v $INDEX_FILE
 
-
 ########################################################
 echo "STEP1 start\t`date`"
 ########################################################
@@ -83,7 +82,7 @@ else
 fi
 
 # Juman & KNP
-$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse
+$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -postprocess -tab > $SYNDB_DIR/syndb.parse
 
 # コンパイル
 if [ $log -eq 1 ]; then
