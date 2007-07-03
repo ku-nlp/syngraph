@@ -52,26 +52,38 @@ foreach (@SYN_SORT) {
     my %gr_check;
     my $flag;
     foreach my $word (@list) {
-	
 	last if ($flag); # 重複していない
 	
 	my $w = (split(/:/, $word))[0]; # ID取る
-	$w = (split(/\//, $w))[0]; # 振り仮名をとる
-	if (defined $syngroup{$w}) { # 語が属している同義グループが存在する
+	($w, my $kana) = split(/\//, $w); # 振り仮名をとる
+	$kana =~ s/v$//; # 「v」をとる
+	if (defined $syngroup{$w} or ($kana and defined $syngroup{$kana}) or (!defined $kana and defined $syngroup{"/$w"})) { # 語が属している同義グループが存在する
 	    if (%gr_check) { # 一番目の語が属している同義グループに二番目以降の語が属しているか？
 		foreach my $g (keys %gr_check) {
-		    unless (grep($g eq $_, @{$syngroup{$w}})) {
-			delete $gr_check{$g}; # 二番目以降の語が属していないものを削除
-			if (defined %gr_check) {
-			    $flag = 1; # 重複していない
-			    last;
-			}
+		    next if ($w and defined $syngroup{$w} and grep($g eq $_, @{$syngroup{$w}}));
+		    next if ($kana and defined $syngroup{$kana} and grep($g eq $_, @{$syngroup{$kana}}));
+		    next if (!$kana and defined $syngroup{"/$w"} and grep($g eq $_, @{$syngroup{"/$w"}}));
+		    delete $gr_check{$g}; # 二番目以降の語が属していないものを削除
+		    unless (defined %gr_check) {
+			$flag = 1; # 重複していない
+			last;
 		    }
 		}
 	    }
 	    else { # 一番目の語が属している同義グループを調べる
 		foreach my $g (@{$syngroup{$w}}) {
 		    $gr_check{$g} = 1;
+		}
+		if (defined $kana) { # 一番目の語が代表表記化済み
+		    $kana =~ s/v$//; # 「v」をとる
+		    foreach my $g (@{$syngroup{"$kana"}}) { # 代表表記化されていないものが入っているグループを調べる
+			$gr_check{$g} = 1 unless (defined $gr_check{$g});
+		    }
+		}
+		else { # 一番目の語が代表表記化されていない
+		    foreach my $g (@{$syngroup{"/$w"}}) { # 代表表記化されているものが入っているグループを調べる
+			$gr_check{$g} = 1 unless (defined $gr_check{$g});
+		    }
 		}
 	    }
 	}
@@ -80,19 +92,18 @@ foreach (@SYN_SORT) {
 	    last;
 	}
     }
-    
+
     # 重複していたらマージ
     unless ($flag){ # 重複している
-	
+
 	# @listをマージする
-	my @group_orig;
 	my $g;
 	my $flag3; # マージ候補のどれかマージできた
 	foreach $g (keys %gr_check) {
+	    my @group_orig;
 	    foreach (@{$result{$g}}) {
 		push (@group_orig, $_);
 	    }
-
 	    # idやふり仮名をマージ
 	    my @group_merge;
 	    my $flag2; # マージできない
@@ -115,8 +126,54 @@ foreach (@SYN_SORT) {
 			}
 			
 			my $word_merge = $w_orig;
-			$word_merge .= $kana_orig ? "/$kana_orig" : "/$kana_delete";
-			$word_merge .= $id_orig ? ":$id_orig" : ":$id_delete";
+			if ($kana_orig) {
+			    $word_merge .= "/$kana_orig";
+			}
+			elsif ($kana_delete) {
+			    $word_merge .= "/$kana_delete";
+			}
+			if ($id_orig) {
+			    $word_merge .= ":$id_orig";
+			}
+			elsif ($id_delete) {
+			    $word_merge .= ":$id_delete";
+			}
+			push @group_merge, $word_merge;
+			$flag4 = 1;
+			last; # マージした
+		    }
+		    elsif (!(defined $kana_orig) and (($w_orig eq $kana_delete) or ($w_orig."v" eq $kana_delete))) { # origが代表表記化されていない
+			# if id_orig ne id_delete & kana_orig ne kana_delete 実はマージできない
+			if ($id_orig and $id_delete and $id_orig ne $id_delete) {
+			    $flag2 = 1;
+			    last; # マージできない
+			}
+			
+			my $word_merge = "$w_delete/$kana_delete";
+			if ($id_orig) {
+			    $word_merge .= ":$id_orig";
+			}
+			elsif ($id_delete) {
+			    $word_merge .= ":$id_delete";
+			}
+			push @group_merge, $word_merge;
+			$flag4 = 1;
+			last; # マージした
+		    }
+		    elsif (!(defined $kana_delete) and (($kana_orig eq $w_delete) or ($kana_orig eq $w_delete."v"))) { # deleteが代表表記化されていない
+			# if id_orig ne id_delete & kana_orig ne kana_delete 実はマージできない
+			if ($id_orig and $id_delete and $id_orig ne $id_delete) {
+			    $flag2 = 1;
+			    last; # マージできない
+			}
+			
+			my $word_merge = "$w_orig/$kana_orig";
+			if ($id_orig) {
+			    $word_merge .= ":$id_orig";
+			}
+			elsif ($id_delete) {
+			    $word_merge .= ":$id_delete";
+			}
 			push @group_merge, $word_merge;
 			$flag4 = 1;
 			last; # マージした
@@ -131,7 +188,7 @@ foreach (@SYN_SORT) {
 	    }
 	    unless ($flag2) { # マージ
 		delete $result{$g};
-		push (@{$result{$g}}, \@group_merge);
+		push (@{$result{$g}}, @group_merge);
 		
 		# ログ
 		my $delete_str;
@@ -159,8 +216,11 @@ foreach (@SYN_SORT) {
 	    foreach my $word (@list) {
 		push (@{$result{$gr_number}}, $word);
 		my $w = (split(/:/, $word))[0]; # ID取る
-		$w = (split(/\//, $w))[0]; # 振り仮名をとる
+		($w, my $kana) = split(/\//, $w); # 振り仮名をとる
 		push (@{$syngroup{$w}},  $gr_number);
+		# 仮名がついているものはそれからもひけるようにする。ただし、代表表記化されてないものと区別する。
+		$kana =~ s/v$//; # 「v」をとる
+		push (@{$syngroup{"/$kana"}},  $gr_number) if ($kana and ($w ne $kana));
 	    }
 	}
     }    
@@ -170,11 +230,13 @@ foreach (@SYN_SORT) {
 	foreach my $word (@list) {
 	    push (@{$result{$gr_number}}, $word);
 	    my $w = (split(/:/, $word))[0]; # ID取る
-	    $w = (split(/\//, $w))[0]; # 振り仮名をとる
+	    ($w, my $kana) = split(/\//, $w); # 振り仮名をとる
 	    push (@{$syngroup{$w}},  $gr_number);
+	    # 仮名がついているものはそれからもひけるようにする。ただし、代表表記化されてないものと区別する。
+	    $kana =~ s/v$//; # 「v」をとる
+	    push (@{$syngroup{"/$kana"}},  $gr_number) if ($kana and ($w ne $kana));
 	}
     }
-    
     $gr_number++;
 }
 
