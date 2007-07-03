@@ -2,6 +2,10 @@
 
 	* scripts/check_synonym.pl
 	代表表記に注意したマージ
+	* scripts/knp_syn.pl, perl/SynGraph.pm
+	SynGraphのformatで詳細なノード情報を出力するoption"-detail"を追加
+	* cgi/index.cgi
+	上位ノードの張り付け制限(下位語数)
 
 2007-06-30  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
