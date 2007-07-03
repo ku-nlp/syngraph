@@ -1479,6 +1479,15 @@ sub get_nodestr {
     $string .= "<尊敬>" if ($node->{sonnkei});
     $string .= "<受身>" if ($node->{ukemi});
     $string .= "<使役>" if ($node->{shieki});
+
+    # nodeのdetail
+    if ($option->{detail}) {
+	$string .= "<log:$node->{log}>" if ($node->{log});
+	$string .= "<fuzoku:$node->{fuzoku}>" if ($node->{fuzoku});
+	$string .= "<weight:$node->{weight}>" if ($node->{weight});
+	$string .= "<wnum:$node->{wnum}>" if ($node->{wnum});
+    }
+
     $string .= "\n";
 
     # nodeのlog
@@ -1500,6 +1509,9 @@ sub get_nodestr {
 	    $string .= "\t\t-----------------------------------------------------------\n";
 	}
     }
+
+
+
 
     return $string;
 }

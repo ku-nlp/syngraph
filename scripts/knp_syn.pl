@@ -14,12 +14,13 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s');
 
 my $option;
 my $knp_option;
 my $regnode_option;
 $option->{debug} = 1 if $opt{debug};
+$option->{detail} = 1 if $opt{detail};
 $option->{orchid} = 1 if $opt{orchid};
 $option->{log} = 1 if $opt{log};
 $option->{cgi} = 1 if $opt{cgi};
