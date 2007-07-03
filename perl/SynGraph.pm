@@ -757,6 +757,8 @@ sub _regnode {
 	    if ($this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
 		foreach my $pid_num (split(/\|/, $this->{synparentcache}{$id})) {
 		    my ($pid, $number) = split(/,/, $pid_num);
+
+		    # 下位語数が $regnode_option->{hypocut_attachnode} 以上なら、SYNノードをはりつけない
 		    next if ($regnode_option->{hypocut_attachnode} and $regnode_option->{hypocut_attachnode} < $number);
 		    
 		    # NODEのLOG
