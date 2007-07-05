@@ -1,3 +1,12 @@
+2007-07-05  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb
+	jumanのversion upに対応
+	* scripts/conv_syndb.pl
+	2文字以下のひらがなは無視 -> 代表表記化されているものは無視しない
+	* perl/SynGraph.pm, cgi/index.cgi
+	上位下位ログの表示変更(「->」を「→」に)
+	
 2007-07-03  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/check_synonym.pl
