@@ -141,7 +141,7 @@ if ($opt{isa}) {
 		    $key_p = (split(/\//, $parent))[0];
 		    my $key_c = (split(/:/, $child))[0];
 		    $key_c = (split(/\//, $child))[0];
-		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c->$key_p" : "$key_c->$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c->$key_p/; # なければ保存
+		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c→$key_p" : "$key_c→$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c→$key_p/; # なければ保存
 		}
 	    }
 	}
@@ -259,7 +259,7 @@ if ($opt{convert_file}) {
 	    $check{$expression} = 1;
 
             # 2文字以下のひらがなは無視
-            next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2);
+            next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2 and !$kana);
 
             # 全角に変換
             $expression = &SynGraph::h2z($expression);
