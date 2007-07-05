@@ -776,7 +776,7 @@ sub _regnode {
 			my @plog;
 			if ($this->{log_isa}) {
 			    foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
-				my ($child_bridge, $parent_bridge) = split(/->/, $_);
+				my ($child_bridge, $parent_bridge) = split(/→/, $_);
 				my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
 				my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
 				push @plog, "$childside => $parentside";
