@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+# $Id$
+
 # KNPへのSYNGRAPH導入のテスト用プログラム
 
 use strict;
@@ -31,7 +33,7 @@ $regnode_option->{antonym} = 1 if $opt{antonym};
 $regnode_option->{cgi} = 1 if $opt{cgi};
 $regnode_option->{log} = 1 if $opt{log};
 
-# 下位語数が $regnode_option->{hypocut_attachnode} 以上なら、SYNノードをはりつけないオプション
+# 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけないオプション
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 
 my $syndbdir;
