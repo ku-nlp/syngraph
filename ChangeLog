@@ -1,3 +1,40 @@
+2007-07-09  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_dic_web_duplicate.pl
+	check_dic_web_news_duplicate.plを改名
+	* scripts/conv_syndb.pl, perl/SynGraph.pm
+	「。」をつけて解析するのをやめる
+	* scripts/merge.sh
+	同義グループのマージの手順を追加
+	* scripts/cat_synonym_same_def.pl
+	add
+	新しい同義グループsame_definitionをsynonymにcat
+	* dic/same_definition.txt
+	add
+	辞書の定義文が同じものを集めた新しい同義グループ
+	* syndb
+	・辞書抽出での小見出し制限を緩める(小見出し４→始め２利用、小見出し５→始め１利用)
+	・辞書抽出で上位語抽出において、格要素を抽出する際に格要素が用言なら抽出しない
+	・辞書抽出で主辞の最後の形態素が助詞であるときの処理変更
+	・辞書抽出で上位語(フレーズ)と同義語(フレーズ)の重複を同義優先で削除
+	・辞書の定義文が同じものを集めた新しい同義グループ追加
+	・辞書整形でsynonym_dic,same_definition,antonymの重複をマージ
+	・辞書整形でsynonym_web_newsからsynonym_dic,same_definitionと重複しているもの削除
+	* dic_change/(log_delete_web_news.txt log_merge_antonym_dic.txt log_merge_synonym_dic.txt log_merge_synonym_web_news.txt) 
+	added
+	マージのログ
+	* dic_middle
+	added
+	マージの中間ファイル
+
+	
+2007-07-05  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_dic_web_paper_duplicate.pl
+	add
+	synonym_web_newsからsynonym_dicと重複したものを削除する
+
+
 2007-07-05  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb
