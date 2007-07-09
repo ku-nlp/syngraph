@@ -227,14 +227,6 @@ sub make_tree {
                              weight      => $weight});
         }
     }
-    
-    # コンパイル時「。」をとる
-    if ($this->{mode} eq 'compile') {
-	if ($tree_ref->{$sid}[-1][0]{id} eq '。/。') {
-	    pop (@{$tree_ref->{$sid}});
-	    $tree_ref->{$sid}[-1][0]{parentbp} = -1;
-	}
-    }
 }
 
 
