@@ -3,6 +3,7 @@
 # $Id$
 
 # 辞書からの同義表現リストから重複エントリを除くスクリプト
+# 反義リストにも使用可能
 
 use strict;
 use Getopt::Long;
@@ -22,9 +23,10 @@ my %SYN;
 open(SYN, '<:encoding(euc-jp)', $opt{synonym_dic}) or die;
 while (<SYN>) {
     chomp;
+
     my @list = split;
 
-    # ★要修正：同義グループ内に同じ言葉がないか
+    # ★必要？：同義グループ内に同じ言葉がないか
 
     # 要素数の数を調べる
     push @{$SYN{@list}}, $_;
@@ -57,6 +59,7 @@ foreach (@SYN_SORT) {
 	my $w = (split(/:/, $word))[0]; # ID取る
 	($w, my $kana) = split(/\//, $w); # 振り仮名をとる
 	$kana =~ s/v$//; # 「v」をとる
+
 	if (defined $syngroup{$w} or ($kana and defined $syngroup{$kana}) or (!defined $kana and defined $syngroup{"/$w"})) { # 語が属している同義グループが存在する
 	    if (%gr_check) { # 一番目の語が属している同義グループに二番目以降の語が属しているか？
 		foreach my $g (keys %gr_check) {
@@ -64,25 +67,31 @@ foreach (@SYN_SORT) {
 		    next if ($kana and defined $syngroup{$kana} and grep($g eq $_, @{$syngroup{$kana}}));
 		    next if (!$kana and defined $syngroup{"/$w"} and grep($g eq $_, @{$syngroup{"/$w"}}));
 		    delete $gr_check{$g}; # 二番目以降の語が属していないものを削除
-		    unless (defined %gr_check) {
+		    if (scalar(keys %gr_check) == 0) {
 			$flag = 1; # 重複していない
 			last;
 		    }
 		}
 	    }
 	    else { # 一番目の語が属している同義グループを調べる
-		foreach my $g (@{$syngroup{$w}}) {
-		    $gr_check{$g} = 1;
+		if ($syngroup{$w}) {
+		    foreach my $g (@{$syngroup{$w}}) {
+			$gr_check{$g} = 1;
+		    }
 		}
 		if (defined $kana) { # 一番目の語が代表表記化済み
 		    $kana =~ s/v$//; # 「v」をとる
-		    foreach my $g (@{$syngroup{"$kana"}}) { # 代表表記化されていないものが入っているグループを調べる
-			$gr_check{$g} = 1 unless (defined $gr_check{$g});
+		    if (defined $syngroup{"$kana"}) {
+			foreach my $g (@{$syngroup{"$kana"}}) { # 代表表記化されていないものが入っているグループを調べる
+			    $gr_check{$g} = 1 unless (defined $gr_check{$g});
+			}
 		    }
 		}
 		else { # 一番目の語が代表表記化されていない
-		    foreach my $g (@{$syngroup{"/$w"}}) { # 代表表記化されているものが入っているグループを調べる
-			$gr_check{$g} = 1 unless (defined $gr_check{$g});
+		    if (defined $syngroup{"/$w"}) {
+			foreach my $g (@{$syngroup{"/$w"}}) { # 代表表記化されているものが入っているグループを調べる
+			    $gr_check{$g} = 1 unless (defined $gr_check{$g});
+			}
 		    }
 		}
 	    }
@@ -207,7 +216,9 @@ foreach (@SYN_SORT) {
 		    $merge_str .= $_;
 		}
 		
-		print LM "<$orig_str> + <$delete_str> => <$merge_str>\n";
+		print LM "★delete1 <$orig_str>\n";
+		print LM "★delete2 <$delete_str>\n";
+		print LM "☆merge <$merge_str>\n\n";
 		$flag3 = 1; # マージできた
 	    }
 	}
