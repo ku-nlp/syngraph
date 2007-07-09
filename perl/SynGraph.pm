@@ -97,11 +97,13 @@ sub new {
         st_data    => {},
         tm_sg      => {},
 	knp        => new KNP(%knp_pm_args),
+	# by NICT
+	fast       => $option->{fast},
     };
     
     bless $this;
 
-    if (defined $syndbdir) {
+    if (defined $syndbdir and $syndbdir ne "") { # by NICT
 	# 類義表現DBをtie
 	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
 	
@@ -362,7 +364,19 @@ sub st_make_bp {
 		    push(@s_body, @{$i->{graph_1}});
 		}
 		my $s_pattern = join(" ", sort(@s_body));
-		next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
+		# by NICT
+		# NOTE:
+		#   It's sometimes very slow to never break this loop.
+		#   So we make the loop break by one of counters for demo,
+		#   but we cannot pick up the whole variations for s_patterns.
+		# next if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num);
+		if ($max_tm_num != 0 && $count_pattern{$s_pattern} >= $max_tm_num) {
+		    if(defined($this->{fast}) && $this->{fast} > 0) {
+			last;
+		    } else {
+			next ;
+		    }
+		}
 		$count_pattern{$s_pattern}++;
 		
 		# アライメントのLOG
@@ -1971,7 +1985,7 @@ sub store_db {
     my %hash;
 
     # ファイルを消して作りなおす
-    my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die;
+    my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die "Cannot tie '$filename'";
 
     # filter setting
     $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
@@ -2006,7 +2020,7 @@ sub retrieve_db {
 sub tie_db {
     my ($filename, $hash_ref) = @_;
 
-    my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die;
+    my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die "Cannot tie '$filename'";
 
     # filter setting
     $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
@@ -2059,7 +2073,7 @@ sub retrieve_cdb {
 sub tie_cdb {
     my ($filename, $hash_ref) = @_;
 
-    my $db = tie %$hash_ref, 'CDB_File', $filename or die;
+    my $db = tie %$hash_ref, 'CDB_File', $filename or die "Cannot tie '$filename'";
 
 }
 
@@ -2115,7 +2129,7 @@ sub retrieve_mldbm {
 sub create_mldbm {
     my ($filename, $hash_ref) = @_;
 
-    my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_CREATE or die;
+    my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_CREATE or die "Cannot tie '$filename'";
 
     # filter setting
     $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
@@ -2131,7 +2145,7 @@ sub create_mldbm {
 sub tie_mldbm {
     my ($filename, $hash_ref) = @_;
 
-    my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_RDONLY or die;
+    my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_RDONLY or die "Cannot tie '$filename'";
 
     # filter setting
     $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
@@ -2268,10 +2282,203 @@ sub _read_xml {
     }
 
     # 木を作る
+    # by NICT
+    ### MODIFIED NICT200707
+    ###   2パスに変更する。1回目：$child,$bp_tableテーブル設定  2回目：結果登録
+    my $child = {};
+    my $bp_table = {};
+    foreach my $step ('prep','do') {
+	my $org_num = -1;
+	my $key_num = 0;
+	# my $child = {};
+	# my $bp_table = {};
+	foreach my $phrase (@{$sen->{phrase}}) {
+	    my $nodename;
+	    my $numid;
+	    my $fuzoku;
+	    my $negation;
+	    $org_num++;
+
+	    # 元の文のフレーズ番号
+	    my $org_pnum = $phrase->{org_pnum} ? $phrase->{org_pnum} : $org_num;
+
+	    # bondは無視
+	    next if ($phrase->{bond} == 1);
+
+	    if( $step eq 'prep' ) {
+		# BP番号のテーブル
+		$bp_table->{$org_num} = $key_num;
+
+		# 子供
+		$child->{$phrase->{dpnd}}->{$org_num} = 1 if ($phrase->{dpnd} != -1);
+	    }
+
+	    foreach my $word (@{$phrase->{word}}) {
+		# 句点、読点は無視
+		if ($word->{pos} =~ /:(句点|読点)/) {
+		    next;
+		}
+
+		# 「お」は無視
+		elsif ($word->{content_p} == -1 and $word->{lem} =~ /^(お|ご|御)$/) {
+		    next;
+		}
+
+		# 否定表現
+		elsif ($word->{content_p} == -1 and $word->{lem} =~ /^(非|不)$/) {
+		    $negation = 1;
+		}
+
+		# 自立語
+		elsif ($word->{content_p} != 0 or
+		       $word->{pos} eq '名詞:形式名詞') {
+		    # 活用させずにそのまま
+		    if (defined $word->{kanou_norm}) {
+			push (@{$nodename}, [$word->{kanou_norm}]);
+		    }
+		    elsif (defined $word->{sonkei_norm}) {
+			push (@{$nodename}, [split(/:/, $word->{sonkei_norm})]);
+		    } else {
+			push (@{$nodename}, [$word->{lem}]);
+		    }
+		    $numid .= $word->{lem} if ($numid);
+		    # 数字の汎化
+		    if ($word->{pos} eq '名詞:数詞' and
+			$word->{lem} ne '何' and
+			$word->{lem} ne '幾') {
+			$numid .= '<num>';
+		    }
+		}
+		# その他、付属語
+		else {
+		    # キーワード扱い
+		    if ($word->{pos} =~ /^接尾辞:名詞性(名詞|特殊)/ or
+			($word->{pos} eq '接尾辞:名詞性述語接尾辞' and $word->{read} eq 'かた')) {
+			if (defined $word->{kanou_norm}) {
+			    push (@{$nodename}, [$word->{kanou_norm}]);
+			}
+			elsif (defined $word->{sonkei_norm}) {
+			    push (@{$nodename}, [split(/:/, $word->{sonkei_norm})]);
+			} else {
+			    push (@{$nodename}, [$word->{lem}]);
+			}
+			$numid .= $word->{lem} if ($numid);
+		    }
+		    # 否定表現
+		    elsif (($word->{pos} =~ /^接尾辞/ and $word->{lem} eq 'ない') or
+			   ($word->{pos} eq '助動詞' and $word->{lem} eq 'ぬ')) {
+			$negation = 1;
+		    }
+		    else {
+			# 一番最後は付属語なし
+			$fuzoku .= $word->{lem} if ($phrase->{dpnd} != -1);
+		    }
+		}
+	    }
+
+	    next if ($#{$nodename} < 0);
+
+#         # チェック用
+#         unless ($nodename) {
+#             return;
+#             use Dumpvalue;
+#             Dumpvalue->new->dumpValue($sen);
+#             print "--------\n";
+#         }
+
+	    if( $step eq 'do' ) {
+		# 子供BPの変換
+		my $childbp = {};
+		foreach my $org_child (keys %{$child->{$org_num}}) {
+		    if (exists $bp_table->{$org_child}) {
+			$childbp->{$bp_table->{$org_child}} = 1;
+		    }
+		}
+
+		my @nodename_list;
+		push (@nodename_list, "");
+		for (my $i = 0; $i < @{$nodename}; $i++) {
+		    my @tmp;
+		    for (my $j = 0; $j < @{$nodename->[$i]}; $j++) {
+			foreach my $str (@nodename_list) {
+			    push (@tmp, "$str$nodename->[$i][$j]");
+			}
+		    }
+		    @nodename_list = @tmp;
+		}
+
+		# ID登録
+		foreach my $str (@nodename_list) {
+		    #regnode_optionが入力に必要かも(odani)
+		    $this->_regnode({ref      => $tree_ref,
+				     sid      => $tmid,
+				     bp       => $key_num,
+				     id       => $str,
+				     fuzoku   => $fuzoku,
+				     negation => $negation,
+				     childbp  => $childbp,
+				     origbp   => $org_pnum,
+				     negation => 0,
+				     score    => 1,
+				     weight   => 1,
+				     wnum     => $phrase->{word}[0]{wnum}});
+		}
+
+		#regnode_optionが入力に必要かも(odani)
+		$this->_regnode({ref      => $tree_ref,
+				 sid      => $tmid,
+				 bp       => $key_num,
+				 id       => $numid,
+				 fuzoku   => $fuzoku,
+				 negation => $negation,   ### 要修正
+				 childbp  => $childbp,
+				 origbp   => $org_pnum,
+				 negation => 0,           ### 要修正
+				 score    => 1,
+				 weight   => 1,
+				 wnum     => $phrase->{word}[0]{wnum}}) if ($numid);
+	    }
+
+	    $key_num++;
+	}
+    }
+}
+
+
+sub _read_xml_old {
+    my ($this, $xml_buf, $tree_ref, $tmid) = @_;
+    my $sen;
+
+    # リファレンスで渡された場合
+    if (ref $xml_buf) {
+        $sen = $xml_buf;
+    }
+    # XMLテキストの場合
+    else {
+        require XML::Simple;
+        my $xml = new XML::Simple;
+        $sen = $xml->XMLin($xml_buf, ForceArray => 1, keyattr => []);
+    }
+
+    # 木を作る
     my $org_num = -1;
     my $key_num = 0;
     my $child = {};
     my $bp_table = {};
+
+    # by NICT
+    # To deal with the backward relations of many languages excepted Japanese,
+    # we collect the information for all children nodes at first.
+    ### MODIFIED NICT200707
+    foreach my $phrase (@{$sen->{phrase}}) {
+	$org_num++;
+	my $org_pnum = $phrase->{org_pnum} ? $phrase->{org_pnum} : $org_num;
+	next if ($phrase->{bond} == 1);
+	$child->{$phrase->{dpnd}}->{$org_num} = 1 if ($phrase->{dpnd} != -1);
+    }
+    my $org_num = -1;
+    ###
+
     foreach my $phrase (@{$sen->{phrase}}) {
         my $nodename;
         my $numid;
@@ -2288,8 +2495,12 @@ sub _read_xml {
         # BP番号のテーブル
         $bp_table->{$org_num} = $key_num;
 
+	# by NICT
+	### MODIFIED NICT200707
+	# コメントアウト
         # 子供
-        $child->{$phrase->{dpnd}}->{$org_num} = 1 if ($phrase->{dpnd} != -1);
+        # $child->{$phrase->{dpnd}}->{$org_num} = 1 if ($phrase->{dpnd} != -1);
+	###
 
         foreach my $word (@{$phrase->{word}}) {
             # 句点、読点は無視
@@ -2418,7 +2629,6 @@ sub _read_xml {
         $key_num++;
     }
 }
-
 
 #
 # SYNGRAPHどうしのマッチング
