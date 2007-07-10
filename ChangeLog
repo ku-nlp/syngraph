@@ -1,3 +1,9 @@
+2007-07-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm
+	st_make_bpにおいて、head対応での否定の不一致を扱うようにした。
+	品詞変更利用をを文末以外に制限した。
+
 2007-07-09  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/check_dic_web_duplicate.pl
