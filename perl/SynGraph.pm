@@ -561,10 +561,14 @@ sub _get_keywords {
 #                 }
 
                 # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
-                while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
-		    # 代表表記
-		    if ($1 =~ /代表表記:([^\s\">]+)/){
-			push(@alt,$1);		
+		# 「歩き方」＝「歩く方法」
+		# ただし利用は文末以外
+		if ($tag->{parent}) {
+		    while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
+			# 代表表記
+			if ($1 =~ /代表表記:([^\s\">]+)/){
+			    push(@alt,$1);		
+			}
 		    }
 		}
 
@@ -1129,7 +1133,14 @@ sub get_nodefac {
 		}
 	    }
 	    elsif($mode eq 'MT') {
-		# MTでアライメントをとるときはheadでの違いはみない。
+		if ($mres->{$matchkey}{type_unmatch}) {
+		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+			# MTでアライメントをとるときはheadでの違いは否定以外はみない。
+			if ($type eq 'negation') { # 否定表現の引継ぎ
+			    $nodefac->{$type} = 1;
+			}
+		    }
+		}
 	    }
 
 	    # スコア
