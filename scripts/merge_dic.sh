@@ -16,6 +16,9 @@ SIM_C_DIR=../dic_change
 # 同義表現データベース
 SYNDB_DIR=../syndb/cgi
 
+# Juman辞書
+JUMANDICDIR=/home/shibata/download/juman/dic
+
 while getopts h OPT
 do
   case $OPT in
@@ -48,6 +51,12 @@ fi
 ########################################################
 echo "STEP1 start\t`date`"
 ########################################################
+
+# 両方がJuman辞書に登録されている同義表現の削除
+perl check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Web/www.txt > $SIM_DIR_Web/www.txt.jumanremoved 2> $SIM_DIR_Web/www.txt.jumanremoved.log
+
+cat $SIM_DIR_Web/nation.txt $SIM_DIR_Web/news.txt $SIM_DIR_Web/www.txt.jumanremoved > $SIM_DIR_Web/all.txt.jumanremoved
+
 # 辞書からの知識抽出のログ作成（CGI用）
 perl -I$PERL_DIR make_logdic.pl --synonym=$SIM_DIR_Dic/synonym.txt --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt --antonym=$SIM_DIR_Dic/antonym.txt --syndbdir=$SYNDB_DIR
 
@@ -59,7 +68,7 @@ perl check_synonym_dic.pl --synonym_dic=$SIM_M_DIR/synonym_dic.txt --log_merge=$
 perl check_synonym_dic.pl --synonym_dic=$SIM_DIR_Dic/antonym.txt --log_merge=$SIM_C_DIR/log_merge_antonym_dic.txt --change=$SIM_M_DIR/antonym.txt
 
 # Webからの知識の整理
-perl check_duplicate_entry.pl -rnsame --synonym_web_news=$SIM_DIR_Web/all.txt --log_merge=$SIM_C_DIR/log_merge_synonym_web_news.txt --change=$SIM_M_DIR/synonym_web_news.txt
+perl check_duplicate_entry.pl -rnsame --synonym_web_news=$SIM_DIR_Web/all.txt.jumanremoved --log_merge=$SIM_C_DIR/log_merge_synonym_web_news.txt --change=$SIM_M_DIR/synonym_web_news.txt
 
 # Webからの知識から辞書からの知識と重複を削除する
 perl check_dic_web_news_duplicate.pl --dic=$SIM_M_DIR/synonym_dic2.txt --web=$SIM_M_DIR/synonym_web_news.txt --log_merge=$SIM_C_DIR/log_delete_web_news.txt --change=$SIM_C_DIR/synonym_web_news.txt
