@@ -1,3 +1,11 @@
+2007-07-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh:
+	両方がJuman辞書に登録されている同義表現の削除
+
+	* scripts/check_synonym_in_juman_dic.pl:
+	added.
+
 2007-07-10  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm
