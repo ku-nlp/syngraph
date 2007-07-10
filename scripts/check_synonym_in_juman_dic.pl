@@ -50,15 +50,14 @@ while (<>) {
     # Î¾ÊýÅÐÏ¿¤µ¤ì¤Æ¤¤¤ë -> ºï½ü
     if (defined $MIDASI{$word1} && defined $MIDASI{$word2}) {
 	print STDERR "¡ù$word1 $word2\n";
+	next;
     }
     # ¤È¤ê¤¢¤¨¤ºÊÝÎ±
     elsif (defined $MIDASI{$word1}) {
 	print STDERR "¡ú$word1 $word2\n";
-	print;
     }
     elsif (defined $MIDASI{$word2}) {
 	print STDERR "¡ú$word2 $word1\n";
-	print;
     }
     print;
 }
