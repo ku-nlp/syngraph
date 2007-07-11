@@ -19,6 +19,9 @@ SYNDB_DIR=../syndb/cgi
 # Juman辞書
 JUMANDICDIR=/home/shibata/download/juman/dic
 
+# kawahara-pm
+KAWAHARAPMDIR=/home/shibata/work/kawahara-pm/perl
+
 while getopts h OPT
 do
   case $OPT in
@@ -53,7 +56,7 @@ echo "STEP1 start\t`date`"
 ########################################################
 
 # 両方がJuman辞書に登録されている同義表現の削除
-perl check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Web/www.txt > $SIM_DIR_Web/www.txt.jumanremoved 2> $SIM_DIR_Web/www.txt.jumanremoved.log
+perl -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Web/www.txt > $SIM_DIR_Web/www.txt.jumanremoved 2> $SIM_DIR_Web/www.txt.jumanremoved.log
 
 cat $SIM_DIR_Web/nation.txt $SIM_DIR_Web/news.txt $SIM_DIR_Web/www.txt.jumanremoved > $SIM_DIR_Web/all.txt.jumanremoved
 
