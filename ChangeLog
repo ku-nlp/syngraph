@@ -1,5 +1,13 @@
 2007-07-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/log_delete_web_news.txt, dic_change/log_merge_synonym_web_news.txt, dic_change/synonym_web_news.txt, dic_middle/synonym_web_news.txt:
+	両方がJuman辞書に登録されている同義表現の削除
+
+	* dic/web_news/all.txt.jumanremoved, dic/web_news/www.txt.jumanremoved, dic/web_news/www.txt.jumanremoved.log:
+	added.
+
+2007-07-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
 	* scripts/merge_dic.sh:
 	両方がJuman辞書に登録されている同義表現の削除
 
