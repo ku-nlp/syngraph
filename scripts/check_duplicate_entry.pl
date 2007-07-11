@@ -59,7 +59,7 @@ while (<>) {
 	    next;
 	}
 
-#	print "$word1 $word2\n";
+	print "$word1 $word2\n" unless $opt{merge};
 	push @line, [ $word1, $word2 ];
 
 	$linedata{$word1}{$linenum} = 1;
@@ -69,70 +69,72 @@ while (<>) {
     }
 }
 
+if ($opt{merge}) {
 # A=B, B=C, C=Aのマージ
-my @merged_group;
-foreach my $word_A (sort { $a cmp $b } keys %data) {
-    foreach my $word_B ( sort { $a cmp $b } keys %{$data{$word_A}}) {
-	next if $word_A ge $word_B;
-	my @registered;
-	foreach my $word_C ( sort { $a cmp $b } keys %{$data{$word_A}}) {
-	    next if $word_B ge $word_C;
+    my @merged_group;
+    foreach my $word_A (sort { $a cmp $b } keys %data) {
+	foreach my $word_B ( sort { $a cmp $b } keys %{$data{$word_A}}) {
+	    next if $word_A ge $word_B;
+	    my @registered;
+	    foreach my $word_C ( sort { $a cmp $b } keys %{$data{$word_A}}) {
+		next if $word_B ge $word_C;
 
-	    if (defined $data{$word_B}{$word_C}) {
-		# マージ候補にあがっているものと同義かどうかチェック
-		if (@registered) {
+		if (defined $data{$word_B}{$word_C}) {
+		    # マージ候補にあがっているものと同義かどうかチェック
+		    if (@registered) {
+			my $flag = 1;
+			foreach my $word (@registered) {
+			    unless (defined $data{$word}{$word_C}) {
+				$flag = 0;
+				last;
+			    }
+			}
+			if ($flag == 1) {
+			    push @registered, $word_C;
+			}
+		    }
+		    else {
+			push @registered, $word_C;
+		    }
+		}
+	    }
+	    if (@registered) {
+		# すでにできた同義グループのサブセットかどうかをチェック
+		my $merge_flag = 1;
+		foreach my $synonym_group (@merged_group) {
 		    my $flag = 1;
 		    foreach my $word (@registered) {
-			unless (defined $data{$word}{$word_C}) {
+			if (!defined $synonym_group->{$word}) {
 			    $flag = 0;
 			    last;
 			}
 		    }
+		    $flag = 0 unless defined $synonym_group->{$word_A} && defined $synonym_group->{$word_B};
+
 		    if ($flag == 1) {
-			push @registered, $word_C;
+			$merge_flag = 0;
 		    }
 		}
-		else {
-		    push @registered, $word_C;
-		}
-	    }
-	}
-	if (@registered) {
-	    # すでにできた同義グループのサブセットかどうかをチェック
-	    my $merge_flag = 1;
-	    foreach my $synonym_group (@merged_group) {
-		my $flag = 1;
-		foreach my $word (@registered) {
-		    if (!defined $synonym_group->{$word}) {
-			$flag = 0;
-			last;
-		    }
-		}
-		$flag = 0 unless defined $synonym_group->{$word_A} && defined $synonym_group->{$word_B};
+		# マージ
+		if ($merge_flag) {
+		    my @newgroup = ( $word_A, $word_B, @registered );
+		    print join (' ', @newgroup), "\n";
 
-		if ($flag == 1) {
-		    $merge_flag = 0;
-		}
-	    }
-	    # マージ
-	    if ($merge_flag) {
-		my @newgroup = ( $word_A, $word_B, @registered );
-		print join (' ', @newgroup), "\n";
+		    print STDERR "★merged: ", join (' ', @newgroup), "\n";
 
-		print STDERR "★merged: ", join (' ', @newgroup), "\n";
+		    push @merged_group, { map {$_ => 1} @newgroup };
 
-		push @merged_group, { map {$_ => 1} @newgroup };
+		    # すでにあったエントリの削除
+		    for (my $i = 0; $i < @newgroup -1; $i++) {
+			for (my $j = $i + 1; $j < @newgroup; $j++) {
+			    my $word_i = $newgroup[$i];
+			    my $word_j = $newgroup[$j];
+			    foreach my $line (keys %{$linedata{$word_i}}) {
+				if (defined $line[$line] && defined $linedata{$word_j}{$line}) {
+				    $line[$line] = undef;
 
-		# すでにあったエントリの削除
-		for (my $i = 0; $i < @newgroup -1; $i++) {
-		    for (my $j = $i + 1; $j < @newgroup; $j++) {
-			my $word_i = $newgroup[$i];
-			my $word_j = $newgroup[$j];
-			foreach my $line (keys %{$linedata{$word_i}}) {
-			    if (defined $line[$line] && defined $linedata{$word_j}{$line}) {
-				$line[$line] = undef;
-
-				print STDERR "☆ deleted $word_i $word_j\n";
+				    print STDERR "☆ deleted $word_i $word_j\n";
+				}
 			    }
 			}
 		    }
@@ -140,12 +142,12 @@ foreach my $word_A (sort { $a cmp $b } keys %data) {
 	    }
 	}
     }
-}
 
-# 出力
-foreach my $line (@line) {
-    if (defined $line) {
-	print join (' ', @{$line}), "\n";
+    # 出力
+    foreach my $line (@line) {
+	if (defined $line) {
+	    print join (' ', @{$line}), "\n";
+	}
     }
 }
 
