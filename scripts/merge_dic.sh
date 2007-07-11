@@ -71,7 +71,7 @@ perl check_synonym_dic.pl --synonym_dic=$SIM_M_DIR/synonym_dic.txt --log_merge=$
 perl check_synonym_dic.pl --synonym_dic=$SIM_DIR_Dic/antonym.txt --log_merge=$SIM_C_DIR/log_merge_antonym_dic.txt --change=$SIM_M_DIR/antonym.txt
 
 # Webからの知識の整理
-perl check_duplicate_entry.pl -rnsame --synonym_web_news=$SIM_DIR_Web/all.txt.jumanremoved --log_merge=$SIM_C_DIR/log_merge_synonym_web_news.txt --change=$SIM_M_DIR/synonym_web_news.txt
+perl check_duplicate_entry.pl -merge -rnsame < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/log_merge_synonym_web_news.txt
 
 # Webからの知識から辞書からの知識と重複を削除する
 perl check_dic_web_news_duplicate.pl --dic=$SIM_M_DIR/synonym_dic2.txt --web=$SIM_M_DIR/synonym_web_news.txt --log_merge=$SIM_C_DIR/log_delete_web_news.txt --change=$SIM_C_DIR/synonym_web_news.txt
