@@ -5,6 +5,12 @@
 
 2007-07-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* scripts/check_duplicate_entry.pl:
+	A=B, B=C, C=AをA=B=Cにマージするオプションを追加
+
+	* scripts/merge_dic.sh:
+	check_duplicate_entry.plのオプションを変更
+	
 	* scripts/build.sh:
 	jumanrcを指定できるように
 	knpで格解析しないように
@@ -15,8 +21,6 @@
 
 	* dic/web_news/all.txt.jumanremoved, dic/web_news/www.txt.jumanremoved, dic/web_news/www.txt.jumanremoved.log:
 	added.
-
-2007-07-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/merge_dic.sh:
 	両方がJuman辞書に登録されている同義表現の削除
