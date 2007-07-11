@@ -14,9 +14,13 @@ SYNDB_DIR=../syndb/i686
 # JUMAN
 JUMAN=juman
 
+# JUMANRC
+JUMANRCFILE=
+jumanrc=
+
 log=0
 
-while getopts ohlj: OPT
+while getopts ohlj:r: OPT
 do
   case $OPT in
       o)  SYNDB_DIR=../syndb/x86_64
@@ -25,6 +29,9 @@ do
 	  SYNDB_DIR=../syndb/cgi
           ;;
       j)  JUMAN=$OPTARG
+          ;;
+      r)  JUMANRCFILE=$OPTARG
+	  jumanrc=1
           ;;
       h)  usage
           ;;
@@ -66,14 +73,7 @@ done
 if [ $log -eq 1 ]; then
     rm -v $SIM_C_DIR/log_merge2.txt
 fi
-rm -v df.db doclen.db
-rm -v $INDEX_FILE
-rm -v df.db doclen.db
-rm -v $INDEX_FILE
 
-########################################################
-echo "STEP1 start\t`date`"
-########################################################
 # 類義表現を変換
 if [ $log -eq 1 ]; then
     perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log
@@ -82,7 +82,13 @@ else
 fi
 
 # Juman & KNP
-$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -postprocess -tab > $SYNDB_DIR/syndb.parse
+if [ $jumanrc -eq 1 ]; then
+    exe="$JUMAN -e2 -B -i '#' -r $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse"
+else
+    exe="$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse"
+fi
+echo $exe
+eval $exe
 
 # コンパイル
 if [ $log -eq 1 ]; then
@@ -95,40 +101,4 @@ fi
 perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR
 
 mv $SYNDB_DIR/synhead_sort.cdb $SYNDB_DIR/synhead.cdb
-echo "STEP1 end\t`date`"
 
-exit
-
-########################################################
-echo "STEP2 start\t`date`"
-########################################################
-
-# データベースがmysqlの場合
-if [ $DB_TYPE = mysql ]
-    then
-    # データベースを作成
-    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME;" | mysql -uroot
-    # 既にテーブルがある場合は削除する
-    echo "DROP TABLE IF EXISTS $DB_TABLE;" | mysql -uroot $DB_NAME
-    # テーブルを作成
-    cat $SRC_DIR/syngraph.sql | sed "s/syngraph/$DB_TABLE/" | mysql -uroot $DB_NAME
-
-# データベースがmysqlの場合
-elif [ $DB_TYPE = mldbm ]
-    then
-    # データベースを削除する
-    rm -v $DB_NAME
-fi
-
-# SYNGRAPHをデータベースに登録
-make_sg.pl --text_data=$TEXT_DATA --db_type=$DB_TYPE --db_name=$DB_NAME --db_table=$DB_TABLE
-# df計算
-cal_df.pl --db_type=$DB_TYPE --db_name=$DB_NAME --db_table=$DB_TABLE
-# インデックスファイル作成
-indexing.pl --index_file=$INDEX_FILE --db_type=$DB_TYPE --db_name=$DB_NAME --db_table=$DB_TABLE
-echo "STEP2 end\t`date`"
-
-
-# 検索(テスト用)
-# sentence_fileはなくてもOK
-# perl -I. search.pl --db_type mysql --db_name test_search --db_table test --sentence_file ~/irex/sentence.db --index_file test_index.db
