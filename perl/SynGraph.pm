@@ -329,6 +329,18 @@ sub st_make_bp {
                 my %body;
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
 
+		# MTのアラインメント時は、先に英語列で評価
+		my $mt_end_flag = 1;
+		if ($option->{mt_align}) {
+		    foreach my $estr (@{$this->{st_data}{$stid}{mvalue}}) {
+			if (index($option->{mt_align}, $estr) >= 0) {
+			    $mt_end_flag = 0;
+			    last;
+			}
+		    }
+		}
+		next if ($mt_end_flag);
+
                 # TMのSYNGRAPHを取得
                 unless ($this->{tm_sg}{$tmid}) {
                     $this->db_retrieve($this->{tm_sg}, [$tmid]);
