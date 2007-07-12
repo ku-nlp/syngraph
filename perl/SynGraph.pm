@@ -328,10 +328,13 @@ sub st_make_bp {
                 my $tmid = $this->{st_data}{$stid}{tmid};
                 my %body;
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
-
+		
+		print "hogehoge $this->{st_data}{$stid}{body}\n";
+		
 		# MTのアラインメント時は、先に英語列で評価
-		my $mt_end_flag = 1;
+		my $mt_end_flag = 0;
 		if ($option->{mt_align}) {
+		    $mt_end_flag = 1;
 		    foreach my $estr (@{$this->{st_data}{$stid}{mvalue}}) {
 			if (index($option->{mt_align}, $estr) >= 0) {
 			    $mt_end_flag = 0;
@@ -368,6 +371,9 @@ sub st_make_bp {
 		    push(@s_body, @{$i->{graph_1}});
 		}
 		my $s_pattern = join(" ", sort(@s_body));
+
+		print "hogehoge2 $s_pattern\n";
+
 		# by NICT
 		# NOTE:
 		#   It's sometimes very slow to never break this loop.
