@@ -1,5 +1,8 @@
 2007-07-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* scripts/merge_dic.sh:
+	check_duplicate_entry.plのオプション変更
+
 	* scripts/check_duplicate_entry.pl:
 	編集距離の短い同義表現をマージ(A=a, A=a' -> A=a=a')
 
