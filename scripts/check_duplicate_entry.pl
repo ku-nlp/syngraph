@@ -14,7 +14,21 @@ binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
 # merge: A=B, B=C, C=A のマージ
-my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'debug');
+my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'debug');
+
+my $edit_distance;
+
+# 欧州共同体 ＥＵ ＥＣ 1.5 0.523241082580591
+# ＷＴＯ 国際貿易機関 世界観光機関 6 0.769830750246244
+my $MERGE_TH_EDITDISTANCE = 0.5;
+
+if ($opt{editdistance}) {
+    require EditDistance;
+
+    $edit_distance = new EditDistance({del_penalty => 1,
+				      ins_penalty => 1,
+				      rep_penalty => 1.5});
+}
 
 my $knp = new KNP(-Option => '-tab -dpnd');
 
@@ -25,12 +39,10 @@ my $dup_counter = 0;
 my $rnsame_counter = 0;
 
 my @line;
-my $linenum = 0;
-my %linedata;
-
 
 while (<>) {
     chomp;
+
     my ($word1, $word2) = split;
 
     if ($word1 eq $word2) {
@@ -52,6 +64,9 @@ while (<>) {
     else {
 	$data{$word1}{$word2} = 1;
 
+	$alldata{$word1}{$word2} = 1;
+	$alldata{$word2}{$word1} = 1;
+
 	# 代表表記が同じ
 	if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
 	    print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2\n";
@@ -62,92 +77,86 @@ while (<>) {
 	print "$word1 $word2\n" unless $opt{merge};
 	push @line, [ $word1, $word2 ];
 
-	$linedata{$word1}{$linenum} = 1;
-	$linedata{$word2}{$linenum} = 1;
-
-	$linenum++;
     }
 }
 
-if ($opt{merge}) {
-# A=B, B=C, C=Aのマージ
-    my @merged_group;
-    foreach my $word_A (sort { $a cmp $b } keys %data) {
-	foreach my $word_B ( sort { $a cmp $b } keys %{$data{$word_A}}) {
-	    next if $word_A ge $word_B;
-	    my @registered;
-	    foreach my $word_C ( sort { $a cmp $b } keys %{$data{$word_A}}) {
-		next if $word_B ge $word_C;
+my %editdata;
+my %editdistance;
+if ($opt{editdistance}) {
+    foreach my $target_word (keys %alldata) {
+	foreach my $word1 (keys %{$alldata{$target_word}}) {
+	    foreach my $word2 (keys %{$alldata{$target_word}}) {
+		next if $word1 ge $word2;
 
-		if (defined $data{$word_B}{$word_C}) {
-		    # マージ候補にあがっているものと同義かどうかチェック
-		    if (@registered) {
-			my $flag = 1;
-			foreach my $word (@registered) {
-			    unless (defined $data{$word}{$word_C}) {
-				$flag = 0;
-				last;
-			    }
-			}
-			if ($flag == 1) {
-			    push @registered, $word_C;
-			}
-		    }
-		    else {
-			push @registered, $word_C;
-		    }
-		}
-	    }
-	    if (@registered) {
-		# すでにできた同義グループのサブセットかどうかをチェック
-		my $merge_flag = 1;
-		foreach my $synonym_group (@merged_group) {
-		    my $flag = 1;
-		    foreach my $word (@registered) {
-			if (!defined $synonym_group->{$word}) {
-			    $flag = 0;
-			    last;
-			}
-		    }
-		    $flag = 0 unless defined $synonym_group->{$word_A} && defined $synonym_group->{$word_B};
+		my $distance = $edit_distance->calc($word1, $word2);
+		# 語長で正規化
+		my $distance_normalized = $distance / (log(length($word1)) + 1) / (log(length($word2)) + 1);
 
-		    if ($flag == 1) {
-			$merge_flag = 0;
-		    }
-		}
-		# マージ
-		if ($merge_flag) {
-		    my @newgroup = ( $word_A, $word_B, @registered );
-		    print join (' ', @newgroup), "\n";
+		$editdistance{$word1}{$word2} = $distance_normalized;
 
-		    print STDERR "★merged: ", join (' ', @newgroup), "\n";
+		if ($distance_normalized < $MERGE_TH_EDITDISTANCE) {
+		    print STDERR "☆Editdistance $target_word: $word1 <-> $word2 $distance $distance_normalized\n";
 
-		    push @merged_group, { map {$_ => 1} @newgroup };
-
-		    # すでにあったエントリの削除
-		    for (my $i = 0; $i < @newgroup -1; $i++) {
-			for (my $j = $i + 1; $j < @newgroup; $j++) {
-			    my $word_i = $newgroup[$i];
-			    my $word_j = $newgroup[$j];
-			    foreach my $line (keys %{$linedata{$word_i}}) {
-				if (defined $line[$line] && defined $linedata{$word_j}{$line}) {
-				    $line[$line] = undef;
-
-				    print STDERR "☆ deleted $word_i $word_j\n";
-				}
-			    }
-			}
-		    }
+		    $editdata{$word1}{$word2} = $target_word;
+		    $editdata{$word2}{$word1} = $target_word;
 		}
 	    }
 	}
     }
+}
 
-    # 出力
+# A=B, B=C, C=Aのマージ
+if ($opt{merge}) {
+    my @merged_group;
+
     foreach my $line (@line) {
-	if (defined $line) {
-	    print join (' ', @{$line}), "\n";
+	my $new_group_flag = 1; # これが1のままの場合、新しいgroupを作る
+	foreach my $synonym_group (@merged_group) {
+
+	    my $merge_flag = 1; # これが1のままの場合、すでにあるグループにマージする
+	    foreach my $word (@{$line}) {
+
+		my $flag = 1;
+		foreach my $synonym_word (keys %{$synonym_group}) {
+		    if ($word eq $synonym_word ||
+			(defined $alldata{$word}{$synonym_word} || defined $alldata{$synonym_word}{$word}) || 
+			$opt{editdistance} && $editdata{$synonym_word}{$word} || $editdata{$word}{$synonym_word}) {
+			;
+		    }
+		    else {
+			$flag = 0;
+			last;
+		    }
+
+		}
+		# マージされない
+		unless ($flag) {
+		    $merge_flag = 0;
+		}
+	    }
+
+	    if ($merge_flag) {
+		print STDERR '★merge: ';
+		foreach my $word (@{$line}) {
+		    if (!defined $synonym_group->{$word}) {
+			$synonym_group->{$word} = 1;
+			print STDERR "$word ";
+		    }
+		}
+		print STDERR 'to 【', join (' ', keys %{$synonym_group}), "】\n";
+
+		$new_group_flag = 0;
+	    }
 	}
+	if ($new_group_flag) {
+	    # 足す
+	    print STDERR '★create: ', join (' ', @{$line}), "\n";
+	    push @merged_group, { map {$_ => 1} @{$line} };
+	}
+    }
+
+    foreach my $merged_group (@merged_group) {
+	print join (' ', keys %{$merged_group}), "\n";
     }
 }
 
