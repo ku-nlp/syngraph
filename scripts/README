@@ -7,6 +7,9 @@
   ./merg_dic.sh		辞書データベースの整形
   ./build.sh		辞書データベースのコンパイル(DB作成)
 
+  (orchidで) nice -n 10 ./build.sh -o -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
+  (reedで) nice -n 10 ./build.sh -n -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
+  (reedで) nice -n 10 ./build.sh -n -l -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
 
 [SYNGRAPH化のテストプログラム knp_syn.pl]
 
