@@ -1,3 +1,13 @@
+2007-07-13  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh:
+	途中経過を出力して人にやさしく
+	安定するまでcheck_duplicate_entry.plの-editdistanceオプションを休止
+
+	* scripts/build.sh:
+	途中経過を出力して人にやさしく
+	parse済みのデータを使うオプションを追加
+
 2007-07-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/merge_dic.sh:
