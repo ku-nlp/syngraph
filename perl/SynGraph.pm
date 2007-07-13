@@ -43,6 +43,7 @@ my $regnode_threshold = 0.5;
 
 
 # 無視する単語のリスト(IREX用)
+# 代表表記が変更されたので、このままではマッチしない
 my @stop_words;
 @stop_words = qw(記事 関する 述べる 含める 探す 場合 含む 報道 言及 関連 議論 つく 具体 的だ 良い もの 物);
 
@@ -711,8 +712,8 @@ sub _regnode {
     # スコアが小さいIDは登録しない
     if ($score >= $regnode_threshold or ($this->{mode} =~ /irex/ and $weight == 0)) {
         # 既にそのIDが登録されていないかチェック
-        if ($ref->{$sid}->[$bp]) {
-            foreach my $i (@{$ref->{$sid}->[$bp]}) {
+        if ($ref->{$sid}[$bp]) {
+            foreach my $i (@{$ref->{$sid}[$bp]}) {
                 if ($i->{id}        eq $id and
                     $i->{kanou}     == $kanou and
                     $i->{sonnkei}   == $sonnkei and
@@ -728,7 +729,7 @@ sub _regnode {
                     }
                     return;
                 }
-
+		# ???
                 return if ($id eq (split(/,/, $sid))[0]);
             }
         }
@@ -738,15 +739,17 @@ sub _regnode {
         $newid->{log} = $log if ($log);
         $newid->{fuzoku} = $fuzoku if ($fuzoku);
 	$newid->{midasi} = $midasi if ($midasi);
-        foreach my $c (keys %{$childbp}) {
-            $newid->{childbp}->{$c} = 1;
-        }
+        if ($childbp) {
+	    foreach my $c (keys %{$childbp}) {
+		$newid->{childbp}{$c} = 1;
+	    }
+	}
 	$newid->{parentbp} = $parentbp if ($parentbp);
 	$newid->{kakari_type} = $kakari_type if ($kakari_type);
 	$newid->{case} = $case if ($case);
         if ($matchbp) {
             foreach my $m (keys %{$matchbp}) {
-                $newid->{matchbp}->{$m} = 1 if ($m != $bp);
+                $newid->{matchbp}{$m} = 1 if ($m != $bp);
             }
         }
         $newid->{origbp}   = $args_hash->{origbp} if (exists $args_hash->{origbp});
@@ -762,16 +765,15 @@ sub _regnode {
         $newid->{hypo_num} = $hypo_num if ($hypo_num);
         $newid->{wnum}     = $wnum if($wnum);
         $newid->{antonym}  = $antonym if ($antonym);
-        push(@{$ref->{$sid}->[$bp]}, $newid);
+        push(@{$ref->{$sid}[$bp]}, $newid);
 
-	if ($regnode_option->{relation}){
+	if ($regnode_option->{relation} and $relation != 1 and $antonym != 1){
+
 	    # キャッシュしておく
-	    if ($relation != 1 and $antonym != 1 && !defined $this->{synparentcache}{$id}) {
-		$this->{synparentcache}{$id} = $this->GetValue($this->{synparent}->{$id});
-	    }
+	    $this->{synparentcache}{$id} = $this->GetValue($this->{synparent}{$id}) if (!defined $this->{synparentcache}{$id});
 
 	    # 上位IDがあれば登録（ただし、上位語の上位語や、反義語の上位語は登録しない。）	
-	    if ($this->{synparentcache}{$id} and $relation != 1 and $antonym != 1) {
+	    if ($this->{synparentcache}{$id}) {
 		foreach my $pid_num (split(/\|/, $this->{synparentcache}{$id})) {
 		    my ($pid, $number) = split(/,/, $pid_num);
 
