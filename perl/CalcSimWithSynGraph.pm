@@ -35,7 +35,6 @@ sub Match {
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
     $regnode_option->{hypocut_attachnode} = $option->{hypocut_attachnode} if $option->{hypocut_attachnode};
-    $matching_option->{pa_matching} = 1 if $option->{pa_matching};
     $matching_option->{wr_matching} = 1 if $option->{wr_matching};
     $matching_option->{hypocut_matching} = $option->{hypocut_matching} if $option->{hypocut_matching};
     $option->{log_sg} = 1 if $option->{log_sg};
