@@ -60,7 +60,7 @@ sub Match {
     
     # SYNGRAPHのマッチング
     # garaph_1は部分、graph_2は完全マッチング
-    my $result = $sgh->syngraph_matching('Matching', $graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
+    my $result = $sgh->syngraph_matching($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
     
     if ($option->{debug} and $result ne 'unmatch') {
 	print "SYNGRAPHマッチング結果\n";
