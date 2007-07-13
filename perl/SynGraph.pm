@@ -455,7 +455,6 @@ sub _get_keywords {
 
     foreach my $tag ($knp_result->tag) {
         my @alt;
-#	my @state;
         my $nodename;
         my $fuzoku;
 	my $midasi;
@@ -504,19 +503,11 @@ sub _get_keywords {
 	# 態
 	if ($tag->{fstring} =~ /<態:([^\s\/\">]+)/) {
 	    foreach (split(/\|/,$1)) {
-#		my $tmp = {};
-#		$tmp->{kanou}   = 1 if ($_ =~ /可能/);
-#		$tmp->{sonnkei} = 1 if ($_ =~ /尊敬/);
-#		$tmp->{shieki}  = 1 if ($_ =~ /使役/);
-#		$tmp->{ukemi}   = 1 if ($_ =~ /受動/);
-
 		$kanou   = 1 if ($_ =~ /可能/);
 		$sonnkei = 1 if ($_ =~ /尊敬/);
 		$shieki  = 1 if ($_ =~ /使役/);
 		$ukemi   = 1 if ($_ =~ /受動/);
-
 		last;
-#		push (@state, $tmp);
 	    }
 	}
 	
@@ -655,6 +646,7 @@ sub _get_keywords {
 	$tmp{parent}      = $parent if ($parent);
 	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	$tmp{kakari_type} = $kakari_type if ($kakari_type);
+	# 格情報登録
 	if ($child->{$tag->{id}}) {
 	    foreach my $childbp (keys %{$child->{$tag->{id}}}) {
 		if ($case->{$childbp}{$tag->{id}}) {
@@ -671,20 +663,8 @@ sub _get_keywords {
 	    # 表記が同じものは無視
 	    next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
 	    # 登録
-	    my %tmp2;
-	    $tmp2{name}       = $alt_key;
-	    $tmp2{fuzoku}     = $tmp{fuzoku};
-	    $tmp2{midasi}     = $tmp{midasi};
-	    $tmp2{kanou}      = $tmp{kanou} if ($tmp{kanou});
-	    $tmp2{sonnkei}    = $tmp{sonnkei} if ($tmp{sonnkei});
-	    $tmp2{ukemi}      = $tmp{ukemi} if ($tmp{ukemi});
-	    $tmp2{shieki}     = $tmp{shieki} if ($tmp{shieki});
-	    $tmp2{negation}   = $tmp{negation} if ($tmp{negation});                
-	    $tmp2{level}      = $tmp{level} if ($tmp{level});
-	    $tmp2{child}      = $tmp{child} if ($tmp{child});
-	    $tmp2{parent}      = $tmp{parent} if ($tmp{parent});
-	    $tmp2{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
-	    $tmp2{case}     = $tmp{case} if ($tmp{case});
+	    my %tmp2 = %tmp;
+	    $tmp2{name} = $alt_key;
 	    push(@{$keywords[$tag->{id}]}, \%tmp2);
 	}
     }
