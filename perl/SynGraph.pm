@@ -329,8 +329,6 @@ sub st_make_bp {
                 my %body;
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
 		
-		print "hogehoge $this->{st_data}{$stid}{body}\n";
-		
 		# MTのアラインメント時は、先に英語列で評価
 		my $mt_end_flag = 0;
 		if ($option->{mt_align}) {
@@ -371,8 +369,6 @@ sub st_make_bp {
 		    push(@s_body, @{$i->{graph_1}});
 		}
 		my $s_pattern = join(" ", sort(@s_body));
-
-		print "hogehoge2 $s_pattern\n";
 
 		# by NICT
 		# NOTE:
@@ -630,6 +626,21 @@ sub _get_keywords {
 #             print "--------\n";
 #         }
 	
+	# 'name' => '最寄り/もより'
+	# 'fuzoku' => 'の'
+	# 'midasi' => '最寄りの'
+	# 'parent' => 1
+	# 'kakari_type' => 'D'
+	
+	# 'name' => '駅/えき'
+	# 'fuzoku' => undef
+	# 'midasi' => '駅'
+	# 'level' => 'C'
+	# 'parent' => '-1'
+	# 'child' => HASH(0x8f129a4)
+	#    0 => 1
+	# 'kakari_type' => 'D'
+
         # 登録
 	my %tmp;
 	$tmp{name}        = $nodename;
@@ -656,27 +667,25 @@ sub _get_keywords {
 	push(@{$keywords[$tag->{id}]}, \%tmp);
 	
 	# ALTの処理(意味有が1形態素と仮定)
-	if (@alt) {
-	    foreach my $alt_key (@alt) {
-		# 表記が同じものは無視
-		next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
-		# 登録
-		my %tmp2;
-		$tmp2{name}       = $alt_key;
-		$tmp2{fuzoku}     = $tmp{fuzoku};
-		$tmp2{midasi}     = $tmp{midasi};
-		$tmp2{kanou}      = $tmp{kanou} if ($tmp{kanou});
-		$tmp2{sonnkei}    = $tmp{sonnkei} if ($tmp{sonnkei});
-		$tmp2{ukemi}      = $tmp{ukemi} if ($tmp{ukemi});
-		$tmp2{shieki}     = $tmp{shieki} if ($tmp{shieki});
-		$tmp2{negation}   = $tmp{negation} if ($tmp{negation});                
-		$tmp2{level}      = $tmp{level} if ($tmp{level});
-		$tmp2{child}      = $tmp{child} if ($tmp{child});
-		$tmp2{parent}      = $tmp{parent} if ($tmp{parent});
-		$tmp2{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
-		$tmp2{case}     = $tmp{case} if ($tmp{case});
-		push(@{$keywords[$tag->{id}]}, \%tmp2);
-	    }
+	foreach my $alt_key (@alt) {
+	    # 表記が同じものは無視
+	    next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
+	    # 登録
+	    my %tmp2;
+	    $tmp2{name}       = $alt_key;
+	    $tmp2{fuzoku}     = $tmp{fuzoku};
+	    $tmp2{midasi}     = $tmp{midasi};
+	    $tmp2{kanou}      = $tmp{kanou} if ($tmp{kanou});
+	    $tmp2{sonnkei}    = $tmp{sonnkei} if ($tmp{sonnkei});
+	    $tmp2{ukemi}      = $tmp{ukemi} if ($tmp{ukemi});
+	    $tmp2{shieki}     = $tmp{shieki} if ($tmp{shieki});
+	    $tmp2{negation}   = $tmp{negation} if ($tmp{negation});                
+	    $tmp2{level}      = $tmp{level} if ($tmp{level});
+	    $tmp2{child}      = $tmp{child} if ($tmp{child});
+	    $tmp2{parent}      = $tmp{parent} if ($tmp{parent});
+	    $tmp2{kakari_type} = $tmp{kakari_type} if ($tmp{kakari_type});
+	    $tmp2{case}     = $tmp{case} if ($tmp{case});
+	    push(@{$keywords[$tag->{id}]}, \%tmp2);
 	}
     }
     
@@ -1035,7 +1044,7 @@ sub syngraph_matching {
 	$result->{$nodebp_2}{type_unmatch}{$type} = 1;
     }
 
-    # $graph_2に子BPがあるかどうか
+    # $graph_2の検索対象となる子どもを取得
     my @childbp_2;
     if ($matchnode_2->{childbp}) {
 	if (defined $body_hash) {
@@ -1045,22 +1054,28 @@ sub syngraph_matching {
 	    @childbp_2 = keys %{$matchnode_2->{childbp}};
 	}
     }
+
+    # graph_2に子があれば
     if (@childbp_2 > 0) {
-	# $graph_1に子BPがあるかどうか
+
+	# graph_1に子があれば
 	if ($matchnode_1->{childbp}) {
 	    my @childbp_1 = keys %{$matchnode_1->{childbp}};
 	    my %child_1_check;
 	    
-	    # bの各子供にマッチするaの子供を見つける
+	    # graph_1の子の数よりgraph_2の子の数の方が多い場合はマッチ失敗
 	    if (@childbp_1 < @childbp_2) {
 		$result->{$nodebp_2}{unmatch} = "child_less";
 		$this->{matching} = 'unmatch';
 		return $result;
 	    }
 	    
+	    # graph_2の各子供にマッチするgraph_1の子供を見つける
 	    foreach my $child_2 (@childbp_2) {
 		my $match_flag = 0;
+
 		foreach my $child_1 (@childbp_1) {
+		    # すでにgraph_2他の子とマッチしたgraph_1の子はチェックしない
 		    next if ($child_1_check{$child_1});
 		    
 		    # 子供同士のマッチング
@@ -1069,17 +1084,7 @@ sub syngraph_matching {
 		    next if ($this->{matching} eq 'unmatch');
 	
 		    foreach my $nodebp (keys %{$res}) {
-			$result->{$nodebp}{matchbp1} = $res->{$nodebp}{matchbp1};
-			$result->{$nodebp}{matchbp2} = $res->{$nodebp}{matchbp2};
-			$result->{$nodebp}{nodedata1} = $res->{$nodebp}{nodedata1};
-			$result->{$nodebp}{nodedata2} = $res->{$nodebp}{nodedata2};
-			$result->{$nodebp}{score} = $res->{$nodebp}{score};
-			foreach my $restype (keys %{$res->{$nodebp}{type_unmatch}}){
-			    $result->{$nodebp}{type_unmatch}{$restype} = 1;
-			}
-			foreach my $resc (keys %{$res->{$nodebp}{childbp}}) {
-			    $result->{$nodebp}{childbp}{$resc} = 1;
-			}
+			$result->{$nodebp} = $res->{$nodebp};
 		    }
 
 		    $child_1_check{$child_1} = 1;
@@ -1087,23 +1092,25 @@ sub syngraph_matching {
 		    last;
 		}
 
+		# マッチする子がなかったらマッチ失敗
 		unless ($match_flag) {
 		    $result->{$nodebp_2}{unmatch} = "child_unmatch:$graph_2->[$child_2][0]{midasi}";
 		    $this->{matching} = 'unmatch';
 		    return $result;
 		}
 	    }
-
 	    return $result;
 	}
-	# Aに子BPがない
+
+	# graph_1に子がない場合はマッチ失敗
 	else {
 	    $result->{$nodebp_2}{unmatch} = "child_less";
 	    $this->{matching} = 'unmatch';
 	    return $result;
 	}
     }
-    # Bに子BPがない
+
+    # graph_2に子がない
     else {
 	return $result;
     }
@@ -1135,37 +1142,27 @@ sub get_nodefac {
 		    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
 		    # headの要素を引き継ぐ
 		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-			if ($type ne 'negation') {
+			if ($type eq 'negation') {
+			    $nodefac->{$type} = 1;
+			}
+			else {
 			    if ($graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
 				$this->{matching} = 'unmatch';
 				return;
 			    }
 			    else {
 				$nodefac->{$type} = $graph1->[$bp1][$nodenum1]{$type};
-			    }
-			}
-			else {
-			    $nodefac->{$type} = 1;
+			    }			    
 			}
 		    }
 		}
 	    }
 	    elsif($mode eq 'MT') {
 		if ($mres->{$matchkey}{type_unmatch}) {
-		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
-			# MTでアライメントをとるときはheadでの違いは否定以外はみない。
-			if ($type eq 'negation') { # 否定表現の引継ぎ
-			    $nodefac->{$type} = 1;
-			}
-		    }
+		    # MTでアライメントをとるときはheadでの違いは否定以外はみない。
+		    $nodefac->{negation} = 1 if ($mres->{$matchkey}{type_unmatch}{negation});
 		}
 	    }
-
-	    # スコア
-	    $score += $mres->{$matchkey}{score};
-
-	    # マッチした基本句
-	    push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
 
 	    # SYNノードのその他の要素
 	    $nodefac->{parentbp} = $graph1->[$bp1][$nodenum1]{parentbp};
@@ -1174,13 +1171,15 @@ sub get_nodefac {
 
 	# その他での処理
 	else {
-	    # スコア
+	    # 要素の不一致ごとにスコアにペナルティーをかける
 	    if ($mres->{$matchkey}{type_unmatch}) {
 		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		    # 格がなければダメ
 		    if ($type eq 'case') {
 			next if (!$graph1->[$bp1][$nodenum1]{$type}
 				 or !$graph2->[$bp2][$nodenum2]{$type});
 		    }
+		    # fuzoku_cut オプションがあり、付属語に不一致があった場合はダメ
 		    elsif ($type eq 'fuzoku' and $option->{fuzoku_cut}) {
 			$this->{matching} = 'unmatch';
 			return;			
@@ -1188,11 +1187,13 @@ sub get_nodefac {
 		    $mres->{$matchkey}{score} *= $penalty->{$type};
 		}
 	    }
-	    $score += $mres->{$matchkey}{score};
-	    
-	    # マッチした基本句
-	    push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
 	}
+
+	# スコア
+	$score += $mres->{$matchkey}{score};
+	
+	# マッチした基本句
+	push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
 
 	# 関係フラグ
 	$nodefac->{relation} = 1 if ($graph1->[$bp1][$nodenum1]{relation} or $graph2->[$bp2][$nodenum2]{relation});
