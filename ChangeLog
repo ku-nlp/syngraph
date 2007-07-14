@@ -1,3 +1,8 @@
+2007-07-14  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi
+	オプションでJUMAN指定（知識抽出およびコンパイル用）
+
 2007-07-13  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/merge_dic.sh:
