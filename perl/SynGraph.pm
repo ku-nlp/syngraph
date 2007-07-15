@@ -304,10 +304,12 @@ sub make_bp {
     }
     
     # キャッシュをクリア
-    $this->{synheadcache} = {};
-    $this->{syndatacache} = {};
-    $this->{synparentcache} = {};
-    $this->{synantonymcache} = {};
+    if ($option->{clear_cache}) {
+	$this->{synheadcache} = {};
+	$this->{syndatacache} = {};
+	$this->{synparentcache} = {};
+	$this->{synantonymcache} = {};
+    }
 }
 
 
@@ -397,6 +399,8 @@ sub st_make_bp {
 		    $log = $this->st_make_log($ref->{$sid}, $this->{tm_sg}{$tmid}, $tmid, $result);		    
 		}
 
+		delete $this->{tm_sg}{$tmid} if ($option->{clear_cache});
+
 		my $newid =
 		    # シソーラス、反義語データベースは使用しない
 		    $this->_regnode({ref            => $ref,
@@ -428,10 +432,12 @@ sub st_make_bp {
 	}
     }
     # キャッシュをクリア
-    $this->{synheadcache} = {};
-    $this->{syndatacache} = {};
-    $this->{synparentcache} = {};
-    $this->{synantonymcache} = {};
+    if ($option->{clear_cache}) {
+	$this->{synheadcache} = {};
+	$this->{syndatacache} = {};
+	$this->{synparentcache} = {};
+	$this->{synantonymcache} = {};
+    }
 }
 
 
