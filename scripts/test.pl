@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'log_sg', 'match_print', 'no_case', 'postprocess', 'relation', 'antonym', 'hypocut_attachnode=s', 'wr_matching', 'hypocut_matching=s', 'orchid');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'no_case', 'postprocess', 'relation', 'antonym', 'hypocut_attachnode=s', 'wr_matching', 'hypocut_matching=s', 'orchid');
 
 my ($zenbun, $query);
 if ($ARGV[0] && $ARGV[1]) {
@@ -31,7 +31,6 @@ my $calcsim = new CalcSimWithSynGraph;
 my $option;
 $option->{debug} = 1 if $opt{debug};
 $option->{orchid} = 1 if $opt{orchid};
-$option->{log_sg} = 1 if $opt{log_sg};
 $option->{no_case} = 1 if $opt{no_case};
 $option->{postprocess} = 1 if $opt{postprocess};
 $option->{relation} = 1 if $opt{relation};
@@ -46,7 +45,7 @@ if ($result eq 'unmatch') {
     print "unmatch\n";
 }
 else {
-    printf "類似度:%1.2f\n",$result->{CALC}->{score};
+    printf "類似度:%1.2f\n",$result->{score};
 
     if ($opt{match_print}){
 	printf "マッチング:\n";

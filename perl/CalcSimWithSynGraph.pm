@@ -37,7 +37,6 @@ sub Match {
     $regnode_option->{hypocut_attachnode} = $option->{hypocut_attachnode} if $option->{hypocut_attachnode};
     $matching_option->{wr_matching} = 1 if $option->{wr_matching};
     $matching_option->{hypocut_matching} = $option->{hypocut_matching} if $option->{hypocut_matching};
-    $option->{log_sg} = 1 if $option->{log_sg};
 
     my $sgh = new SynGraph($syndbdir, $knp_option);    
 
@@ -49,8 +48,6 @@ sub Match {
     $sgh->make_sg($str1, $ref, $sid1, $regnode_option, $option);
     $sgh->make_sg($str2, $ref, $sid2, $regnode_option, $option);
     Dumpvalue->new->dumpValue($ref) if $option->{debug};
-#    $sgh->format_syngraph($ref->{$sid1}) if $option->{debug};
-#    $sgh->format_syngraph($ref->{$sid2}) if $option->{debug};
 
     my $graph_1 = $ref->{$sid1};
     my $headbp_1 = @{$ref->{$sid1}}-1;
@@ -61,48 +58,25 @@ sub Match {
     # garaph_1は部分、graph_2は完全マッチング
     my $result = $sgh->syngraph_matching($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
     
-    if ($option->{debug} and $result ne 'unmatch') {
+    my $nodefac = $sgh->get_nodefac('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
+
+    if ($option->{debug} and $nodefac ne 'unmatch') {
 	print "SYNGRAPHマッチング結果\n";
-	Dumpvalue->new->dumpValue($result);
+	Dumpvalue->new->dumpValue($nodefac);
     }
     
     # マッチペア出力
-    if ($option->{debug} and $result ne 'unmatch') {
+    if ($option->{debug} and $nodefac ne 'unmatch') {
 	print "matchpair\n";
-	for (my $num=0; $num<@{$result->{MATCH}->{match}}; $num++) {
+	for (my $num = 0; $num < @{$nodefac->{match}}; $num++) {
 		print "$num\n";
-		printf "graph_1: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_1}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_1}}), $result->{MATCH}->{matchid}->[$num]->{graph_1};
-		printf "graph_2: %s (bp = %s, id = %s)\n", $result->{MATCH}->{matchpair}->[$num]->{graph_2}, join(',', @{$result->{MATCH}->{match}->[$num]->{graph_2}}), $result->{MATCH}->{matchid}->[$num]->{graph_2};
+		printf "graph_1: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_1}, join(',', @{$nodefac->{match}[$num]{graph_1}}), $nodefac->{matchid}[$num]{graph_1};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_2}, join(',', @{$nodefac->{match}[$num]{graph_2}}), $nodefac->{matchid}[$num]{graph_2};
 	    }
     }
     
-    return $result;
+    return $nodefac;
 }
-
-
-# 	# 転置ハッシュを作る
-# 	$search->{thash} = {};
-# 	foreach my $sid (keys %{$search->{ref}}) {
-# 	    for (my $tagnum = 0; $tagnum < @{$search->{ref}->{$sid}}; $tagnum++) {
-# 		my $tag = $search->{ref}->{$sid}->[$tagnum];
-# 		foreach my $id (@$tag) {
-# #		    $id->{tag} = $tagnum;       # 対応付けのために必要
-# 		    $id->{node} = $tagnum;       # 対応付けのために必要
-# #		    push(@{$search->{thash}->{$sid}->{$id->{idname}}}, $id);
-# 		    push(@{$search->{thash}->{$sid}->{$id->{id}}}, $id);
-# 		}
-# 	    }
-# 	}
-#	print STDERR "thash\n";
-#	Dumpvalue->new->dumpValue($search->{thash});
-
-# 	# 類似度計算
-# 	$search->{matching_tmp} = {};
-# 	my $result = $search->matching($sid2, @{$search->{ref}->{$sid2}}-1, $sid1, 0, -1);
-# 	Dumpvalue->new->dumpValue($result) if $option->{debug};
-	
-# 	return $result;
-#     }
 
 
 1;
