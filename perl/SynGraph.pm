@@ -316,12 +316,18 @@ sub st_make_bp {
         next if ($node->{weight} == 0);
 
 	my %count_pattern;
+	my %tmid_tmp;
         if ($node->{id} and $this->{st_head}{$node->{id}}) {
             foreach my $stid (@{$this->{st_head}{$node->{id}}}) {
                 my $headbp = $this->{st_data}{$stid}{head};
                 my $tmid = $this->{st_data}{$stid}{tmid};
                 my %body;
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
+		if ($tmid_tmp{$tmid}) {
+		    next;
+		} else {
+		    $tmid_tmp{$tmid} = 1;
+		}
 		
 		# MTのアラインメント時は、先に英語列で評価
 		my $mt_end_flag = 0;
