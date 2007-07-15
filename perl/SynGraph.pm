@@ -302,6 +302,12 @@ sub make_bp {
             }
         }
     }
+    
+    # キャッシュをクリア
+    $this->{synheadcache} = {};
+    $this->{syndatacache} = {};
+    $this->{synparentcache} = {};
+    $this->{synantonymcache} = {};
 }
 
 
@@ -421,6 +427,11 @@ sub st_make_bp {
 	    }
 	}
     }
+    # キャッシュをクリア
+    $this->{synheadcache} = {};
+    $this->{syndatacache} = {};
+    $this->{synparentcache} = {};
+    $this->{synantonymcache} = {};
 }
 
 
