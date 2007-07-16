@@ -87,7 +87,7 @@ echo $exe
 eval $exe
 
 # Webからの知識の整理
-exe="perl -I$UTILS check_duplicate_entry.pl -merge -rnsame < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/log_merge_synonym_web_news.txt"
+exe="perl -I$UTILS check_duplicate_entry.pl -merge -rnsame -editdistance < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/log_merge_synonym_web_news.txt"
 echo $exe
 eval $exe
 
