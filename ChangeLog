@@ -1,3 +1,13 @@
+2007-07-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/log_delete_web_news.txt, dic_change/log_merge_synonym_web_news.txt, dic_change/synonym_web_news.txt, dic_middle/synonym_web_news.txt:
+	同義表現のマージ
+	- A=B, B=C, C=A -> A=B=C
+	- 編集距離を利用 (A=a, A=a' -> A=a=a')
+	
+	* scripts/merge_dic.sh:
+	check_duplicate_entry.plのオプションに-editdistanceを追加
+
 2007-07-14  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi
