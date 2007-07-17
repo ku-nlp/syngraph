@@ -145,11 +145,11 @@ sub make_sg {
     }
 
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
-   if ($ref->{$sid}) {
-       for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
-           $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
+    if ($ref->{$sid}) {
+	for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
+	    $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
-   }
+    }
 }
 
 
@@ -331,6 +331,8 @@ sub st_make_bp {
                 my $tmid = $this->{st_data}{$stid}{tmid};
                 my %body;
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
+
+		# すでにチェックしたTMは再度チェックしない
 		if ($tmid_tmp{$tmid}) {
 		    next;
 		} else {
@@ -423,11 +425,12 @@ sub st_make_bp {
 				     level          => $nodefac->{level}, 
 				     score          => $nodefac->{score} * $synonym_penalty,
 				     weight         => $nodefac->{weight}
-				     });
+				 });
 
 		$newid->{matchid}   = $nodefac->{matchid} if ($newid);
 		$newid->{match}     = $nodefac->{match} if ($newid);
 		$newid->{matchpair} = $nodefac->{matchpair} if ($newid);
+		$newid->{hypo_num}  = $node->{hypo_num} if ($newid && $node->{hypo_num});
 	    }
 	}
     }
