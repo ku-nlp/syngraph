@@ -23,7 +23,7 @@ sub new {
 	log_merge      => {},
 	rep_cash       => {},
 	indexkey_cash  => {},
-	ambiguity_file => {},
+	noambiguity_file => {},
 	sgh            => new SynGraph(undef, $knp_option, undef),
     };
     
