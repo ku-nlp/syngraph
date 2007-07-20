@@ -83,7 +83,6 @@ if ($opt{print_syngraph}) {
 
 	next if $expression_cash{$expression};
 
-#	print "########################################################\n";
 	print "--------------------------------------------------------\n";
 	my $key = "$synid,$expression";
 	print "$key\n";
@@ -91,7 +90,6 @@ if ($opt{print_syngraph}) {
 
 	$expression_cash{$expression} = 1;
     }
-#    print "########################################################\n";
     print "--------------------------------------------------------\n";
 }    
 

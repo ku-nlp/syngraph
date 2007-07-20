@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# 辞書からの同義表現リストをformatをそろえてつなげるスクリプトスクリプト
+# 辞書からの同義表現リストをformatをそろえてつなげるスクリプト
 
 use strict;
 use Getopt::Long;
@@ -12,12 +12,11 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'same_diff=s', 'cat_file=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'same_diff=s');
 
-open(CAT, '>:encoding(euc-jp)', $opt{cat_file}) or die;
 open(SYN, '<:encoding(euc-jp)', $opt{synonym_dic}) or die;
 while (<SYN>) {
-    print CAT $_;
+    print $_;
 }
 close(SYN);
 
@@ -26,7 +25,6 @@ while (<SDIF>) {
     next if $_ eq "\n";
     next if $_ =~ /^★/;
 
-    print CAT $_;
+    print $_;
 }
 close(SDIF);
-close(CAT);

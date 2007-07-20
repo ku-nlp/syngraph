@@ -14,7 +14,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'dic=s', 'web=s', 'log_merge=s', 'change=s');
+my %opt; GetOptions(\%opt, 'dic=s', 'web=s', 'log_merge=s');
 
 my $knp = new KNP(-Option => '-tab -dpnd');
 
@@ -45,7 +45,6 @@ close(DIC);
 
 open(WEB, '<:encoding(euc-jp)', $opt{web}) or die;
 open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;
-open(CH, '>:encoding(euc-jp)', $opt{change}) or die;
 while (<WEB>) {
     chomp;
     my @list = split;
@@ -124,10 +123,8 @@ while (<WEB>) {
 	    $ch_str .= " " if ($ch_str);
 	    $ch_str .= $word;
 	}    
-	print CH "$ch_str\n";
+	print "$ch_str\n";
     }
 }
-
-close(CH);
 close(LM);
 close(WEB);
