@@ -1,3 +1,21 @@
+2007-07-20  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/rsk/iwanami/definition
+	文末が様子である定義文は削除
+	* dic/rsk/iwanami/same_definition
+	小見出し数が４、５のものからも作る
+	* dic/noambiguity.txt
+	add
+	小見出しが一つしかない見出し語のリスト
+	* dic_change, dic_middle
+	名前変更と辞書変更にともなうupdate
+	* perl/MergeTxt.pm
+	add
+	辞書整理用module
+	* scripts
+	辞書整理用スクリプトの整理
+	曖昧性のない語を介した連結を導入
+	
 2007-07-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi:
