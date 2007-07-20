@@ -11,21 +11,21 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'ambiguity_file=s');
+my %opt; GetOptions(\%opt, 'noambiguity_file=s');
 
 my $MergeTxt = new MergeTxt;
 
-if ($opt{ambiguity_file}) {
+if ($opt{noambiguity_file}) {
 
-    open(AMB, '<:encoding(euc-jp)', $opt{ambiguity_file}) or die;
+    open(AMB, '<:encoding(euc-jp)', $opt{noambiguity_file}) or die;
     while (<AMB>) {
         chomp;
         my ($word, $word_and_id) = split(/ /, $_);
 	
-	$MergeTxt->{ambiguity_file}{$word} = 1 unless ($MergeTxt->{ambiguity_file}{$word});
+	$MergeTxt->{noambiguity_file}{$word} = 1 unless ($MergeTxt->{noambiguity_file}{$word});
     }    
 }
-#Dumpvalue->new->dumpValue($MergeTxt->{ambiguity_file});
+#Dumpvalue->new->dumpValue($MergeTxt->{noambiguity_file});
 
 my $syn_group = {};
 my $gr_number = 0;
@@ -40,7 +40,7 @@ while (<>) {
     my @c_list;
     my $flag;
     foreach my $word (@list) {
-	if ($MergeTxt->{ambiguity_file}{$word}) {
+	if ($MergeTxt->{noambiguity_file}{$word}) {
 	    my $c_word = "$word:1/1:1/1";
 	    $flag = 1 unless ($flag);
 	    push @c_list, $c_word;

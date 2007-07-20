@@ -73,7 +73,7 @@ echo $exe
 eval $exe
 
 # 辞書からの同義関係(synonym, same_difinition)の知識の連結
-exe="perl cat_synonym_same_def.pl -synonym_dic=$SIM_DIR_Dic/synonym.txt -same_diff=$SIM_DIR_Dic/same_definition.txt > $SIM_M_DIR/synonym_dic.txt"
+exe="perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt --same_diff=$SIM_DIR_Dic/same_definition.txt > $SIM_M_DIR/synonym_dic.txt"
 echo $exe
 eval $exe
 
@@ -87,7 +87,7 @@ echo $exe
 eval $exe
 
 # 辞書からの知識の整理２（曖昧性のない語を介した連結）
-exe="perl -I../perl check_synonym_add.pl --ambiguity_files=$SIM_DIR_Dic/noambiguity.txt < $SIM_M_DIR/synonym_dic.txt.merge > $SIM_M_DIR/synonym_dic.txt.merge.add 2>$SIM_C_DIR/synonym_dic.txt.merge.add.log"
+exe="perl -I../perl check_synonym_add.pl --noambiguity_file=$SIM_DIR_Dic/noambiguity.txt < $SIM_M_DIR/synonym_dic.txt.merge > $SIM_M_DIR/synonym_dic.txt.merge.add 2>$SIM_C_DIR/synonym_dic.txt.merge.add.log"
 echo $exe
 eval $exe
 
