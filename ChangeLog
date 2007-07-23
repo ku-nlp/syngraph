@@ -1,3 +1,8 @@
+2007-07-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/x4syn.pl/x4syn.pl:
+	added '-def-sentence' to KNP option.
+
 2007-07-20  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* ExtractSynfromDic/perl/MyHead.pm, ExtractSynfromDic/scripts/x4syn.pl, ExtractSynfromDic/orig/rsk4.xml, ExtractSynfromDic/db/rep2bunrui.db, ExtractSynfromDic/db/rep2hinsi.db:
