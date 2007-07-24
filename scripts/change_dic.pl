@@ -4,6 +4,7 @@ use strict;
 use Dumpvalue;
 use Getopt::Long;
 use utf8;
+use SynGraph;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
@@ -11,254 +12,146 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %wordid;
 
-my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'synonym_change=s', 'isa_change=s', 'antonym_change=s');
+my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'synonym_change=s', 'isa_change=s', 'antonym_change=s', 'definition_change=s', 'log=s');
 
-open (FILE, '<:encoding(euc-jp)', $opt{definition}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    
-    foreach my $word (@words) {
-	if ($word =~ /:/) {
-	    my $flag;
-	    foreach (@{$wordid{(split(/:/, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);
-	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+# 多義性が曖昧な語をチェック
+my %check;
+foreach my $Filetype ('synonym', 'definition', 'isa', 'antonym') {
+    open (FILE, '<:encoding(euc-jp)', $opt{$Filetype}) || die;
+    while (<FILE>) {
+	chomp;
+	my @words = split;
+	
+	foreach my $word (@words) {
+	    next if ($check{$word});
 
-	    # 振り仮名ついてない用
-	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
+	    $check{$word} = 1;
+	    if ((split(/:/,$word,2))[1]) {
+		my $w = (split(/:/,$word,2))[0]; 
+		push @{$wordid{$w}}, $word;
 	    }
-	    next if ($flag);
-	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
 	}
     }
+    close(FILE);
 }
-close(FILE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
+# ログ
+open (LOG, '>:encoding(euc-jp)', $opt{log}) or die;
+
+# synonymは多義性を展開
+# ひらがな二文字は削除
+# 半角を全角に
+open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die;
+open (CHANGE, '>:encoding(euc-jp)', $opt{synonym_change}) or die;
 while (<FILE>) {
     chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    
-    foreach my $word (@words) {
-	if ($word =~ /:/) {
-	    my $flag;
-	    foreach (@{$wordid{(split(/:/, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);
-	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
+    my @list = split (/\s/, $_);
+    my @c_list;
+    my @log;
 
-	    # 振り仮名ついてない用
-	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);
-	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
+    foreach my $word (@list) {
+	if ((split(/:/, $word, 2))[1]) {
+	    push @c_list, $word;
 	}
-    }
-}
-close(FILE);
-
-open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    
-    foreach my $word (@words) {
-	if ($word =~ /:/) {
-	    my $flag;
-	    foreach (@{$wordid{(split(/:/, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
+	else {
+	    if ($word =~ /.+?\/.+?/) {
+		if ($wordid{$word}) {
+		    # 多義性を展開
+		    push @c_list, @{$wordid{$word}};
+		    push @log, "$word → " . join(" ", @{$wordid{$word}});
 		}
-	    }
-	    next if ($flag);	    
-	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
-
-	    # 振り仮名ついてない用
-	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);	    
-	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
-	}
-    }
-}
-close(FILE);
-
-open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    
-    foreach my $word (@words) {
-	if ($word =~ /:/) {
-	    my $flag;
-	    foreach (@{$wordid{(split(/:/, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);	    
-	    push(@{$wordid{(split(/:/, $word))[0]}}, $word);
-
-	    # 振り仮名ついてない用
-	    foreach (@{$wordid{(split(/\//, $word))[0]}}) {
-		if ($_ eq $word) {
-		    $flag = 1;
-		    last;
-		}
-	    }
-	    next if ($flag);	    
-	    push(@{$wordid{(split(/\//, $word))[0]}}, $word);
-	}
-    }
-}
-close(FILE);
-
-# チェック用
-# Dumpvalue->new->dumpValue(\%wordid);
-
-open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-open(CHANGE, '>:encoding(euc-jp)', $opt{synonym_change}) or die;
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    
-    foreach my $word (@words) {
-	if ($word !=~ /:/) {
-	    if ($wordid{$word}) {
-		foreach (@{$wordid{$word}}) {
-		    print CHANGE "$_ ";			
+		else {
+		    push @c_list, $word;
 		}
 	    }
 	    else {
-		print CHANGE "$word ";			
-	    }
-	}
-	else{
-	    print CHANGE "$word ";	
-	}
-    }
-    print CHANGE "\n";
-}
-close(FILE);
-close(CHANGE);
-
-open (FILE, '<:encoding(euc-jp)', $opt{isa}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-open(CHANGE, '>:encoding(euc-jp)', $opt{isa_change}) or die;
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    my @word0_list;
-    my @word1_list;
-    
-    if ($words[0] !=~ /:/) {
-	if ($wordid{$words[0]}) {
-	    foreach (@{$wordid{$words[0]}}) {
-		push @word0_list, $_;
+		# 2文字以下のひらがなは無視
+		if ($word =~ /^[ぁ-ん]+$/ and length($word) <= 2){
+		    # ログ
+		    push @log, "★short $word → X\n";
+		    next;
 		}
-	}
-	else {
-	    push @word0_list, $words[0];
-	    }
-    }
-    else{
-	push @word0_list, $words[0];
-    }
 
-    if ($words[1] !=~ /:/) {
-	if ($wordid{$words[1]}) {
-	    foreach (@{$wordid{$words[1]}}) {
-		push @word1_list, $_;
+		# 全角に変換
+		if ($word ne &SynGraph::h2z($word)) {
+		    # ログ
+		    push @log, "★h2z $word → " . &SynGraph::h2z($word) . "\n";
+		    $word = &SynGraph::h2z($word);
 		}
-	}
-	else {
-	    push @word1_list, $words[1];
+
+		push @c_list, $word;
 	    }
-    }
-    else{
-	push @word1_list, $words[1];
+	}
     }
 
-    foreach my $wordid0 (@word0_list) {
-	foreach my $wordid1 (@word1_list) {
-	    print CHANGE "$wordid0 $wordid1 $words[2]\n";
+    print CHANGE join(" ", @c_list) . "\n";
+    if (@log) {
+	print LOG "★delete <" . join(" ", @list) . ">\n";
+	foreach (@log) {
+	    print LOG "★detail $_\n";
 	}
+	print LOG "★change <" . join(" ", @c_list) . ">\n\n";
     }
 }
 close(FILE);
 close(CHANGE);
 
-open (FILE, '<:encoding(euc-jp)', $opt{antonym}) || die; #  PerlIOレイヤを指定する。上で宣言したレイヤは使用されない。
-open(CHANGE, '>:encoding(euc-jp)', $opt{antonym_change}) or die;
-while (<FILE>) {
-    chomp;
-    my $sent = $_;
-    my @words = split (/\s/, $sent);
-    my @word0_list;
-    my @word1_list;
+# isa, antonymは関係を展開
+foreach my $Filetype ('isa', 'antonym', 'definition') {
+    open (FILE, '<:encoding(euc-jp)', $opt{$Filetype}) || die;
+    my $open_file = $Filetype . '_change';
+    open (CHANGE, '>:encoding(euc-jp)', $opt{$open_file}) or die;
+    while (<FILE>) {
+	chomp;
+	my ($word1, $word2) = split (/\s/, $_);
+	my %word_list;
 
-    if ($words[0] !=~ /:/) {
-	if ($wordid{$words[0]}) {
-	    foreach (@{$wordid{$words[0]}}) {
-		push @word0_list, $_;
-		}
-	}
-	else {
-	    push @word0_list, $words[0];
+	my $delete_flag;
+	foreach my $word ($word1, $word2) {
+	    if ((split(/:/, $word, 2))[1]) {
+		push @{$word_list{$word}}, $word;
 	    }
-    }
-    else{
-	push @word0_list, $words[0];
-    }
-
-    if ($words[1] !=~ /:/) {
-	if ($wordid{$words[1]}) {
-	    foreach (@{$wordid{$words[1]}}) {
-		push @word1_list, $_;
+	    else {
+		if ($word =~ /.+?\/.+?/) {
+		    if ($wordid{$word}) {
+			# 多義性を展開
+			push @{$word_list{$word}}, @{$wordid{$word}};
+		    }
+		    else {
+			push @{$word_list{$word}}, $word;
+		    }
 		}
-	}
-	else {
-	    push @word1_list, $words[1];
+		else {
+		    # 2文字以下のひらがなは無視
+		    if ($word =~ /^[ぁ-ん]+$/ and length($word) <= 2){
+			$delete_flag = 1;
+			last;
+		    }
+		    
+		    # 全角に変換
+		    if ($word ne &SynGraph::h2z($word)) {
+			$word = &SynGraph::h2z($word);
+		    }
+		    
+		    push @{$word_list{$word}}, $word;
+		}
 	    }
-    }
-    else{
-	push @word1_list, $words[1];
+	}
+	
+	# 削除
+	if ($delete_flag) {
+	    next;
+	}
+	
+	# 出力
+	foreach my $w1 (@{$word_list{$word1}}) {
+	    foreach my $w2 (@{$word_list{$word2}}) {
+		print CHANGE "$w1 $w2\n";
+	    }
+	}
     }
 
-    foreach my $wordid0 (@word0_list) {
-	foreach my $wordid1 (@word1_list) {
-	    print CHANGE "$wordid0 $wordid1\n";
-	}
-    }
+    close(FILE);
+    close(CHANGE);
 }
-close(FILE);
-close(CHANGE);
+close(LOG);
