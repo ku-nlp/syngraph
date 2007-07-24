@@ -1,7 +1,11 @@
-2007-07-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+2007-07-25  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
-	* scripts/calc-similarity-synonym.pl:
-	定義文が2文節以上はそのまま出すように変更
+	* scripts/change_dic.pl
+	ソースの大幅整理
+	同義グループ整理・作成のログとり
+	ひらがな２文字の消去、半角を全角に、の２処理をここに移動
+	* scripts/merge_dic.sh, conv_syndb.pl, check_synonym_add.pl
+	同義グループ整理・作成のログとり
 
 2007-07-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
