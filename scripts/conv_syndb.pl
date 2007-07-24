@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -21,6 +21,7 @@ my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
 my %option;
 $option{$opt{option}}=1 if (defined $opt{option});
 
+my @log_list;                         # covのlog
 my %definition;                       # 語ID => 定義文の配列
 my %syn_hash;                         # 表現 => SYNID
 my %syn_group;                        # 同義グループ
@@ -86,6 +87,7 @@ foreach my $file_type (@file) {
 	    $syn_number++;
 	    
 	    # 同義グループを作る
+	    my @log;
 	    foreach my $syn (@syn_list) {
 		my $syn_key = $syn . "$file_tag";
 		push (@{$syn_group{$synid}}, $syn_key);
@@ -97,8 +99,19 @@ foreach my $file_type (@file) {
 		    push (@{$syn_group{$synid}}, $def_key);
 		    push (@{$syn_hash{$definition{$syn}}}, $synid);
 		    $def_delete{$syn} = 1 if (!defined $def_delete{$syn});
+
+		    # ログ
+		    push @log, "★definition <$syn $definition{$syn}>\n";
 		}
 	    }
+
+	    # ログ
+	    my $log_str = "★delete <" . join(" ", @syn_list) . ">\n";
+	    foreach (@log) {
+		$log_str .= "$_\n";		
+	    }
+	    $log_str .= "☆conv <" . join(" ", @{$syn_group{$synid}}) . ">\n\n";
+	    push @log_list, $log_str;
 	}
 	close(SYN);
     }
@@ -243,7 +256,6 @@ if ($opt{convert_file}) {
 
     foreach my $synid (keys %syn_group) {
 	my %check; # 曖昧性のある語の展開をチェック
-	my $flag;
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
@@ -254,18 +266,6 @@ if ($opt{convert_file}) {
 	    $kana = "\/$kana" if $kana;
 	    $word_id = ":$word_id" if $word_id;
 
-	    # 曖昧性のある語の展開したものは一回しか数えない
-	    next if $check{$expression};
-	    $check{$expression} = 1;
-
-            # 2文字以下のひらがなは無視
-            next if ($expression =~ /^[ぁ-ん]+$/ and length($expression) <= 2 and !$kana);
-
-            # 全角に変換
-            $expression = &SynGraph::h2z($expression);
-
-	    # 大文字に変換 ★小谷0425
-
             # 出力
             print CF "# S-ID:$synid,$expression\n";
             print CF "$expression\n";
@@ -275,16 +275,26 @@ if ($opt{convert_file}) {
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
 	    if ($tag eq 'DIC') {
-		$expression .= $flag ? "$kana". "<$tag>" : "$kana" . "$word_id" . "<$tag>";
-		$flag = 1;
+		$expression .= "$kana" . "$word_id" . "<$tag>";
 	    }
 	    else { # '定義文''Web'
 		$expression .= "<$tag>";
 	    }
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
 	}
-    }	
+    }
     close(CF);
+}
+
+#
+# ログ
+#
+if ($opt{conv_log}) {
+    open(LOG, '>:encoding(euc-jp)', $opt{conv_log}) or die;
+    foreach (@log_list) {
+	print LOG "$_";
+    }
+    close(LOG);
 }
 
 #
@@ -346,19 +356,31 @@ sub get_synid {
         # SYNIDを振る
 	my $synid = 's' . $syn_number . ":" . (split(/:/, $word))[0];
 	$syn_number++;
-
+	
         # グループに登録
 	my $word_key = $word . "<DIC>";
 	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
 
         # 定義文があるとき
+	my @log;
         if ($definition{$word}) {
 	    my $def_key = $definition{$word} . "<定義文>";
 	    push (@{$syn_group{$synid}}, $def_key);
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
+
+	    # ログ
+	    push @log, "★definition <$word $definition{$word}>\n";
 	}
+
+	# ログ
+	my $log_str = "★delete <$word>\n";
+	foreach (@log) {
+	    $log_str .= "$_\n";		
+	}
+	$log_str .= "☆conv <" . join(" ", @{$syn_group{$synid}}) . ">\n\n";
+	push @log_list, $log_str;
 	
         # IDを返す
         return $syn_hash{$word};

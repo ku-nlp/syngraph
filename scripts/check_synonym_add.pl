@@ -39,11 +39,13 @@ while (<>) {
     # 多義でないものを「1/1:1/1」に決める
     my @c_list;
     my $flag;
+    my @word_change_log;
     foreach my $word (@list) {
 	if ($MergeTxt->{noambiguity_file}{$word}) {
 	    my $c_word = "$word:1/1:1/1";
 	    $flag = 1 unless ($flag);
 	    push @c_list, $c_word;
+	    push @word_change_log, "$word → $c_word";
 	}
 	else {
 	    push @c_list, $word;
@@ -51,6 +53,9 @@ while (<>) {
     }
     if ($flag) {
 	print STDERR "★delete <" , join(" ", @list), ">\n";
+	foreach (@word_change_log) {
+	    print STDERR "☆detail $_\n";
+	}
 	print STDERR "☆change <" , join(" ", @c_list), ">\n\n";
     }
 
