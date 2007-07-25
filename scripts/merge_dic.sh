@@ -68,12 +68,12 @@ echo $exe
 eval $exe
 
 # 辞書からの知識抽出のログ作成（CGI用）
-exe="perl -I$PERL_DIR make_logdic.pl --synonym=$SIM_DIR_Dic/synonym.txt --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt --antonym=$SIM_DIR_Dic/antonym.txt --syndbdir=$SYNDB_DIR"
+exe="perl -I$PERL_DIR make_logdic.pl --synonym=$SIM_DIR_Dic/synonym.txt.filtered --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_DIR_Dic/antonym.txt --syndbdir=$SYNDB_DIR"
 echo $exe
 eval $exe
 
 # 辞書からの同義関係(synonym, same_difinition)の知識の連結
-exe="perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt --same_diff=$SIM_DIR_Dic/same_definition.txt > $SIM_M_DIR/synonym_dic.txt"
+exe="perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered --same_diff=$SIM_DIR_Dic/same_definition.txt > $SIM_M_DIR/synonym_dic.txt"
 echo $exe
 eval $exe
 
@@ -105,8 +105,8 @@ eval $exe
 
 # 辞書を変換（多義性の扱い）
 # 今は同義グループの連結をしない
-#exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt"
-exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --log=$SIM_C_DIR/change.log"
+#exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt"
+exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --log=$SIM_C_DIR/change.log"
 echo $exe
 eval $exe
 
