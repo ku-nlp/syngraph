@@ -1,5 +1,8 @@
 2007-07-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	定義文が同じものを類義表現とする関数を追加
+
 	* scripts/merge_dic.sh: 入力ファイル名を変更
 
 	* dic_change/synonym_web_news.txt, dic_middle/synonym_dic.txt.merge, syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/antonym.txt, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.log, dic_change/web_news.txt.log, dic_middle/synonym_dic.txt:
@@ -37,7 +40,7 @@
 	「〜様子」をdefinitionに入れないように
 	「〜Vすること」が格解析できていなかったのを、knpを更新してできるように
 
-	* ExtractSynfromDic/scripts/x4syn.pl/x4syn.pl:
+	* ExtractSynfromDic/scripts/x4syn.pl:
 	added '-def-sentence' to KNP option.
 
 2007-07-20  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
