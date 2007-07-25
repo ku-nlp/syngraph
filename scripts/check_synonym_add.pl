@@ -30,6 +30,7 @@ if ($opt{noambiguity_file}) {
 my $syn_group = {};
 my $gr_number = 0;
 my $word_index = {};
+my %log_hash;
 
 while (<>) {
     chomp;
@@ -52,11 +53,15 @@ while (<>) {
 	}
     }
     if ($flag) {
-	print STDERR "★delete <" , join(" ", @list), ">\n";
+	my $log_str;
+
+	$log_str =  "★delete <" . join(" ", @list) . ">\n";
 	foreach (@word_change_log) {
-	    print STDERR "☆detail $_\n";
+	    $log_str .=  "★detail $_\n";
 	}
-	print STDERR "☆change <" , join(" ", @c_list), ">\n\n";
+	$log_str .= "☆change <" . join(" ", @c_list) . ">\n";
+	my $log_hashkey = join(" ", @c_list);
+	$log_hash{$log_hashkey} = $log_str;
     }
 
     # 連結できる可能性check
@@ -68,7 +73,7 @@ while (<>) {
 
 	# 連結したものを登録
 	push my @group_add, @c_list;
-	my $log;
+	my $log_str;
 	foreach my $add_g_number (keys %{$gr_check}) {
 
 	    # add_groupに連結
@@ -76,8 +81,17 @@ while (<>) {
 	    
 	    # ログ
 	    my $delete_str = join(" ", @{$syn_group->{$add_g_number}});
-	    $log .= "★delete <$delete_str>\n";
-	    
+	    if (defined $log_hash{$delete_str}) {
+		foreach (split(/\n/, $log_hash{$delete_str})) {
+		    if ($_ =~ /^★/) {
+			$log_str .= "$_\n";
+		    }
+		}
+	    }
+	    else {
+		$log_str .= "★delete <$delete_str>\n";
+	    }
+
 	    # add_g_number情報削除
 	    $MergeTxt->delete_word_index(\@{$syn_group->{$add_g_number}}, $add_g_number, $word_index);
 	    delete $syn_group->{$add_g_number};
@@ -85,13 +99,13 @@ while (<>) {
 	
 	# ログ
 	my $delete_str = join(" ", @c_list);
-	$log .= "★delete <$delete_str>\n";
+	$log_str .= "★delete <$delete_str>\n";
 	my $add_str = join(" ", @group_add);
-	$log .= "☆add <$add_str>\n";
-	
+	$log_str .= "☆add <$add_str>\n";
+	$log_hash{$add_str} = $log_str;
+
 	# 連結したものを登録
 	$MergeTxt->regist_list4add(\@group_add, $gr_number, $syn_group, $word_index);
-	print STDERR "$log\n";
     }
     else {
 	#連結できなかったら登録
@@ -116,4 +130,9 @@ my @sort_result_list = $MergeTxt->sort_group(\@result_list);
 foreach (@sort_result_list) {
 #foreach (@result_list) {
     print "$_\n";
+}
+
+# ログの出力
+foreach (keys %log_hash) {
+    print STDERR "$log_hash{$_}\n";
 }
