@@ -103,7 +103,8 @@ foreach my $Filetype ('isa', 'antonym', 'definition') {
     open (CHANGE, '>:encoding(euc-jp)', $opt{$open_file}) or die;
     while (<FILE>) {
 	chomp;
-	my ($word1, $word2) = split (/\s/, $_);
+	# 上位下位のときのみ、$numに数字が入る
+	my ($word1, $word2, $num) = split (/\s/, $_);
 	my %word_list;
 
 	my $delete_flag;
@@ -146,7 +147,7 @@ foreach my $Filetype ('isa', 'antonym', 'definition') {
 	# 出力
 	foreach my $w1 (@{$word_list{$word1}}) {
 	    foreach my $w2 (@{$word_list{$word2}}) {
-		print CHANGE "$w1 $w2\n";
+		print CHANGE $Filetype eq 'isa' ? "$w1 $w2 $num\n" : "$w1 $w2\n";
 	    }
 	}
     }
