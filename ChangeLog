@@ -1,3 +1,9 @@
+2007-07-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	否定フラグを得る際に、<否定表現>ではなく、<意味有>がついていない形態素に<否定>がついているかどうかをチェックするように変更
+	(「ない」に否定フラグがつかないようになる)
+
 2007-07-25  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/change_dic.pl
