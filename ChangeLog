@@ -1,5 +1,8 @@
 2007-07-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* dic/rsk_iwanami/same_definition.txt:
+	小見出しの多いものからとらないように
+
 	* ExtractSynfromDic/scripts/x4syn.pl:
 	定義文が同じものを類義表現とする関数を追加
 
