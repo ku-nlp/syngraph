@@ -1,5 +1,14 @@
 2007-07-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/isa.txt, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.log, dic_change/antonym.txt, dic_change/antonym.txt.merge.log, dic_change/definition.txt, dic_middle/antonym.txt.merge, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge:
+	集合上位語を捨てる
+	「〜の言い方/呼び方」のパターン追加
+
+	* ExtractSynfromDic/scripts/x4syn.pl: 上位語抽出の際の後処理を追加
+
+	* ExtractSynfromDic/tools/def_sentence.rule:
+	「〜の言い方/呼び方」のパターン追加
+
 	* dic/rsk_iwanami/same_definition.txt:
 	小見出しの多いものからとらないように
 
@@ -19,21 +28,15 @@
 
 	* scripts/check_synonym_add.pl
 	ログの出力形態を変更
+	
+2007-07-24  odani  <odani@reed.kuee.kyoto-u.ac.jp>
 
-2007-07-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+	* scripts/check_synonym_add.pl, scripts/conv_syndb.pl, scripts/merge_dic.sh:
+		同義グループ整理・作成のログとり
 
-	* perl/SynGraph.pm:
-	否定フラグを得る際に、<否定表現>ではなく、<意味有>がついていない形態素に<否定>がついているかどうかをチェックするように変更
-	(「ない」に否定フラグがつかないようになる)
-
-2007-07-25  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
-
-	* scripts/change_dic.pl
-	ソースの大幅整理
+	* scripts/change_dic.pl: ソースの大幅整理
 	同義グループ整理・作成のログとり
 	ひらがな２文字の消去、半角を全角に、の２処理をここに移動
-	* scripts/merge_dic.sh, conv_syndb.pl, check_synonym_add.pl
-	同義グループ整理・作成のログとり
 
 2007-07-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
