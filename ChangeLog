@@ -31,9 +31,6 @@
 	
 2007-07-24  odani  <odani@reed.kuee.kyoto-u.ac.jp>
 
-	* scripts/check_synonym_add.pl, scripts/conv_syndb.pl, scripts/merge_dic.sh:
-		同義グループ整理・作成のログとり
-
 	* scripts/change_dic.pl: ソースの大幅整理
 	同義グループ整理・作成のログとり
 	ひらがな２文字の消去、半角を全角に、の２処理をここに移動
