@@ -517,8 +517,10 @@ sub _get_keywords {
         # 尊敬表現
         $sonnkei = 1 if ($tag->{fstring} =~ /<敬語:尊敬表現>/);
 
-        # 否定表現
-        $negation = 1 if ($tag->{fstring} =~ /<否定表現>/);
+	# <意味有>がついていない形態素に<否定>があれば1をたてる
+	# 「ない」 -> 「無い」 (否定フラグがたたない)
+	# 「なくない」 -> 「無い」<否定> になる
+        $negation = &check_negation($tag);
 
 	# 態
 	if ($tag->{fstring} =~ /<態:([^\s\/\">]+)/) {
@@ -692,7 +694,17 @@ sub _get_keywords {
     return @keywords;
 }
 
+# <意味有>がついていない形態素に<否定>があれば1をかえす
+sub check_negation {
+    my ($tag) = @_;
 
+    foreach my $mrph ($tag->mrph) {
+	if ($mrph->fstring =~ /<否定>/ && $mrph->fstring !~ /<意味有>/) {
+	    return 1;
+	}
+    }
+    return 0;
+}
 
 #
 # IDを登録
