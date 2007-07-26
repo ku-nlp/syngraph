@@ -46,7 +46,7 @@ while (<>) {
 	    my $c_word = "$word:1/1:1/1";
 	    $flag = 1 unless ($flag);
 	    push @c_list, $c_word;
-	    push @word_change_log, "$word → $c_word";
+	    push @word_change_log, "$word→$c_word";
 	}
 	else {
 	    push @c_list, $word;
@@ -57,7 +57,7 @@ while (<>) {
 
 	$log_str =  "★delete <" . join(" ", @list) . ">\n";
 	foreach (@word_change_log) {
-	    $log_str .=  "★detail $_\n";
+	    $log_str .=  "！detail $_\n";
 	}
 	$log_str .= "☆change <" . join(" ", @c_list) . ">\n";
 	my $log_hashkey = join(" ", @c_list);
@@ -83,7 +83,7 @@ while (<>) {
 	    my $delete_str = join(" ", @{$syn_group->{$add_g_number}});
 	    if (defined $log_hash{$delete_str}) {
 		foreach (split(/\n/, $log_hash{$delete_str})) {
-		    if ($_ =~ /^★/) {
+		    if ($_ =~ /^★/ or $_=~ /^！/) {
 			$log_str .= "$_\n";
 		    }
 		}
