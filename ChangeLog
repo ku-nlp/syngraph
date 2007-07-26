@@ -1,3 +1,10 @@
+2007-07-26  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* script/get_wordsynlog.pl
+	added
+	単語間の同義関係のログを出力するスクリプト
+
+
 2007-07-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/rsk_iwanami/synonym.txt:
