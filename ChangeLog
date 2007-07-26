@@ -1,3 +1,8 @@
+2007-07-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	不要な行を削除(<GHS>タグを含む行)
+
 2007-07-26  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* script/get_wordsynlog.pl
