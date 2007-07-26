@@ -3,6 +3,8 @@
 # $Id$
 # 入力２語の同義関係のログをとるスクリプト
 
+# usage: perl get_wordsynlog.pl -add_log ../dic_change/synonym_dic.txt.merge.add.log  帯びる/おびる:1/1:2/3 奏する/そうする:1/1:2/2
+
 use strict;
 use Getopt::Long;
 use Encode;
