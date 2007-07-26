@@ -1,5 +1,8 @@
 2007-07-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* dic/rsk_iwanami/synonym.txt:
+	不要な行を削除(<GHS>タグを含む行)
+	
 	* ExtractSynfromDic/scripts/x4syn.pl:
 	不要な行を削除(<GHS>タグを含む行)
 
