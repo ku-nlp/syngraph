@@ -145,7 +145,7 @@ sub make_sg {
     }
 
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
-    if ($ref->{$sid}) {
+    if (!$option->{no_syn_id} && $ref->{$sid}) {
 	for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
 	    $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
