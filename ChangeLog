@@ -1,3 +1,9 @@
+2007-07-27  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi
+	反義関係のログを出力できていなかったバグを修正
+	同義グループの中身を詳細に表示するよう変更
+
 2007-07-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/rsk_iwanami/synonym.txt:
