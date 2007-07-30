@@ -1,3 +1,9 @@
+2007-07-30  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/orig/rsk4.xml:
+	同義表現を抽出する際と同様、文語基本形などを考慮
+	GHSタグを削除
+
 2007-07-27  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi
