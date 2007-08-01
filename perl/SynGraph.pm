@@ -996,7 +996,7 @@ sub syngraph_matching {
 	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
 		and $node_1->{id} eq $node_2->{id} 
-		and (!($node_1->{relation} and $node_2->{relation}) or $matching_option->{wr_matching})
+		and (!($node_1->{relation} and $node_2->{relation}) or $matching_option->{coordinate_matching})
 		and !($matching_option->{hypocut_matching} and (($node_1->{hypo_num} > $matching_option->{hypocut_matching}) or ($node_2->{hypo_num} > $matching_option->{hypocut_matching})))
 		and !($node_1->{antonym} and $node_2->{antonym})) {
 
