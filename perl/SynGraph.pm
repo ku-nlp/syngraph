@@ -160,7 +160,7 @@ sub make_tree {
     my ($this, $knp_result, $tree_ref, $option) = @_;
     my $sid = $knp_result->id;
 
-    my @keywords = $this->_get_keywords($knp_result);
+    my @keywords = $this->_get_keywords($knp_result, $option);
 
     return if (@keywords == 0);
 
@@ -466,7 +466,7 @@ sub st_check {
 # KNP結果からキーワードを取り出す
 #
 sub _get_keywords {
-    my ($this, $knp_result) = @_;
+    my ($this, $knp_result, $option) = @_;
     my @keywords;
 
     # BP単位
@@ -476,6 +476,7 @@ sub _get_keywords {
     foreach my $tag ($knp_result->tag) {
         my @alt;
         my $nodename;
+        my $nodename_num; # 数字汎化用ID
         my $fuzoku;
 	my $midasi;
 	my $parent;
@@ -545,26 +546,38 @@ sub _get_keywords {
             if ($mrph->{fstring} =~ /<意味有>/ ||
 		# -copulaのとき、判定詞には<意味有>がないので、特別処理
 		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
+
+		my $nodename_str;
 		# 可能動詞であれば戻す
 		if ($mrph->{fstring} =~ /<可能動詞:([^\s\">]+)/) {
-		    $nodename .= !$nodename ? "$1" : "+$1";
+		    $nodename_str = $1;
 		}
 		# 尊敬動詞であれば戻す
 		elsif ($mrph->{fstring} =~ /<尊敬動詞:([^\s\">]+)/) {
-		    $nodename .= !$nodename ? "$1" : "+$1";
+		    $nodename_str = $1;
 		}
                 # 代表表記
                 elsif ($mrph->{fstring} =~ /<代表表記:([^\s\">]+)/) {
-		    $nodename .= !$nodename ? "$1" : "+$1";
+		    $nodename_str = $1;
                 }
                 # 擬似代表表記
                 elsif ($mrph->{fstring} =~ /<疑似代表表記:([^\s\">]+)/) {
-		    $nodename .= !$nodename ? "$1" : "+$1";
+		    $nodename_str = $1;
                 }
                 else {
-		    $nodename .= !$nodename ? "$mrph->{genkei}" : "+$mrph->{genkei}";
+		    $nodename_str = $mrph->{genkei};
                 }
-		
+
+		# 数詞の汎化
+		if ($mrph->{hinsi} eq "名詞" && $mrph->{bunrui} eq "数詞" &&
+		    $mrph->{genkei} !~ /^(何|幾|数|なん|いく|すう)$/) {
+		    $nodename .= !$nodename ? "$nodename_str" : "+$nodename_str";
+		    $nodename_num .= !$nodename_num ? "<num>" : "+<num>";
+		} else {
+		    $nodename .= !$nodename ? "$nodename_str" : "+$nodename_str";
+		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
+		}
+
                 # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
                 if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
 		    foreach (@tmp){
@@ -687,6 +700,13 @@ sub _get_keywords {
 	    # 登録
 	    my %tmp2 = %tmp;
 	    $tmp2{name} = $alt_key;
+	    push(@{$keywords[$tag->{id}]}, \%tmp2);
+	}
+	
+	# 数詞を汎化したidを登録
+	if ($option->{num_generalize} && $nodename_num =~ /<num>/) {
+	    my %tmp2 = %tmp;
+	    $tmp2{name} = $nodename_num;
 	    push(@{$keywords[$tag->{id}]}, \%tmp2);
 	}
     }
