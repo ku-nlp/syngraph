@@ -324,7 +324,7 @@ sub st_make_bp {
         next if ($node->{weight} == 0);
 
 	my %count_pattern;
-	my %tmid_tmp;
+	my %stid_tmp;
         if ($node->{id} and $this->{st_head}{$node->{id}}) {
             foreach my $stid (@{$this->{st_head}{$node->{id}}}) {
                 my $headbp = $this->{st_data}{$stid}{head};
@@ -333,10 +333,10 @@ sub st_make_bp {
                 map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
 
 		# すでにチェックしたTMは再度チェックしない
-		if ($tmid_tmp{$tmid}) {
+		if ($stid_tmp{$stid}) {
 		    next;
 		} else {
-		    $tmid_tmp{$tmid} = 1;
+		    $stid_tmp{$stid} = 1;
 		}
 		
 		# MTのアラインメント時は、先に英語列で評価
