@@ -18,10 +18,14 @@ JUMAN=juman
 JUMANRCFILE=
 jumanrc=
 
+# KNP Options
+knpopts=()
+k=1
+
 log=0
 noparse=0
 
-while getopts ohlj:r:n OPT
+while getopts ohlj:r:nd OPT
 do
   case $OPT in
       o)  SYNDB_DIR=../syndb/x86_64
@@ -36,11 +40,18 @@ do
           ;;
       n)  noparse=1
 	  ;;
+      d)  knpopts[k]="-dpnd"
+	  k=`expr $k + 1`
+	  ;;
       h)  usage
           ;;
     esac
 done
 shift `expr $OPTIND - 1`
+
+# KNP default options
+knpopts[k]="-postprocess -tab"
+k=`expr $k + 1`
 
 # Perl module
 PERL_DIR=../perl
@@ -76,9 +87,9 @@ if [ $noparse -eq 1 -a -e $SYNDBPARSE ]; then
     exe="cp $SYNDBPARSE $SYNDB_DIR/"
 else
     if [ $jumanrc -eq 1 ]; then
-	exe="$JUMAN -e2 -B -i '#' -r $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse"
+	exe="$JUMAN -e2 -B -i '#' -r $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
     else
-	exe="$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp -dpnd -postprocess -tab > $SYNDB_DIR/syndb.parse"
+	exe="$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
     fi
 fi
 echo $exe
