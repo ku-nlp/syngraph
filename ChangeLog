@@ -1,3 +1,8 @@
+2007-08-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	Jumanの解析誤りをチェックするためのオプションを追加
+
 2007-08-13  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh:
