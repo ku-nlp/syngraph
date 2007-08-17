@@ -261,21 +261,20 @@ if ($opt{convert_file}) {
 	    # タグを取る
 	    my $tag = $1 if $expression =~ s/<(定義文|DIC|Web)>$//g;
 	    
-	    # /（ふり仮名）:1/1:1/1:1/1などを取る
-	    ($expression, my $kana, my $word_id) = split(/\/|:/, $expression, 3);
-	    $kana = "\/$kana" if $kana;
+	    # :1/1:1/1:1/1を取る
+	    ($expression, my $word_id) = split(/:/, $expression, 2);
 	    $word_id = ":$word_id" if $word_id;
 
             # 出力
-            print CF "# S-ID:$synid,$expression\n";
+            print CF "# S-ID:$synid,$expression$word_id\n";
             print CF "$expression\n";
             
 	    # 同義グループ情報
-	    # １個目の語は正しいword_idがついている。２語目以降は展開の結果（暫定）
+	    # $synid = 's517:趣/おもむき'
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
 	    if ($tag eq 'DIC') {
-		$expression .= "$kana" . "$word_id" . "<$tag>";
+		$expression .= "$word_id" . "<$tag>";
 	    }
 	    else { # '定義文''Web'
 		$expression .= "<$tag>";
