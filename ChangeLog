@@ -1,3 +1,8 @@
+2007-08-17  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/build.sh, conv_syndb.pl, word_into_juman.pl
+	compileにおける各表現パースにおいて、すでに代表表記化されているものはそれを利用する
+
 2007-08-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
