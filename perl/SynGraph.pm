@@ -718,12 +718,15 @@ sub _get_keywords {
 sub check_negation {
     my ($tag) = @_;
 
+    my $reg_count = 0;
     foreach my $mrph ($tag->mrph) {
 	if ($mrph->fstring =~ /<否定>/ && $mrph->fstring !~ /<意味有>/) {
-	    return 1;
+	    $reg_count++;
 	}
     }
-    return 0;
+
+    # <否定>の数が奇数だったら1を返す
+    return $reg_count % 2 ? 1 : 0;
 }
 
 #
