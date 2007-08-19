@@ -1,3 +1,8 @@
+2007-08-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	KNPルールの変更により、KNPの<否定表現>をみて、否定フラグをたてるように戻した
+
 2007-08-17  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh, conv_syndb.pl, word_into_juman.pl
