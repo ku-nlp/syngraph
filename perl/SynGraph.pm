@@ -518,10 +518,8 @@ sub _get_keywords {
         # 尊敬表現
         $sonnkei = 1 if ($tag->{fstring} =~ /<敬語:尊敬表現>/);
 
-	# <意味有>がついていない形態素に<否定>があれば1をたてる
-	# 「ない」 -> 「無い」 (否定フラグがたたない)
-	# 「なくない」 -> 「無い」<否定> になる
-        $negation = &check_negation($tag);
+	# 否定表現
+        $negation = 1 if ($tag->{fstring} =~ /<否定表現>/);
 
 	# 態
 	if ($tag->{fstring} =~ /<態:([^\s\/\">]+)/) {
@@ -712,21 +710,6 @@ sub _get_keywords {
     }
     
     return @keywords;
-}
-
-# <意味有>がついていない形態素に<否定>があれば1をかえす
-sub check_negation {
-    my ($tag) = @_;
-
-    my $reg_count = 0;
-    foreach my $mrph ($tag->mrph) {
-	if ($mrph->fstring =~ /<否定>/ && $mrph->fstring !~ /<意味有>/) {
-	    $reg_count++;
-	}
-    }
-
-    # <否定>の数が奇数だったら1を返す
-    return $reg_count % 2 ? 1 : 0;
 }
 
 #
