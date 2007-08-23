@@ -1,3 +1,13 @@
+2007-08-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/calc-similarity-synonym.pl:
+	サ変名詞と動詞のペアの場合も、用言格フレームの類似度計算を使うように変更
+
+2007-08-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/calc-similarity-synonym.pl:
+	CalcSimilarityByCF.pmの仕様変更に対応
+
 2007-08-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
