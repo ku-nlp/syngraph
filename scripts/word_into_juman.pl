@@ -59,7 +59,7 @@ while (<>) { # 代表表記
 		}
 	    }
 	}
-	else { # 代用表記でない
+	else { # 代表表記でない
 	    $result = $juman->analysis("$word");
 	    print $result->all();
 	    print "EOS\n";
