@@ -17,9 +17,6 @@
 	* scripts/calc-similarity-synonym.pl:
 	用言の類似度計算で閾値をこえない場合、名詞の類似度計算もするように変更
 
-	* scripts/calc-similarity-synonym.pl:
-	用言の類似度計算で閾値をこえない場合、名詞の類似度計算もするように変更
-
 2007-08-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/calc-similarity-synonym.pl:
