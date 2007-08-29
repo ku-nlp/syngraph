@@ -1,5 +1,17 @@
 2007-08-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/synonym.txt:
+	類義表現の助詞を削除する条件を変更
+
+	* dic/rsk_iwanami/definition.txt:
+	「<注>あることばの前につけて</注>」, 「<注>あることばのあとにつけて</注>」を含む定義文からは抽出しないように
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	「類義表現助詞削除」がFeatureにあるときのみ、助詞を削除するように
+
+	* ExtractSynfromDic/tools/def_sentence.rule:
+	類義表現助詞削除というFeatureを与えて、助詞を削除する条件を指定できるように
+
 	* dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/synonym.txt, ExtractSynfromDic/scripts/x4syn.pl:
 	「<注>あることばの前につけて</注>」, 「<注>あることばのあとにつけて</注>」を含む定義文からは、類義語・上位語を抽出しないように
 
