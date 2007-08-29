@@ -1,5 +1,8 @@
 2007-08-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* dic/rsk_iwanami/isa.txt, ExtractSynfromDic/scripts/x4syn.pl:
+	体言止の場合、子供をとらないように変更
+
 	* dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/synonym.txt:
 	類義表現の助詞を削除する条件を変更
 
