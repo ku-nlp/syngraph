@@ -1,3 +1,9 @@
+2007-08-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/rsk_iwanami/synonym.txt, ExtractSynfromDic/scripts/x4syn.pl:
+	括弧を含んだ同義表現のゴミを除く処理を、個別の同義表現で行なうように変更
+	（以前は、括弧を含んだ同義表現のゴミがあれば、その見出しから何も抽出されなかった）
+
 2007-08-27  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/isa.txt.filtered, ExtractSynfromDic/scripts/x4syn.pl:
