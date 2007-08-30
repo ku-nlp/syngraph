@@ -1,3 +1,14 @@
+2007-08-30  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: pathを変更
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/web_news.txt.log, dic_change/antonym.txt, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_middle/antonym.txt.merge, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt.filtered, dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt.filtered:
+	連体詞、接続詞の上位語をとらないように
+	括弧を含んだ同義表現のゴミを除く処理を、個別の同義表現で行なうように変更
+	「<注>あることばの前につけて</注>」, 「<注>あることばのあとにつけて</注>」を含む定義文からは、類義語・上位語を抽出しないように
+	「類義表現助詞削除」がFeatureにあるときのみ、助詞を削除するように
+	体言止の場合、子供をとらないように変更
+
 2007-08-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* dic/rsk_iwanami/isa.txt, ExtractSynfromDic/scripts/x4syn.pl:
