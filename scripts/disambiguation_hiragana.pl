@@ -13,6 +13,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 use Getopt::Long;
 use CalcSimilarityByCF;
+use Constant;
 use KNP;
 
 my (%opt);
@@ -23,12 +24,12 @@ GetOptions(\%opt, 'help', 'debug');
 my $DISAMBIGUATE_TH = 0.3;
 my $DISAMBIGUATE_RATIO = 3;
 
-my $knp = new KNP( -JumanCommand => '/home/harashima/usr/bin/juman',
-		   -JumanRcfile => '/home/harashima/usr/etc/jumanrc');
+my $knp = new KNP( -JumanCommand => $Constant::JumanCommand,
+		   -JumanRcfile => $Constant::JumanRcfile);
 
 my $cscf = new CalcSimilarityByCF( {debug => $opt{debug}} );
 
-$cscf->TieMIDBfile('../../CalcSimilarityByCF/db/all-mi');
+$cscf->TieMIDBfile($Constant::CalcsimMidbfile);
 
 while (<>) {
     chomp;
