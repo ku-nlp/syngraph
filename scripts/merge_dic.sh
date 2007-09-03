@@ -109,6 +109,6 @@ echo $exe
 eval $exe
 
 # ひらがなの曖昧性解消
-exe="perl disambiguation_hiragana.pl < $SIM_C_DIR/synonym_dic.txt.merge.add.postprocess > $SIM_C_DIR/synonym_dic.txt 2> $SIM_C_DIR/synonym_dic.hiragana_disambiguation.log"
+exe="perl -I$PERL_DIR disambiguation_hiragana.pl < $SIM_C_DIR/synonym_dic.txt.merge.add.postprocess > $SIM_C_DIR/synonym_dic.txt 2> $SIM_C_DIR/synonym_dic.hiragana_disambiguation.log"
 echo $exe
 eval $exe
