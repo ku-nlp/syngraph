@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use Dumpvalue;
@@ -14,7 +14,7 @@ my %wordid;
 
 my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'synonym_change=s', 'isa_change=s', 'antonym_change=s', 'definition_change=s', 'log=s');
 
-# 多義性が曖昧な語をチェック
+# 多義な語をチェック
 my %check;
 foreach my $Filetype ('synonym', 'definition', 'isa', 'antonym') {
     open (FILE, '<:encoding(euc-jp)', $opt{$Filetype}) || die;
@@ -26,6 +26,7 @@ foreach my $Filetype ('synonym', 'definition', 'isa', 'antonym') {
 	    next if ($check{$word});
 
 	    $check{$word} = 1;
+	    # 多義語
 	    if ((split(/:/,$word,2))[1]) {
 		my $w = (split(/:/,$word,2))[0]; 
 		push @{$wordid{$w}}, $word;
