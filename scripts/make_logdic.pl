@@ -24,8 +24,8 @@ foreach my $file (@FILE_NAME) {
     while (<FILE>) {
 	chomp;
 	my $sent = $_;
-	$log_dic{(split (/\//, $sent))[0]} .= "<$file.txt:$_>\n"    
-	}
+	$log_dic{(split (/\//, $sent))[0]} .= "<$file.txt:$_>\n";
+    }
 }
 close(FILE);
 
