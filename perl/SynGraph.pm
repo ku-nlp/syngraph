@@ -2241,7 +2241,7 @@ sub _read_xml {
 	# my $child = {};
 	# my $bp_table = {};
 	foreach my $phrase (@{$sen->{phrase}}) {
-	    my $nodename;
+	    my $nodename = [];
 	    my $numid;
 	    my $fuzoku;
 	    my $negation;
@@ -2324,7 +2324,7 @@ sub _read_xml {
 		}
 	    }
 
-	    next if ($#{$nodename} < 0);
+	    # next if ($#{$nodename} < 0);
 
 #         # チェック用
 #         unless ($nodename) {
