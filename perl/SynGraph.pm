@@ -577,22 +577,25 @@ sub _get_keywords {
 		}
 
                 # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
-                if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
-		    foreach (@tmp){
-			# 可能動詞であれば戻す
-			if ($_ =~ /可能動詞:([^\s\">]+)/) {
-			    push(@alt,$1);
-			}
-			# 尊敬動詞であれば戻す
-			elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
-			    push(@alt,$1);
-			}
-			# 代表表記
-			elsif ($_ =~ /代表表記:([^\s\">]+)/){
-			    push(@alt,$1);
+		# 用言/名詞曖昧性解消されてない場合、ALTの情報からSynノードを作る
+		unless ($mrph->fstring =~ /<(?:名詞|用言)曖昧性解消>/) {
+		    if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
+			foreach (@tmp){
+			    # 可能動詞であれば戻す
+			    if ($_ =~ /可能動詞:([^\s\">]+)/) {
+				push(@alt,$1);
+			    }
+			    # 尊敬動詞であれば戻す
+			    elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
+				push(@alt,$1);
+			    }
+			    # 代表表記
+			    elsif ($_ =~ /代表表記:([^\s\">]+)/){
+				push(@alt,$1);
+			    }
 			}
 		    }
-                }
+		}
 #                 # コンパイル時はALTは使わない場合
 #                 if ($this->{mode} eq 'compile' and @alt > 0) {
 #                     undef @alt;
