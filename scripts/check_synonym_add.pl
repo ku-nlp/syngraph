@@ -23,7 +23,8 @@ if ($opt{noambiguity_file}) {
         my ($word, $word_and_id) = split(/ /, $_);
 	
 	$MergeTxt->{noambiguity_file}{$word} = 1 unless ($MergeTxt->{noambiguity_file}{$word});
-    }    
+    }
+    close AMB;
 }
 #Dumpvalue->new->dumpValue($MergeTxt->{noambiguity_file});
 
