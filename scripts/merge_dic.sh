@@ -73,7 +73,7 @@ echo $exe
 eval $exe
 
 # 辞書からの同義関係(synonym, same_difinition)の知識の連結
-exe="perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered --same_diff=$SIM_DIR_Dic/same_definition.txt > $SIM_M_DIR/synonym_dic.txt"
+exe="perl -I../perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered --same_definition=$SIM_DIR_Dic/same_definition.txt --synonym_filter_log=$SIM_DIR_Dic/synonym-filter.log > $SIM_M_DIR/synonym_dic.txt 2> $SIM_M_DIR/cat_synonym_same_def.log"
 echo $exe
 eval $exe
 
