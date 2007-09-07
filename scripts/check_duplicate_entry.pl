@@ -88,7 +88,7 @@ if ($opt{editdistance}) {
 	    foreach my $word2 (keys %{$alldata{$target_word}}) {
 		next if $word1 ge $word2;
 
-		my $distance = $edit_distance->calc($word1, $word2);
+		my ($distance) = $edit_distance->calc($word1, $word2);
 		# 語長で正規化
 		my $distance_normalized = $distance / (log(length($word1)) + 1) / (log(length($word2)) + 1);
 
