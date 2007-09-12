@@ -1,3 +1,19 @@
+2007-09-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/antonym.txt, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/isa.txt.filtered, dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt, dic/rsk_iwanami/synonym.txt.filtered, dic/rsk_iwanami/definition.txt, ExtractSynfromDic/tools/def_sentence.rule:
+	以下を同義語に
+	- 「（一文節）こと。」（例:「あがること。」）
+	- 「また、（一文節）こと。」（例:「また、失うこと。」）
+
+2007-09-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: 定数をConstant.pmに出した
+
+	* perl/Constant.pm: $KnpCommandなどを追加
+
+	* dic/rsk_iwanami/same_definition.txt:
+	「<注>あることばの前につけて</注>」, 「<注>あることばのあとにつけて</注>」を含む定義文からは同義グループをとらないように
+
 2007-09-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/log_dic.cdb, syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/isa.txt, dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/isa.txt.filtered, ExtractSynfromDic/scripts/x4syn.pl:
