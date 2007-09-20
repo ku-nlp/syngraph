@@ -320,13 +320,29 @@ sub make_bp {
 sub st_make_bp {
     my ($this, $ref, $sid, $bp, $max_tm_num, $option, $matching_option) = @_;
 
-    foreach my $node (@{$ref->{$sid}[$bp]}) {
+    # ノードはどんどん追加されるので、元のノードを退避してforeachをまわす
+    # こうしないと、追加されたノードまで新たなキーとしてしまう
+    my @node_list = @{$ref->{$sid}[$bp]};
+    foreach my $node (@node_list) {
         next if ($node->{weight} == 0);
 
 	my %count_pattern;
 	my %stid_tmp;
-        if ($node->{id} and $this->{st_head}{$node->{id}}) {
-            foreach my $stid (@{$this->{st_head}{$node->{id}}}) {
+        if ($node->{id}) {
+	    my @head_list;
+	    push(@head_list, @{$this->{st_head}{$node->{id}}}) if ($this->{st_head}{$node->{id}});
+
+	    # 翻訳時のみ、子がある場合は、"子->親"のキーも探索
+	    if ($option->{mt_trans}) {
+		foreach my $c (keys %{$node->{childbp}}) {
+		    foreach my $child_node (@{$ref->{$sid}[$c]}) {
+			my $head_key = $child_node->{id}."->".$node->{id};
+			push(@head_list, @{$this->{st_head}{$head_key}}) if ($this->{st_head}{$head_key});
+		    }
+		}
+	    }
+	    
+            foreach my $stid (@head_list) {
                 my $headbp = $this->{st_data}{$stid}{head};
                 my $tmid = $this->{st_data}{$stid}{tmid};
                 my %body;
