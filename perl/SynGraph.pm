@@ -336,6 +336,7 @@ sub st_make_bp {
 	    if ($option->{mt_trans}) {
 		foreach my $c (keys %{$node->{childbp}}) {
 		    foreach my $child_node (@{$ref->{$sid}[$c]}) {
+			next if ($node->{not_synnode});
 			my $head_key = $child_node->{id}."->".$node->{id};
 			push(@head_list, @{$this->{st_head}{$head_key}}) if ($this->{st_head}{$head_key});
 		    }
@@ -440,7 +441,8 @@ sub st_make_bp {
 				     negation       => $nodefac->{negation},
 				     level          => $nodefac->{level}, 
 				     score          => $nodefac->{score} * $synonym_penalty,
-				     weight         => $nodefac->{weight}
+				     weight         => $nodefac->{weight},
+				     not_synnode    => 1
 				 });
 
 		$newid->{matchid}   = $nodefac->{matchid} if ($newid);
@@ -761,6 +763,7 @@ sub _regnode {
     my $antonym               = $args_hash->{antonym};
     my $wnum                  = $args_hash->{wnum};
     my $regnode_option        = $args_hash->{regnode_option};
+    my $not_synnode           = $args_hash->{not_synnode};
 
     # コンパイルでは完全に一致する部分にはIDを付与しない
     return if ($this->{mode} eq 'repeat' and $bp == @{$ref->{$sid}} - 1 and !$childbp);
@@ -820,10 +823,11 @@ sub _regnode {
         $newid->{hypo_num} = $hypo_num if ($hypo_num);
         $newid->{wnum}     = $wnum if($wnum);
         $newid->{antonym}  = $antonym if ($antonym);
+	$newid->{not_synnode} = $not_synnode if ($not_synnode);
         push(@{$ref->{$sid}[$bp]}, $newid);
 
 	# 上位IDがあれば登録(ただし上位語の上位語や、反義語の上位語は登録しない)
-	if ($regnode_option->{relation} and $relation != 1 and $antonym != 1){
+	if ($regnode_option->{relation} and $relation != 1 and $antonym != 1 and !$not_synnode){
 
 	    # キャッシュしておく
 	    $this->{synparentcache}{$id} = $this->GetValue($this->{synparent}{$id}) if (!defined $this->{synparentcache}{$id});
@@ -897,7 +901,7 @@ sub _regnode {
 	    }
 	}
 
-	if ($regnode_option->{antonym}){
+	if ($regnode_option->{antonym} and !$not_synnode){
 	    # キャッシュしておく
  	    if ($antonym != 1 and $relation != 1 && !defined $this->{synantonymcache}{$id}) {
  		$this->{synantonymcache}{$id} = $this->GetValue($this->{synantonym}{$id});
