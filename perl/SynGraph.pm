@@ -345,6 +345,10 @@ sub st_make_bp {
 	    
             foreach my $stid (@head_list) {
 		my $st_data = $this->get_st_data_value($this->{st_data}, $stid);
+		unless ($st_data) {
+		    print STDERR "TM: $stid Not Found\n";
+		    next;
+		}
                 my $headbp = $st_data->{head};
                 my $tmid = $st_data->{tmid};
                 my %body;
