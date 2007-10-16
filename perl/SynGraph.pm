@@ -323,11 +323,11 @@ sub st_make_bp {
     # ノードはどんどん追加されるので、元のノードを退避してforeachをまわす
     # こうしないと、追加されたノードまで新たなキーとしてしまう
     my @node_list = @{$ref->{$sid}[$bp]};
+    my %stid_tmp;
     foreach my $node (@node_list) {
         next if ($node->{weight} == 0);
 
 	my %count_pattern;
-	my %stid_tmp;
         if ($node->{id}) {
 	    my @head_list;
 	    push(@head_list, @{$this->{st_head}{$node->{id}}}) if ($this->{st_head}{$node->{id}});
