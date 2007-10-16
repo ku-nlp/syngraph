@@ -89,7 +89,7 @@ sub new {
         dbh        => undef,
         sth        => undef,
         st_head    => {},
-        st_data    => {},
+        st_data    => [],
         tm_sg      => {},
 	knp        => new KNP(%knp_pm_args),
 	# by NICT
@@ -344,10 +344,11 @@ sub st_make_bp {
 	    }
 	    
             foreach my $stid (@head_list) {
-                my $headbp = $this->{st_data}{$stid}{head};
-                my $tmid = $this->{st_data}{$stid}{tmid};
+		my $st_data = $this->get_st_data_value($this->{st_data}, $stid);
+                my $headbp = $st_data->{head};
+                my $tmid = $st_data->{tmid};
                 my %body;
-                map {$body{$_} = 1} split(" ", $this->{st_data}{$stid}{body});
+                map {$body{$_} = 1} split(" ", $st_data->{body});
 
 		# すでにチェックしたTMは再度チェックしない
 		if ($stid_tmp{$stid}) {
@@ -360,7 +361,7 @@ sub st_make_bp {
 		my $mt_end_flag = 0;
 		if ($option->{mt_align}) {
 		    $mt_end_flag = 1;
-		    foreach my $estr (@{$this->{st_data}{$stid}{mvalue}}) {
+		    foreach my $estr (@{$st_data->{mvalue}}) {
 			if (index($option->{mt_align}, $estr) >= 0) {
 			    $mt_end_flag = 0;
 			    last;
@@ -1945,6 +1946,18 @@ sub _mldbm_retrieve {
 
     foreach my $sid (@$list_ref) {
         $ref->{$sid} = $this->{dbh}->{$sid};
+    }
+}
+
+
+#
+# st_data*.mldbmからkeyのvalueを取得して返す
+#
+sub get_st_data_value {
+    my ($this, $ref, $key) = @_;
+
+    foreach my $st_data (@{$ref}) {
+        return $st_data->{$key} if (defined $st_data->{$key});
     }
 }
 
