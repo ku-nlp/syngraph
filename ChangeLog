@@ -1,3 +1,8 @@
+2007-10-18  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/change_dic.pl, merge_dic.sh
+	辞書の最後の整形において曖昧な語の展開をやめる（多義でない語に「:1/1:1/1」の付加は行う）
+
 2007-10-17  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* ExtractSynfromDic/scripts/x4syn.pl
