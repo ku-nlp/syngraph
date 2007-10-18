@@ -102,9 +102,9 @@ exe="perl check_dic_web_news_duplicate.pl --dic=$SIM_M_DIR/synonym_dic.txt.merge
 echo $exe
 eval $exe
 
-# 辞書を変換（多義性の扱い）
+# 辞書を整形(多義でない語に「:1/1:1/1」を付与、ひらがな２文字以下削除、半角を全角に)
 # 今は同義グループの連結をしない
-exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --log=$SIM_C_DIR/change.log"
+exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
 echo $exe
 eval $exe
 
