@@ -1,3 +1,8 @@
+2007-10-19  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm
+	ノードのログ作成部分を関数化
+
 2007-10-18  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/change_dic.pl, merge_dic.sh
