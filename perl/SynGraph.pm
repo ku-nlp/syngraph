@@ -828,7 +828,7 @@ sub _regnode {
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
-			$log = $this->make_isanode_log($newid, $pid);
+			$log = $this->make_relnode_log($newid, $pid, $this->{log_isa}, "parent");
 		    }
 
 		    $this->_regnode({ref            => $ref,
@@ -872,7 +872,7 @@ sub _regnode {
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
-			$log = $this->make_antnode_log($newid, $aid);
+			$log = $this->make_relnode_log($newid, $aid, $this->{log_antonym}, "antonym");
 		    }
 		    
 		    $this->_regnode({ref            => $ref,
@@ -1346,84 +1346,57 @@ sub make_synnode_log {
     return $result;
 }
 
-sub make_isanode_log {
-    my ($this, $newid, $pid) = @_;
+sub make_relnode_log {
+    my ($this, $newid, $rid, $log_reldata, $type) = @_;
     my $log;
 
-    my ($parentword) = $pid =~ /s\d+:([^\/]+)/;
-    my ($childword) = $newid->{id} =~ /s\d+:([^\/]+)/;
-    $log = "log : $newid->{midasi} = $parentword\n";
+    my ($orig_word) = $newid->{id} =~ /s\d+:([^\/]+)/;
+    my ($rel_word) = $rid =~ /s\d+:([^\/]+)/;
+    if ($type eq "parent") {
+	$log = "log : $newid->{midasi} = $rel_word\n";
+    }
+    elsif ($type eq "antonym") {
+	$log = "log : $newid->{midasi} <=> $rel_word\n";
+    }
     if ($newid->{log}) {
 	foreach (split(/\n/, $newid->{log})){
 	    next if $_ =~ /^log/;
 	    $log .= "$_\n";
 	}
     }
-    my @plog;
-    if ($this->{log_isa}) {
-	foreach (split(/\|/, $this->GetValue($this->{log_isa}{"$newid->{id}-$pid"}))) {
-	    my ($child_bridge, $parent_bridge) = split(/→/, $_);
-	    my $childside = (($child_bridge eq $childword) ? "$childword" : "$childword = $child_bridge")."(\@$newid->{id})";
-	    my $parentside = (($parent_bridge eq $parentword) ? "$parentword" : "$parent_bridge = $parentword")."(\@$pid)";
-	    push @plog, "$childside => $parentside";
+    if ($log_reldata) {
+	my @rlog;
+	my $key = "$newid->{id}-$rid";
+	if ($this->GetValue($log_reldata->{$key})) {
+	    foreach (split(/\|/, $this->GetValue($log_reldata->{$key}))) {
+		my ($orig_bridge, $rel_bridge);
+		if ($type eq "parent") {
+		    ($orig_bridge, $rel_bridge) = split(/→/, $_);
+		}
+		elsif ($type eq "antonym") {
+		    ($orig_bridge, $rel_bridge) = split(/-/, $_);
+		}
+		my $origside = (($orig_bridge eq $orig_word) ? "$orig_word" : "$orig_word = $orig_bridge")."(\@$newid->{id})";
+		my $relside = (($rel_bridge eq $rel_word) ? "$rel_word" : "$rel_bridge = $rel_word")."(\@$rid)";
+		if ($type eq "parent") {
+		    push @rlog, "$origside => $relside";
+		}
+		elsif ($type eq "antonym") {
+		    push @rlog, "$origside <=> $relside";
+		}
+	    }
 	}
 	my $flag;
-	foreach (@plog) {
+	foreach (@rlog) {
 	    unless ($flag) {
-		$log .= "parent : $_";
+		$log .= "$type : $_";
 		$flag = 1;
 	    }
 	    else {
 		$log .= " or $_";
 	    }
-			    }
+	}
 	$log .= "\n";
-    }
-    
-    return $log;
-}
-
-sub make_antnode_log {
-    my ($this, $newid, $aid) = @_;
-    my $log;
-
-    my ($word1) = $newid->{id} =~ /s\d+:([^\/]+)/;
-    my ($word2) = $aid =~ /s\d+:([^\/]+)/;
-    $log = "log : $newid->{midasi} <=> $word2\n";
-    if ($newid->{log}) {
-	foreach (split(/\n/, $newid->{log})){
-	    next if $_ =~ /^log/;
-	    $log .= "$_\n";
-	}
-    }
-    if ($this->{log_antonym}) {
-	my @alog;
-	if ($this->{log_antonym}{"$newid->{id}-$aid"}) {
-	    foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$newid->{id}-$aid"}))) {
-		my ($word1_bridge, $word2_bridge) = split(/-/, $_);
-		my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
-		my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
-		push @alog, "$word1_side <=> $word2_side";
-	    }
-	}
-	if ($this->{log_antonym}{"$aid-$newid->{id}"}) {
-	    foreach (split(/\|/, $this->GetValue($this->{log_antonym}{"$aid-$newid->{id}"}))) {
-		my ($word2_bridge, $word1_bridge) = split(/-/, $_);
-		my $word1_side = (($word1_bridge eq $word1) ? "$word1" : "$word1 = $word1_bridge")."(\@$newid->{id})";
-		my $word2_side = (($word2_bridge eq $word2) ? "$word2" : "$word2_bridge = $word2")."(\@$aid)";
-		push @alog, "$word1_side <=> $word2_side" if (!grep("$word1_side <=> $word2_side" eq $_, @alog));
-	    }
-	}
-	my $alog_str;
-	foreach (@alog) {
-	    if ($alog_str) {
-		$alog_str .= " or $_";
-	    }
-	    else {
-		$alog_str .= "antonym : $_";
-	    }
-	}
-	$log .= "$alog_str\n";
     }
     
     return $log;
