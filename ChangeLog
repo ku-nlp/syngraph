@@ -1,7 +1,7 @@
 2007-10-24  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
 
-	* scripts/conv_syndb.pl, syndb/cgi/log_antonym.cdb
-	ログデータベースの内容をちょっと変更	
+	* scripts/conv_syndb.pl, syndb/cgi/log_antonym.cdb, cgi/index.cgi
+	ログデータベースの内容をちょっと変更
 	
 	* perl/SynGraph.pm
 	ログ表示関数の共通部分を整理
