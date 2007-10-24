@@ -147,7 +147,7 @@ if ($opt{isa}) {
 
 	foreach my $child_synid (@$childsyn_list) {
 	    foreach my $parent_synid (@$parentsyn_list) {
-		$rel_synid{$child_synid}->{$parent_synid} = $number if $rel_synid{$child_synid}->{$parent_synid} < $number; # 最大数を記録,要相談
+		$rel_synid{$child_synid}->{$parent_synid} = $number if ((!defined $rel_synid{$child_synid}->{$parent_synid}) or ($rel_synid{$child_synid}->{$parent_synid} < $number)); # 最大数を記録,要相談
 		# 上位下位のログ
 		if ($option{log}) {
 		    my $key_p = (split(/:/, $parent))[0];
@@ -205,17 +205,15 @@ if ($opt{antonym}) {
 
 	foreach my $word1_synid (@$word1syn_list) {
 	    foreach my $word2_synid (@$word2syn_list) {
-		$antonym{$word1_synid} .= $antonym{$word1_synid} ? "|$word2_synid" : $word2_synid unless ($antonym{$word1_synid} =~ /$word2_synid/);
-		$antonym{$word2_synid} .= $antonym{$word2_synid} ? "|$word1_synid" : $word1_synid unless ($antonym{$word2_synid} =~ /$word1_synid/);
+		$antonym{$word1_synid} .= $antonym{$word1_synid} ? "|$word2_synid" : "$word2_synid" unless ($antonym{$word1_synid} =~ /$word2_synid/);
+		$antonym{$word2_synid} .= $antonym{$word2_synid} ? "|$word1_synid" : "$word1_synid" unless ($antonym{$word2_synid} =~ /$word1_synid/);
 
 		# 反義関係のログ
 		if ($option{log}) {
-		    my $key_1 = (split(/:/, $word1))[0];
-		    $key_1 = (split(/\//, $word1))[0];
-		    my $key_2 = (split(/:/, $word2))[0];
-		    $key_2 = (split(/\//, $word2))[0];
+		    my $key_1 = (split(/\//, $word1))[0];
+		    my $key_2 = (split(/\//, $word2))[0];
 		    $log_antonym{"$word1_synid-$word2_synid"} .= $log_antonym{"$word1_synid-$word2_synid"} ? "|$key_1-$key_2" : "$key_1-$key_2" unless $log_antonym{"$word1_synid-$word2_synid"} =~ /$key_1-$key_2/;
-#		    $log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
+		    $log_antonym{"$word2_synid-$word1_synid"} .= $log_antonym{"$word2_synid-$word1_synid"} ? "|$key_2-$key_1" : "$key_2-$key_1" unless $log_antonym{"$word2_synid-$word1_synid"} =~ /$key_2-$key_1/;
 		}
 	    }
 	}
