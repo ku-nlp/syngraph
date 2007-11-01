@@ -509,10 +509,10 @@ sub _get_keywords {
 	# 格 case->{係り元のid}{係り先のid} = '〜格'
 	# <格解析結果:書く/かく:動1:ガ/C/彼/0/0/?;ヲ/N/本/2/0/?;ニ/U/-/-/-/-;ト/U/-/-/-/-;デ/U/-/-/-/-;カラ/U/-/-/-/-;マデ/U/-/-/-/-;φ/U/-/-/-/-;時間/U/-/-/-/-;外の関係/U/-/-/-/-;ノ/U/-/-/-/-;ニツク/U/-/-/-/->
 	if($tag->{fstring} =~ /\<格解析結果:(.+?):(.+?):([PC]\d+:)?(.+?)\>/) {
-	    foreach my $node_case (split(/;/, $4)){
-		# 要修正
-		push (my @node_case_feature, split(/\//, $node_case));
-		$case->{$node_case_feature[3]}{$tag->{id}} = $node_case_feature[0] unless ($node_case_feature[3] =~ /-/);
+	    foreach my $str (split(/;/, $4)){
+		my ($case_tmp, $type, $hyouki, $tid, $sid) = split(/\//, $str);
+
+		$case->{$tid}{$tag->{id}} = $case_tmp if ($tid ne '-');
 	    }
 	}
 
