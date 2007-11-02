@@ -179,7 +179,13 @@ sub make_tree {
 	    if ($option->{log}) {
 		$log = $this->make_basicnode_log($node);
 	    }
-	    
+
+	    foreach my $type ('kakari_type', 'level', 'midasi') {
+		$tree_ref->{$sid}[$bp_num]{$type} = $node->{$type} if $node->{$type};
+	    }
+
+	    $tree_ref->{$sid}[$bp_num]{parentbp} = $node->{parent} if $node->{parent};
+
 	    # SYNGRAPHに登録
             $this->_regnode({ref         => $tree_ref,
                              sid         => $sid,
@@ -187,17 +193,13 @@ sub make_tree {
                              id          => $node->{name},
 			     log         => $log,
                              fuzoku      => $node->{fuzoku},
-			     midasi      => $node->{midasi},
                              childbp     => $node->{child},
-			     parentbp    => $node->{parent},
-			     kakari_type => $node->{kakari_type},
 			     case        => $node->{case},
                              kanou       => $node->{kanou},
 			     sonnkei     => $node->{sonnkei},
                              ukemi       => $node->{ukemi},
 			     shieki      => $node->{shieki},
 			     negation    => $node->{negation},
-			     level       => $node->{level},
                              score       => 1,
                              weight      => $weight});
         }
@@ -213,7 +215,7 @@ sub make_bp {
     my %synnode_check;
 
     # 各SYNノードをチェック
-    foreach my $node (@{$ref->{$sid}[$bp]}) {
+    foreach my $node (@{$ref->{$sid}[$bp]{nodes}}) {
         next if ($node->{weight} == 0);
 
 	# キャッシュしておく
@@ -263,18 +265,14 @@ sub make_bp {
 				 id             => $synid2,
 				 log            => $log,
 				 fuzoku         => $nodefac->{fuzoku},
-				 midasi         => $nodefac->{midasi},
 				 matchbp        => $nodefac->{matchbp},
 				 childbp        => $nodefac->{childbp},
-				 parentbp       => $nodefac->{parentbp},
-				 kakari_type    => $nodefac->{kakari_type},
 				 case           => $nodefac->{case},
 				 kanou          => $nodefac->{kanou},
 				 sonnkei        => $nodefac->{sonnkei},
 				 ukemi          => $nodefac->{ukemi},
 				 shieki         => $nodefac->{shieki},
 				 negation       => $nodefac->{negation},
-				 level          => $nodefac->{level}, 
 				 score          => $nodefac->{score} * $synonym_penalty,
 				 weight         => $nodefac->{weight},
 				 relation       => $nodefac->{relation},
@@ -414,18 +412,14 @@ sub st_make_bp {
 				     id             => $stid,
 				     log            => $log,
 				     fuzoku         => $nodefac->{fuzoku},
-				     midasi         => $nodefac->{midasi},
 				     matchbp        => $nodefac->{matchbp},
 				     childbp        => $nodefac->{childbp},
-				     parentbp       => $nodefac->{parentbp},
-				     kakari_type    => $nodefac->{kakari_type},
 				     case           => $nodefac->{case},
 				     kanou          => $nodefac->{kanou},
 				     sonnkei        => $nodefac->{sonnkei},
 				     ukemi          => $nodefac->{ukemi},
 				     shieki         => $nodefac->{shieki},
 				     negation       => $nodefac->{negation},
-				     level          => $nodefac->{level}, 
 				     score          => $nodefac->{score} * $synonym_penalty,
 				     weight         => $nodefac->{weight},
 				     not_synnode    => 1
@@ -733,15 +727,12 @@ sub _regnode {
     my $midasi                = $args_hash->{midasi};
     my $matchbp               = $args_hash->{matchbp};
     my $childbp               = $args_hash->{childbp};
-    my $parentbp              = $args_hash->{parentbp};
-    my $kakari_type           = $args_hash->{kakari_type};
     my $case                  = $args_hash->{case};
     my $kanou                 = $args_hash->{kanou};
     my $sonnkei               = $args_hash->{sonnkei};
     my $ukemi                 = $args_hash->{ukemi};
     my $shieki                = $args_hash->{shieki};
     my $negation              = $args_hash->{negation};
-    my $level                 = $args_hash->{level};
     my $score                 = $args_hash->{score};
     my $weight                = $args_hash->{weight};
     my $relation              = $args_hash->{relation};
@@ -758,14 +749,13 @@ sub _regnode {
     if ($score >= $regnode_threshold or ($this->{mode} =~ /irex/ and $weight == 0)) {
         # 既にそのIDが登録されていないかチェック
         if ($ref->{$sid}[$bp]) {
-            foreach my $i (@{$ref->{$sid}[$bp]}) {
+            foreach my $i (@{$ref->{$sid}[$bp]{nodes}}) {
                 if ($i->{id}        eq $id and
                     $i->{kanou}     == $kanou and
                     $i->{sonnkei}   == $sonnkei and
 		    $i->{ukemi}     == $ukemi and
 		    $i->{shieki}    == $shieki and
                     $i->{negation}  == $negation and
-                    $i->{level}     == $level and
                     $i->{weight}    == $weight) {
                     if ($i->{score} < $score) {
                         $i->{score} = $score;
@@ -783,14 +773,11 @@ sub _regnode {
         $newid->{id} = $id;
         $newid->{log} = $log if ($log);
         $newid->{fuzoku} = $fuzoku if ($fuzoku);
-	$newid->{midasi} = $midasi if ($midasi);
         if ($childbp) {
 	    foreach my $c (keys %{$childbp}) {
 		$newid->{childbp}{$c} = 1;
 	    }
 	}
-	$newid->{parentbp} = $parentbp if ($parentbp);
-	$newid->{kakari_type} = $kakari_type if ($kakari_type);
 	$newid->{case} = $case if ($case);
         if ($matchbp) {
             foreach my $m (keys %{$matchbp}) {
@@ -802,7 +789,6 @@ sub _regnode {
 	$newid->{ukemi}    = $ukemi if ($ukemi);
 	$newid->{shieki}   = $shieki if ($shieki);
 	$newid->{negation} = $negation if ($negation);
-        $newid->{level}    = $level if ($level);
         $newid->{score}    = $score;
         $newid->{weight}   = $weight;
         $newid->{relation} = $relation if ($relation);
@@ -810,7 +796,7 @@ sub _regnode {
         $newid->{wnum}     = $wnum if($wnum);
         $newid->{antonym}  = $antonym if ($antonym);
 	$newid->{not_synnode} = $not_synnode if ($not_synnode);
-        push(@{$ref->{$sid}[$bp]}, $newid);
+        push(@{$ref->{$sid}[$bp]{nodes}}, $newid);
 
 	# 上位IDがあれば登録(ただし上位語の上位語や、反義語の上位語は登録しない)
 	if ($regnode_option->{relation} and $relation != 1 and $antonym != 1 and !$not_synnode){
@@ -828,7 +814,7 @@ sub _regnode {
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
-			$log = $this->make_relnode_log($newid, $pid, $this->{log_isa}, "parent");
+			$log = $this->make_relnode_log($newid, $pid, $this->{log_isa}, $midasi, 'parent');
 		    }
 
 		    $this->_regnode({ref            => $ref,
@@ -840,15 +826,12 @@ sub _regnode {
 				     midasi         => $midasi,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
-				     parentbp       => $parentbp,
-				     kakari_type    => $kakari_type,
 				     case           => $case,
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     shieki         => $shieki,
 				     negation       => $negation,
-				     level          => $level,
 				     score          => $score * $relation_penalty,
 				     weight         => $weight,
 				     regnode_option => $regnode_option,
@@ -872,7 +855,7 @@ sub _regnode {
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
-			$log = $this->make_relnode_log($newid, $aid, $this->{log_antonym}, "antonym");
+			$log = $this->make_relnode_log($newid, $aid, $this->{log_antonym}, $midasi, 'antonym');
 		    }
 		    
 		    $this->_regnode({ref            => $ref,
@@ -884,15 +867,12 @@ sub _regnode {
 				     midasi         => $midasi,
 				     matchbp        => $matchbp,
 				     childbp        => $childbp,
-				     parentbp       => $parentbp,
-				     kakari_type    => $kakari_type,
 				     case           => $case,
 				     kanou          => $kanou,
 				     sonnkei        => $sonnkei,
 				     ukemi          => $ukemi,
 				     shieki         => $shieki,
 				     negation       => $negation ^ 1,
-				     level          => $level,
 				     score          => $score * $antonym_penalty,
 				     weight         => $weight,
 				     regnode_option => $regnode_option,
@@ -934,14 +914,14 @@ sub syngraph_matching {
 
     # BP内でマッチするノードを探す
     my $nodenum1 = -1;
-    foreach my $node_1 (@{$graph_1->[$nodebp_1]}) {
+    foreach my $node_1 (@{$graph_1->[$nodebp_1]{nodes}}) {
 	$nodenum1++;
 
 	# スコアが低いものは調べない。
         next if ($node_1->{score} < $matchnode_score);
 
 	my $nodenum2 = -1;
-        foreach my $node_2 (@{$graph_2->[$nodebp_2]}) {
+        foreach my $node_2 (@{$graph_2->[$nodebp_2]{nodes}}) {
 	    $nodenum2++;
 	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
@@ -1056,7 +1036,7 @@ sub syngraph_matching {
 
 		# マッチする子がなかったらマッチ失敗
 		unless ($match_flag) {
-		    $result->{$nodebp_2}{unmatch} = "child_unmatch:$graph_2->[$child_2][0]{midasi}";
+		    $result->{$nodebp_2}{unmatch} = "child_unmatch:$graph_2->[$child_2]{midasi}";
 		    $this->{matching} = 'unmatch';
 		    return $result;
 		}
@@ -1108,12 +1088,12 @@ sub get_nodefac {
 			    $nodefac->{$type} = 1;
 			}
 			else {
-			    if ($graph2->[$bp2][$nodenum2]{$type}) { # 引き継げない
+			    if ($graph2->[$bp2]{nodes}[$nodenum2]{$type}) { # 引き継げない
 				$this->{matching} = 'unmatch';
 				return;
 			    }
 			    else {
-				$nodefac->{$type} = $graph1->[$bp1][$nodenum1]{$type};
+				$nodefac->{$type} = $graph1->[$bp1]{nodes}[$nodenum1]{$type};
 			    }			    
 			}
 		    }
@@ -1125,10 +1105,6 @@ sub get_nodefac {
 		    $nodefac->{negation} = 1 if ($mres->{$matchkey}{type_unmatch}{negation});
 		}
 	    }
-
-	    # SYNノードのその他の要素
-	    $nodefac->{parentbp} = $graph1->[$bp1][$nodenum1]{parentbp};
-	    $nodefac->{kakari_type} = $graph1->[$bp1][$nodenum1]{kakari_type};
 	}
 
 	# その他での処理
@@ -1138,8 +1114,8 @@ sub get_nodefac {
 		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
 		    # 格がなければダメ
 		    if ($type eq 'case') {
-			next if (!$graph1->[$bp1][$nodenum1]{$type}
-				 or !$graph2->[$bp2][$nodenum2]{$type});
+			next if (!$graph1->[$bp1]{nodes}[$nodenum1]{$type}
+				 or !$graph2->[$bp2]{nodes}[$nodenum2]{$type});
 		    }
 		    # fuzoku_cut オプションがあり、付属語に不一致があった場合はダメ
 		    elsif ($type eq 'fuzoku' and $option->{fuzoku_cut}) {
@@ -1158,15 +1134,15 @@ sub get_nodefac {
 	push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
 
 	# 関係フラグ
-	$nodefac->{relation} = 1 if ($graph1->[$bp1][$nodenum1]{relation} or $graph2->[$bp2][$nodenum2]{relation});
-	$nodefac->{antonym} = 1 if ($graph1->[$bp1][$nodenum1]{antonym} or $graph2->[$bp2][$nodenum2]{antonym});
+	$nodefac->{relation} = 1 if ($graph1->[$bp1]{nodes}[$nodenum1]{relation} or $graph2->[$bp2]{nodes}[$nodenum2]{relation});
+	$nodefac->{antonym} = 1 if ($graph1->[$bp1]{nodes}[$nodenum1]{antonym} or $graph2->[$bp2]{nodes}[$nodenum2]{antonym});
 
 	# MTのアライメント用
 	if ($mode eq 'MT') {
 	    my @match1 = split(/,/, $mres->{$matchkey}{matchbp1});
 	    my @match2 = split(/,/, $mres->{$matchkey}{matchbp2});
 	    push(@{$nodefac->{match}}, {graph_1 => \@match1, graph_2 => \@match2});
-	    push(@{$nodefac->{matchpair}}, {graph_1 => $graph1->[$bp1][$nodenum1]{midasi} , graph_2 => $graph2->[$bp2][$nodenum2]{midasi}});
+	    push(@{$nodefac->{matchpair}}, {graph_1 => $graph1->[$bp1]{midasi} , graph_2 => $graph2->[$bp2]{midasi}});
 	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1][$nodenum1]{id}, graph_2 => $graph2->[$bp2][$nodenum2]{id}});
 	}
     }
@@ -1178,10 +1154,10 @@ sub get_nodefac {
     # SYNノードのその他の要素
     my @match_sort = sort @match;
     foreach my $matchbp1 (@match_sort) {
-	$nodefac->{midasi} .= $graph1->[$matchbp1][0]{midasi};	
-	$nodefac->{weight} += $graph1->[$matchbp1][0]{weight};
-	if ($graph1->[$matchbp1][0]{childbp}) {
-	    foreach my $childbp1 (keys %{$graph1->[$matchbp1][0]{childbp}}) {
+	$nodefac->{midasi} .= $graph1->[$matchbp1]{midasi};	
+	$nodefac->{weight} += $graph1->[$matchbp1]{nodes}[0]{weight};
+	if ($graph1->[$matchbp1]{nodes}[0]{childbp}) {
+	    foreach my $childbp1 (keys %{$graph1->[$matchbp1]{nodes}[0]{childbp}}) {
 		push (@child, $childbp1) unless grep($childbp1 eq $_, @match);
 	    }
 	}
@@ -1280,12 +1256,12 @@ sub make_synnode_log {
     foreach (sort {$a <=> $b} keys %{$mres}) {
 	my ($bp1, $num1) = split(/-/, $mres->{$_}{nodedata1});
 	my ($bp2, $num2) = split(/-/, $mres->{$_}{nodedata2});
-	$expression_orig .= $graph1->[$bp1][$num1]{midasi};
+	$expression_orig .= $graph1->[$bp1]{midasi};
 	
 	# マッチした表現からDBの中の表現まで
 	my $tmp2;
-	if ($graph2->[$bp2][$num1]{log}) {
-	    my @array = split(/\n/, $graph2->[$bp2][$num2]{log});
+	if ($graph2->[$bp2]{nodes}[$num1]{log}) {
+	    my @array = split(/\n/, $graph2->[$bp2]{nodes}[$num2]{log});
 	    for (my $num = @array - 1; $num > -1; $num--) {
 		next if $array[$num] =~ /^log/;
 		if ($array[$num] =~ s/^synonym :([^=]+)=([^\(]+)//) {
@@ -1299,8 +1275,8 @@ sub make_synnode_log {
 
 	# 入力の表現からマッチした表現まで
 	my $tmp1;
-	if ($graph1->[$bp1][$num1]{log}) {
-	    foreach (split(/\n/, $graph1->[$bp1][$num1]{log})) {
+	if ($graph1->[$bp1]{nodes}[$num1]{log}) {
+	    foreach (split(/\n/, $graph1->[$bp1]{nodes}[$num1]{log})) {
 		next if $_ =~ /^log/;
 		$tmp1 .= "$_\n";
 	    }
@@ -1347,7 +1323,7 @@ sub make_synnode_log {
 }
 
 sub make_relnode_log {
-    my ($this, $newid, $rid, $log_reldata, $type) = @_;
+    my ($this, $newid, $rid, $log_reldata, $midasi, $type) = @_;
     my $log;
 
     my ($orig_word) = $newid->{id} =~ /s\d+:([^\/]+)/;
@@ -1416,8 +1392,8 @@ sub st_make_log {
 	my ($bp2, $num2) = split(/-/, $mres->{$_}{nodedata2});
 	
 	# マッチした表現
-	$expression_orig .= $graph1->[$bp1][$num1]{midasi};
-	$expression_exam .= $graph2->[$bp2][$num2]{midasi};
+	$expression_orig .= $graph1->[$bp1]{midasi};
+	$expression_exam .= $graph2->[$bp2]{midasi};
 
 	# マッチしたノードのID
 	$id_orig .= " + " if ($id_orig);
@@ -1475,7 +1451,7 @@ sub format_syngraph {
 
     # !!の数
     for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
-	foreach my $node (@{$syngraph->[$bp_num]}) { # ノード単位
+	foreach my $node (@{$syngraph->[$bp_num]{nodes}}) { # ノード単位
 	    # ノードの対応する基本句番号
 	    my $matchbp;
 	    foreach (sort {$a <=> $b} ($node->{matchbp} ? (keys %{$node->{matchbp}}, $bp_num) : ($bp_num))) {
@@ -1490,7 +1466,7 @@ sub format_syngraph {
     # 出力生成
     for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
 	my $res;
-	foreach my $node (@{$syngraph->[$bp_num]}) { # ノード単位
+	foreach my $node (@{$syngraph->[$bp_num]{nodes}}) { # ノード単位
 
 	    # ノードの対応する基本句番号
 	    my $matchbp;
@@ -1502,8 +1478,8 @@ sub format_syngraph {
 
 		# 親
 		my $parent;
-		if ($syn_bp->{$node->{parentbp}}) {
-		    foreach my $parentbp (keys %{$syn_bp->{$node->{parentbp}}}) {
+		if ($syn_bp->{$syngraph->[$bp_num]{parentbp}}) {
+		    foreach my $parentbp (keys %{$syn_bp->{$syngraph->[$bp_num]{parentbp}}}) {
 			# 親ノードとして正しいかチェック
 			my $flag;
 			foreach my $a (split(/,/, $parentbp)) {
@@ -1522,11 +1498,11 @@ sub format_syngraph {
 
 		}
 		else { # 親が-1
-		    $parent = $node->{parentbp};
+		    $parent = $syngraph->[$bp_num]{parentbp};
 		}
 
 		# !!行の出力を格納
-		$res->{$matchbp} = "!! $matchbp $parent$node->{kakari_type} <見出し:$node->{midasi}>";
+		$res->{$matchbp} = "!! $matchbp $parent$syngraph->[$bp_num]{kakari_type} <見出し:$syngraph->[$bp_num]{midasi}>";
 		$res->{$matchbp} .= "<格解析結果:$node->{case}格>" if ($node->{case});
 		$res->{$matchbp} .= "\n";
 	    }
