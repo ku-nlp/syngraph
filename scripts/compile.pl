@@ -42,7 +42,7 @@ while (my $knp_result = $sgh->read_parsed_data) {
 
     # 文末BPのノードから文IDへのテーブル
     if ($sgh->{syndata}->{$sid}) {
-        foreach my $node (@{$sgh->{syndata}->{$sid}->[(@{$sgh->{syndata}->{$sid}}-1)]}) {
+        foreach my $node (@{$sgh->{syndata}->{$sid}->[(@{$sgh->{syndata}->{$sid}}-1)]{nodes}}) {
             if ($node->{id}) {
 		$sgh->{synhead}{$node->{id}} .= $sgh->{synhead}{$node->{id}} ? "|$sid" : $sid unless ($sgh->{synhead}{$node->{id}} =~ /$sid/);
             }
