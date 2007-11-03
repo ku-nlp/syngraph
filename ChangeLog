@@ -1,3 +1,8 @@
+2007-11-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi:
+	辞書検索へのリンクをはるときに、辞書にない語はリンクをはらないように変更
+
 2007-11-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/syndata.mldbm, syndb/x86_64/syndata.mldbm, syndb/i686/syndata.mldbm:
