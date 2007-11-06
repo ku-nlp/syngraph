@@ -1,3 +1,7 @@
+2007-11-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: SynIDに属する単語の配列を返すAPIを作成(for TSUBAKI)
+
 2007-11-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi:
