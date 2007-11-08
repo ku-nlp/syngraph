@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+# $Id$
+
 # syndataをprintするスクリプト
 
 # usage: perl -I../perl print_syndata.pl ../syndb/i686/syndata.mldbm
@@ -30,7 +32,7 @@ foreach my $key ( sort { $a cmp $b } keys %db) {
 	my @ids;
 
 	# 基本ノードとSynノード
-	foreach my $node (@{$bp}) {
+	foreach my $node (@{$bp->{nodes}}) {
 	    push @ids, $node->{id};
 	}
 	print ' ', join('|', @ids), "\n";
