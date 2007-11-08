@@ -1,3 +1,10 @@
+2007-11-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/print_syndata.pl: SynGraphデータ構造の変更に伴う更新
+
+	* syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm:
+	Jumanの更新に伴う更新
+
 2007-11-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi: SynIDに属する単語の配列を返すAPIを作成(for TSUBAKI)
