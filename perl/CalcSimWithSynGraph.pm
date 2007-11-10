@@ -12,9 +12,23 @@ use SynGraph;
 # コンストラクタ
 #
 sub new {
-    my ($this) = @_;
+    my ($this, $option) = @_;
 
-    $this = {};
+    # DBの場所指定
+    my $syndbdir;
+    if ($option->{syndbdir}) {
+	$syndbdir = $option->{syndbdir} . (!$option->{orchid} ?  'i686' : 'x86_64');
+    }
+    else {
+	$syndbdir = !$option->{orchid} ?  '../syndb/i686' : '../syndb/x86_64';
+    }
+    
+    # 各種option
+    my $knp_option; 
+    $knp_option->{no_case} = 1 if $option->{no_case};
+    $knp_option->{postprocess} = 1 if $option->{postprocess};
+
+    $this = { sgh => new SynGraph($syndbdir, $knp_option)};
 
     bless $this;
 
@@ -25,28 +39,22 @@ sub new {
 sub Match {
     my ($this, $id, $str1, $str2, $option) = @_;
 
-    my $syndbdir = !$option->{orchid} ?  '../syndb/i686' : '../syndb/x86_64';
-    my $knp_option; 
+    # 各種option
     my $regnode_option;
     my $matching_option;
-    my $matching_option;
-    $knp_option->{no_case} = 1 if $option->{no_case};
-    $knp_option->{postprocess} = 1 if $option->{postprocess};
     $regnode_option->{relation} = 1 if $option->{relation};
     $regnode_option->{antonym} = 1 if $option->{antonym};
     $regnode_option->{hypocut_attachnode} = $option->{hypocut_attachnode} if $option->{hypocut_attachnode};
     $matching_option->{coordinate_matching} = 1 if $option->{coordinate_matching};
     $matching_option->{hypocut_matching} = $option->{hypocut_matching} if $option->{hypocut_matching};
 
-    my $sgh = new SynGraph($syndbdir, $knp_option);    
-
     my $sid1 = "$id-1";
     my $sid2 = "$id-2";
     
     # SYNGRAPHを作成
     my $ref={};
-    $sgh->make_sg($str1, $ref, $sid1, $regnode_option, $option);
-    $sgh->make_sg($str2, $ref, $sid2, $regnode_option, $option);
+    $this->{sgh}->make_sg($str1, $ref, $sid1, $regnode_option, $option);
+    $this->{sgh}->make_sg($str2, $ref, $sid2, $regnode_option, $option);
     Dumpvalue->new->dumpValue($ref) if $option->{debug};
 
     my $graph_1 = $ref->{$sid1};
@@ -56,9 +64,10 @@ sub Match {
     
     # SYNGRAPHのマッチング
     # garaph_1は部分、graph_2は完全マッチング
-    my $result = $sgh->syngraph_matching($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
-    
-    my $nodefac = $sgh->get_nodefac('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
+    my $result = $this->{sgh}->syngraph_matching($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
+    return if $this->{sgh}->{matching} eq 'unmatch';
+    my $nodefac = $this->{sgh}->get_nodefac('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
+    return if $this->{sgh}->{matching} eq 'unmatch';
 
     if ($option->{debug} and $nodefac ne 'unmatch') {
 	print "SYNGRAPHマッチング結果\n";

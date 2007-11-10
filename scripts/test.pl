@@ -27,7 +27,6 @@ if ($ARGV[0] && $ARGV[1]) {
 # my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');
 # my ($zenbun, $query) = ('彼に向かわせる', '彼が向かう');
 
-my $calcsim = new CalcSimWithSynGraph;
 my $option;
 $option->{debug} = 1 if $opt{debug};
 $option->{orchid} = 1 if $opt{orchid};
@@ -39,6 +38,7 @@ $option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachn
 $option->{coordinate_matching} = 1 if $opt{coordinate_matching};
 $option->{hypocut_matching} = $opt{hypocut_matching} if $opt{hypocut_matching};
 
+my $calcsim = new CalcSimWithSynGraph($option);
 my $result = $calcsim->Match(1, $zenbun, $query, $option);
 
 if ($result eq 'unmatch') {
