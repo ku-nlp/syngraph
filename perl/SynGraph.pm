@@ -1143,7 +1143,7 @@ sub get_nodefac {
 	    my @match2 = split(/,/, $mres->{$matchkey}{matchbp2});
 	    push(@{$nodefac->{match}}, {graph_1 => \@match1, graph_2 => \@match2});
 	    push(@{$nodefac->{matchpair}}, {graph_1 => $graph1->[$bp1]{midasi} , graph_2 => $graph2->[$bp2]{midasi}});
-	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1][$nodenum1]{id}, graph_2 => $graph2->[$bp2][$nodenum2]{id}});
+	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1]{node}[$nodenum1]{id}, graph_2 => $graph2->[$bp2]{node}[$nodenum2]{id}});
 	}
     }
 
