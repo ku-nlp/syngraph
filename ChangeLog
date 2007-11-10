@@ -1,3 +1,8 @@
+2007-11-11  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/CalcSimWithSynGraph.pm, scripts/test.pl
+	DBの位置を外から指定できるように変更。動いていなかったのを修正
+
 2007-11-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/print_syndata.pl: SynGraphデータ構造の変更に伴う更新
