@@ -943,7 +943,7 @@ sub syngraph_matching {
 		foreach my $type (@types) {
 		    if ($node_1->{$type} ne $node_2->{$type}) {
 			$unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
-			$unmatch_num +=1;
+			$unmatch_num++;
 		    }
 		}
 
@@ -1007,7 +1007,7 @@ sub syngraph_matching {
 	    
 	    # graph_1の子の数よりgraph_2の子の数の方が多い場合はマッチ失敗
 	    if (@childbp_1 < @childbp_2) {
-		$result->{$nodebp_2}{unmatch} = "child_less";
+		$result->{$nodebp_2}{unmatch} = 'child_less';
 		$this->{matching} = 'unmatch';
 		return $result;
 	    }
@@ -1046,7 +1046,7 @@ sub syngraph_matching {
 
 	# graph_1に子がない場合はマッチ失敗
 	else {
-	    $result->{$nodebp_2}{unmatch} = "child_less";
+	    $result->{$nodebp_2}{unmatch} = 'child_less';
 	    $this->{matching} = 'unmatch';
 	    return $result;
 	}
@@ -1152,9 +1152,8 @@ sub get_nodefac {
     $nodefac->{score} = $score / $num;
 
     # SYNノードのその他の要素
-    my @match_sort = sort @match;
-    foreach my $matchbp1 (@match_sort) {
-	$nodefac->{midasi} .= $graph1->[$matchbp1]{midasi};	
+    foreach my $matchbp1 (sort @match) {
+	$nodefac->{midasi} .= $graph1->[$matchbp1]{midasi};
 	$nodefac->{weight} += $graph1->[$matchbp1]{nodes}[0]{weight};
 	if ($graph1->[$matchbp1]{nodes}[0]{childbp}) {
 	    foreach my $childbp1 (keys %{$graph1->[$matchbp1]{nodes}[0]{childbp}}) {
@@ -1198,7 +1197,7 @@ sub OutputSynFormat {
     my $bp = 0;
     foreach my $tag ($result->tag) {
 	# knp解析結果を出力
-	$ret_string .= "+ ";
+	$ret_string .= '+ ';
 	$ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
 	$ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
 	foreach my $mrph ($tag->mrph) {
