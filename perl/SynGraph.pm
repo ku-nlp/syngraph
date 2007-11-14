@@ -901,15 +901,14 @@ sub _regnode {
 sub syngraph_matching {
     my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option) = @_;
     
-    my @types = qw(fuzoku case kanou sonnkei ukemi shieki negation);
     my $matchnode_score = 0;
     my $matchnode_1;
     my $matchnode_2;
     my $matchnodenum1;
     my $matchnodenum2;
     my $matchnode_unmatch;
-    my $matchnode_unmatch_num = @types;
-    
+    my $matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
+
     my $result;
 
     # BP内でマッチするノードを探す
@@ -940,7 +939,7 @@ sub syngraph_matching {
 		# 付属語、要素の違いのチェック
 		my $unmatch;
 		my $unmatch_num;
-		foreach my $type (@types) {
+		foreach my $type (keys %{$penalty}) {
 		    if ($node_1->{$type} ne $node_2->{$type}) {
 			$unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
 			$unmatch_num++;
