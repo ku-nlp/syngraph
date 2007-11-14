@@ -1,5 +1,7 @@
 2007-11-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* cgi/index.cgi: グラフ生成時に、基本ノードに色をつけるように
+
 	* cgi/index.cgi: GraphVizによるグラフ生成を追加
 
 2007-11-13  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
