@@ -1,5 +1,11 @@
 2007-11-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* cgi/index.cgi: グラフ生成時に、上位語などのFeatureを表示するように
+
+	* cgi/index.cgi: インターフェース改善
+
+	* perl/SynGraph.pm: 関数syngraph_matching内で@typesを廃止
+
 	* cgi/index.cgi: グラフ生成時に、基本ノードに色をつけるように
 
 	* cgi/index.cgi: GraphVizによるグラフ生成を追加
