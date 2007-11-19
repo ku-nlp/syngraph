@@ -965,7 +965,7 @@ sub syngraph_matching {
     
     # BPがマッチしない
     if ($matchnode_score == 0){
-	$result->{$nodebp_2}{unmatch} = "no_matchnode";
+	$result->{$nodebp_2}{unmatch_reason} = 'no_matchnode';
 	$this->{matching} = 'unmatch';
 	return $result;
     }
@@ -1006,7 +1006,7 @@ sub syngraph_matching {
 	    
 	    # graph_1の子の数よりgraph_2の子の数の方が多い場合はマッチ失敗
 	    if (@childbp_1 < @childbp_2) {
-		$result->{$nodebp_2}{unmatch} = 'child_less';
+		$result->{$nodebp_2}{unmatch_reason} = 'child_less';
 		$this->{matching} = 'unmatch';
 		return $result;
 	    }
@@ -1035,7 +1035,7 @@ sub syngraph_matching {
 
 		# マッチする子がなかったらマッチ失敗
 		unless ($match_flag) {
-		    $result->{$nodebp_2}{unmatch} = "child_unmatch:$graph_2->[$child_2]{midasi}";
+		    $result->{$nodebp_2}{unmatch_reason} = "child_unmatch:$graph_2->[$child_2]{midasi}";
 		    $this->{matching} = 'unmatch';
 		    return $result;
 		}
@@ -1045,7 +1045,7 @@ sub syngraph_matching {
 
 	# graph_1に子がない場合はマッチ失敗
 	else {
-	    $result->{$nodebp_2}{unmatch} = 'child_less';
+	    $result->{$nodebp_2}{unmatch_reason} = 'child_less';
 	    $this->{matching} = 'unmatch';
 	    return $result;
 	}
