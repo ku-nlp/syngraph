@@ -904,24 +904,24 @@ sub syngraph_matching {
     my $matchnode_score = 0;
     my $matchnode_1;
     my $matchnode_2;
-    my $matchnodenum1;
-    my $matchnodenum2;
+    my $matchnode_index1;
+    my $matchnode_index2;
     my $matchnode_unmatch;
     my $matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
 
     my $result;
 
     # BP内でマッチするノードを探す
-    my $nodenum1 = -1;
+    my $node_index1 = -1;
     foreach my $node_1 (@{$graph_1->[$nodebp_1]{nodes}}) {
-	$nodenum1++;
+	$node_index1++;
 
 	# スコアが低いものは調べない。
         next if ($node_1->{score} < $matchnode_score);
 
-	my $nodenum2 = -1;
+	my $node_index2 = -1;
         foreach my $node_2 (@{$graph_2->[$nodebp_2]{nodes}}) {
-	    $nodenum2++;
+	    $node_index2++;
 	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
 		and $node_1->{id} eq $node_2->{id} 
@@ -954,8 +954,8 @@ sub syngraph_matching {
 		    $matchnode_score = $score;
 		    $matchnode_1 = $node_1;
 		    $matchnode_2 = $node_2;
-		    $matchnodenum1 = $nodenum1;
-		    $matchnodenum2 = $nodenum2;
+		    $matchnode_index1 = $node_index1;
+		    $matchnode_index2 = $node_index2;
 		    $matchnode_unmatch = $unmatch;
 		    $matchnode_unmatch_num = $unmatch_num;
 		}
@@ -977,8 +977,8 @@ sub syngraph_matching {
     $result->{$nodebp_2}{matchbp1} = $matchbp_1;
     $result->{$nodebp_2}{matchbp2} = $matchbp_2;
     # マッチしたノードの情報の居場所
-    $result->{$nodebp_2}{nodedata1} = "$nodebp_1-$matchnodenum1";
-    $result->{$nodebp_2}{nodedata2} = "$nodebp_2-$matchnodenum2";
+    $result->{$nodebp_2}{nodedata1} = "$nodebp_1-$matchnode_index1";
+    $result->{$nodebp_2}{nodedata2} = "$nodebp_2-$matchnode_index2";
     # マッチのスコア,素性の違い
     $result->{$nodebp_2}{score} = $matchnode_score;
     foreach my $type (keys %{$matchnode_unmatch}) {
@@ -1071,8 +1071,8 @@ sub get_nodefac {
     foreach my $matchkey (keys %{$mres}) {
 
 	# マッチしたノード情報のありか
-	my ($bp1, $nodenum1) = split(/-/, $mres->{$matchkey}{nodedata1});
-	my ($bp2, $nodenum2) = split(/-/, $mres->{$matchkey}{nodedata2});
+	my ($bp1, $node_index1) = split(/-/, $mres->{$matchkey}{nodedata1});
+	my ($bp2, $node_index2) = split(/-/, $mres->{$matchkey}{nodedata2});
 
 	# ★headを早く見つけることで高速化可能★odani0529
 	# headでの処理
@@ -1087,12 +1087,12 @@ sub get_nodefac {
 			    $nodefac->{$type} = 1;
 			}
 			else {
-			    if ($graph2->[$bp2]{nodes}[$nodenum2]{$type}) { # 引き継げない
+			    if ($graph2->[$bp2]{nodes}[$node_index2]{$type}) { # 引き継げない
 				$this->{matching} = 'unmatch';
 				return;
 			    }
 			    else {
-				$nodefac->{$type} = $graph1->[$bp1]{nodes}[$nodenum1]{$type};
+				$nodefac->{$type} = $graph1->[$bp1]{nodes}[$node_index1]{$type};
 			    }			    
 			}
 		    }
@@ -1113,8 +1113,8 @@ sub get_nodefac {
 		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
 		    # 格がなければダメ
 		    if ($type eq 'case') {
-			next if (!$graph1->[$bp1]{nodes}[$nodenum1]{$type}
-				 or !$graph2->[$bp2]{nodes}[$nodenum2]{$type});
+			next if (!$graph1->[$bp1]{nodes}[$node_index1]{$type}
+				 or !$graph2->[$bp2]{nodes}[$node_index2]{$type});
 		    }
 		    # fuzoku_cut オプションがあり、付属語に不一致があった場合はダメ
 		    elsif ($type eq 'fuzoku' and $option->{fuzoku_cut}) {
@@ -1133,8 +1133,8 @@ sub get_nodefac {
 	push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
 
 	# 関係フラグ
-	$nodefac->{relation} = 1 if ($graph1->[$bp1]{nodes}[$nodenum1]{relation} or $graph2->[$bp2]{nodes}[$nodenum2]{relation});
-	$nodefac->{antonym} = 1 if ($graph1->[$bp1]{nodes}[$nodenum1]{antonym} or $graph2->[$bp2]{nodes}[$nodenum2]{antonym});
+	$nodefac->{relation} = 1 if ($graph1->[$bp1]{nodes}[$node_index1]{relation} or $graph2->[$bp2]{nodes}[$node_index2]{relation});
+	$nodefac->{antonym} = 1 if ($graph1->[$bp1]{nodes}[$node_index1]{antonym} or $graph2->[$bp2]{nodes}[$node_index2]{antonym});
 
 	# MTのアライメント用
 	if ($mode eq 'MT') {
@@ -1142,7 +1142,7 @@ sub get_nodefac {
 	    my @match2 = split(/,/, $mres->{$matchkey}{matchbp2});
 	    push(@{$nodefac->{match}}, {graph_1 => \@match1, graph_2 => \@match2});
 	    push(@{$nodefac->{matchpair}}, {graph_1 => $graph1->[$bp1]{midasi} , graph_2 => $graph2->[$bp2]{midasi}});
-	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1]{nodes}[$nodenum1]{id}, graph_2 => $graph2->[$bp2]{nodes}[$nodenum2]{id}});
+	    push(@{$nodefac->{matchid}}, {graph_1 => $graph1->[$bp1]{nodes}[$node_index1]{id}, graph_2 => $graph2->[$bp2]{nodes}[$node_index2]{id}});
 	}
     }
 
@@ -1396,7 +1396,7 @@ sub st_make_log {
 	# マッチしたノードのID
 	$id_orig .= " + " if ($id_orig);
 	$id_orig .="<$graph1->[$bp1][$num1]{id}>";
-	foreach (('fuzoku', 'negation', 'kanou', 'sonnkei', 'shieki', 'ukemi', 'case')) {
+	foreach (keys %{$penalty}) {
 	    if ($graph1->[$bp1][$num1]{$_}) {
 		if ($_ eq 'fuzoku' or $_ eq 'case') {
 		    $id_orig .= "<$_:$graph1->[$bp1][$num1]{$_}>";
@@ -1408,7 +1408,7 @@ sub st_make_log {
 	}
 	$id_exam .= " + " if ($id_exam);
 	$id_exam .="<$graph2->[$bp2][$num2]{id}>";
-	foreach (('fuzoku', 'negation', 'kanou', 'sonnkei', 'shieki', 'ukemi', 'case')) {
+	foreach (keys %{$penalty}) {
 	    if ($graph2->[$bp2][$num2]{$_}) {
 		if ($_ eq 'fuzoku' or $_ eq 'case') {
 		    $id_exam .= "<$_:$graph2->[$bp2][$num2]{$_}>";
