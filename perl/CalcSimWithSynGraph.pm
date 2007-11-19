@@ -79,8 +79,8 @@ sub Match {
 	print "matchpair\n";
 	for (my $num = 0; $num < @{$nodefac->{match}}; $num++) {
 		print "$num\n";
-		printf "graph_1: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_1}, join(',', @{$nodefac->{match}[$num]{graph_1}}), $nodefac->{matchid}[$num]{graph_1};
-		printf "graph_2: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_2}, join(',', @{$nodefac->{match}[$num]{graph_2}}), $nodefac->{matchid}[$num]{graph_2};
+		printf "graph_1: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_1}, join('/', @{$nodefac->{match}[$num]{graph_1}}), $nodefac->{matchid}[$num]{graph_1};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_2}, join('/', @{$nodefac->{match}[$num]{graph_2}}), $nodefac->{matchid}[$num]{graph_2};
 	    }
     }
     
