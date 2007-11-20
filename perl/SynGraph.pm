@@ -248,7 +248,8 @@ sub make_bp {
 		my $result = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		next if $this->{matching} eq 'unmatch';
 
-		# 
+		# 付属語・素性などを考慮してSynGraphマッチング
+		# マッチする場合は新たに付与するnodeを得る
 		my $newnode = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $result);
 		next if ($this->{matching} eq 'unmatch');
 
@@ -366,7 +367,8 @@ sub st_make_bp {
 		    next;
 		}
 
-		# ノードとしての素性を獲得
+		# 付属語・素性などを考慮してSynGraphマッチング
+		# マッチする場合は新たに付与するnodeを得る
 		my $newnode = $this->syngraph_matching_and_get_newnode('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $result, $option);
 		if ($this->{matching} eq 'unmatch') {
 		    delete $this->{tm_sg}{$tmid};
@@ -1057,8 +1059,8 @@ sub syngraph_matching_rough {
 }
 
 
-# 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがあってもgraph_2に引き継ぎ可能)
-# SYNノードとしての素性を獲得
+# 付属語・素性などを考慮してSynGraphマッチング
+# マッチする場合は新たに付与するnodeを得る
 sub syngraph_matching_and_get_newnode {
     my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $mres, $option) = @_;
     my $newnode = {};
