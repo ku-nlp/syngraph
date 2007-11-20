@@ -1,3 +1,12 @@
+2007-11-20  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/CalcSimWithSynGraph.pm, perl/SynGraph.pm: 関数名の変更
+	 - syngraph_matching -> syngraph_matching_rough
+	 - get_nodefac -> syngraph_matching_and_get_newnode
+
+	* perl/SynGraph.pm:
+	fuzoku_cutオプションを廃止して、force_matchオプションにタイプを指定するように変更
+
 2007-11-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi: グラフ生成時に、上位語などのFeatureを表示するように
