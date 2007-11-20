@@ -64,27 +64,27 @@ sub Match {
     
     # SYNGRAPHのマッチング
     # garaph_1は部分、graph_2は完全マッチング
-    my $result = $this->{sgh}->syngraph_matching($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
+    my $result = $this->{sgh}->syngraph_matching_rough($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
     return if $this->{sgh}->{matching} eq 'unmatch';
-    my $nodefac = $this->{sgh}->get_nodefac('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
+    my $newnode = $this->{sgh}->syngraph_matching_and_get_newnode('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
     return if $this->{sgh}->{matching} eq 'unmatch';
 
-    if ($option->{debug} and $nodefac ne 'unmatch') {
+    if ($option->{debug} and $newnode ne 'unmatch') {
 	print "SYNGRAPHマッチング結果\n";
-	Dumpvalue->new->dumpValue($nodefac);
+	Dumpvalue->new->dumpValue($newnode);
     }
     
     # マッチペア出力
-    if ($option->{debug} and $nodefac ne 'unmatch') {
+    if ($option->{debug} and $newnode ne 'unmatch') {
 	print "matchpair\n";
-	for (my $num = 0; $num < @{$nodefac->{match}}; $num++) {
+	for (my $num = 0; $num < @{$newnode->{match}}; $num++) {
 		print "$num\n";
-		printf "graph_1: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_1}, join('/', @{$nodefac->{match}[$num]{graph_1}}), $nodefac->{matchid}[$num]{graph_1};
-		printf "graph_2: %s (bp = %s, id = %s)\n", $nodefac->{matchpair}[$num]{graph_2}, join('/', @{$nodefac->{match}[$num]{graph_2}}), $nodefac->{matchid}[$num]{graph_2};
+		printf "graph_1: %s (bp = %s, id = %s)\n", $newnode->{matchpair}[$num]{graph_1}, join('/', @{$newnode->{match}[$num]{graph_1}}), $newnode->{matchid}[$num]{graph_1};
+		printf "graph_2: %s (bp = %s, id = %s)\n", $newnode->{matchpair}[$num]{graph_2}, join('/', @{$newnode->{match}[$num]{graph_2}}), $newnode->{matchid}[$num]{graph_2};
 	    }
     }
     
-    return $nodefac;
+    return $newnode;
 }
 
 
