@@ -23,7 +23,7 @@ my $relation_penalty = 0.7;
 # 反義語のペナルティ
 my $antonym_penalty = 0.8;
 
-# 要素の違いによるペナルティ
+# 素性の違いによるペナルティ
 our $penalty = {fuzoku => 1.0,     # 付属語
 		case => 0.3,       # 格
 		kanou => 0.8,      # 可能表現
@@ -249,7 +249,7 @@ sub make_bp {
 		next if $this->{matching} eq 'unmatch';
 
 		# 新たなSYNノードとして貼り付けてよいかどうかをチェック
-		# SYNノードとしての要素を獲得
+		# SYNノードとしての素性を獲得
 		my $nodefac = $this->get_nodefac('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $result);
 		next if ($this->{matching} eq 'unmatch');
 
@@ -367,7 +367,7 @@ sub st_make_bp {
 		    next;
 		}
 
-		# ノードとしての要素を獲得
+		# ノードとしての素性を獲得
 		my $nodefac = $this->get_nodefac('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $result, $option);
 		if ($this->{matching} eq 'unmatch') {
 		    delete $this->{tm_sg}{$tmid};
@@ -906,7 +906,7 @@ sub syngraph_matching {
     my $matchnode_2;
     my $matchnode_index1;
     my $matchnode_index2;
-    my $matchnode_unmatch;
+    my %matchnode_unmatch_feature;
     my $matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
 
     my $result;
@@ -936,17 +936,17 @@ sub syngraph_matching {
 			 or ($matchnode_score == $score 
 			     and ($matchnode_1->{weight} + $matchnode_2->{weight} > $node_1->{weight} + $node_2->{weight})));
 		
-		# 付属語、要素の違いのチェック
-		my $unmatch;
+		# 付属語、素性の違いのチェック
+		my %unmatch_feature;
 		my $unmatch_num;
 		foreach my $type (keys %{$penalty}) {
 		    if ($node_1->{$type} ne $node_2->{$type}) {
-			$unmatch->{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
+			$unmatch_feature{$type} = {graph_1 =>$node_1->{$type}, graph_2 =>$node_2->{$type}};
 			$unmatch_num++;
 		    }
 		}
 
-		# スコアが大きいペアを採用。同じスコアならば重みの大きいものを、重みが同じならば要素の違いが少ないものを。
+		# スコアが大きいペアを採用。同じスコアならば重みの大きいものを、重みが同じならば素性の違いが少ないものを。
 		if ($matchnode_score < $score
 		    or ($matchnode_1->{weight} + $matchnode_2->{weight} < $node_1->{weight} + $node_2->{weight})
 		    or ($matchnode_1->{weight} + $matchnode_2->{weight} == $node_1->{weight} + $node_2->{weight}
@@ -956,7 +956,7 @@ sub syngraph_matching {
 		    $matchnode_2 = $node_2;
 		    $matchnode_index1 = $node_index1;
 		    $matchnode_index2 = $node_index2;
-		    $matchnode_unmatch = $unmatch;
+		    %matchnode_unmatch_feature = %unmatch_feature;
 		    $matchnode_unmatch_num = $unmatch_num;
 		}
 	    }		    
@@ -981,8 +981,8 @@ sub syngraph_matching {
     $result->{$nodebp_2}{nodedata2} = "$nodebp_2-$matchnode_index2";
     # マッチのスコア,素性の違い
     $result->{$nodebp_2}{score} = $matchnode_score;
-    foreach my $type (keys %{$matchnode_unmatch}) {
-	$result->{$nodebp_2}{type_unmatch}{$type} = 1;
+    foreach my $type (keys %matchnode_unmatch_feature) {
+	$result->{$nodebp_2}{unmatch_feature}{$type} = 1;
     }
 
     # $graph_2の検索対象となる子どもを取得
@@ -1059,7 +1059,7 @@ sub syngraph_matching {
 
 
 # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがあってもgraph_2に引き継ぎ可能)
-# SYNノードとしての要素を獲得
+# SYNノードとしての素性を獲得
 sub get_nodefac {
     my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $mres, $option) = @_;
     my $nodefac = {};
@@ -1079,10 +1079,10 @@ sub get_nodefac {
 	if ($headbp2 == $matchkey) {
 	    
 	    if ($mode eq 'syn') {
-		if ($mres->{$matchkey}{type_unmatch}) {
+		if ($mres->{$matchkey}{unmatch_feature}) {
 		    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
-		    # headの要素を引き継ぐ
-		    foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+		    # headの素性を引き継ぐ
+		    foreach my $type (keys %{$mres->{$matchkey}{unmatch_feature}}) {
 			if ($type eq 'negation') {
 			    $nodefac->{$type} = 1;
 			}
@@ -1099,18 +1099,18 @@ sub get_nodefac {
 		}
 	    }
 	    elsif($mode eq 'MT') {
-		if ($mres->{$matchkey}{type_unmatch}) {
+		if ($mres->{$matchkey}{unmatch_feature}) {
 		    # MTでアライメントをとるときはheadでの違いは否定以外はみない。
-		    $nodefac->{negation} = 1 if ($mres->{$matchkey}{type_unmatch}{negation});
+		    $nodefac->{negation} = 1 if ($mres->{$matchkey}{unmatch_feature}{negation});
 		}
 	    }
 	}
 
 	# その他での処理
 	else {
-	    # 要素の不一致ごとにスコアにペナルティーをかける
-	    if ($mres->{$matchkey}{type_unmatch}) {
-		foreach my $type (keys %{$mres->{$matchkey}{type_unmatch}}) {
+	    # 素性の不一致ごとにスコアにペナルティーをかける
+	    if ($mres->{$matchkey}{unmatch_feature}) {
+		foreach my $type (keys %{$mres->{$matchkey}{unmatch_feature}}) {
 		    # 格がなければダメ
 		    if ($type eq 'case') {
 			next if (!$graph1->[$bp1]{nodes}[$node_index1]{$type}
@@ -1150,7 +1150,7 @@ sub get_nodefac {
     my $num = (keys %{$mres});
     $nodefac->{score} = $score / $num;
 
-    # SYNノードのその他の要素
+    # SYNノードのその他の素性
     foreach my $matchbp1 (sort @match) {
 	$nodefac->{midasi} .= $graph1->[$matchbp1]{midasi};
 	$nodefac->{weight} += $graph1->[$matchbp1]{nodes}[0]{weight};
