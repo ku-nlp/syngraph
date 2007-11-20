@@ -1108,18 +1108,18 @@ sub get_nodefac {
 
 	# その他での処理
 	else {
-	    # 素性の不一致ごとにスコアにペナルティーをかける
+	    # 素性の不一致ごとにスコアにペナルティをかける
 	    if ($mres->{$matchkey}{unmatch_feature}) {
 		foreach my $type (keys %{$mres->{$matchkey}{unmatch_feature}}) {
-		    # 格がなければダメ
+		    # 片一方にでも格がなければペナルティをかけない
 		    if ($type eq 'case') {
 			next if (!$graph1->[$bp1]{nodes}[$node_index1]{$type}
 				 or !$graph2->[$bp2]{nodes}[$node_index2]{$type});
 		    }
-		    # fuzoku_cut オプションがあり、付属語に不一致があった場合はダメ
-		    elsif ($type eq 'fuzoku' and $option->{fuzoku_cut}) {
+		    # 付属語が不一致があった場合はマッチさせないオプション
+		    elsif ($type eq 'fuzoku' and defined $option->{force_match}{$type}) {
 			$this->{matching} = 'unmatch';
-			return;			
+			return;
 		    }
 		    $mres->{$matchkey}{score} *= $penalty->{$type};
 		}
