@@ -64,6 +64,7 @@ sub Match {
     
     # SYNGRAPHのマッチング
     # garaph_1は部分、graph_2は完全マッチング
+    $this->{sgh}->{matching} = 'matching';
     my $result = $this->{sgh}->syngraph_matching_rough($graph_1, $headbp_1, $graph_2, $headbp_2, undef, $matching_option);
     return if $this->{sgh}->{matching} eq 'unmatch';
     my $newnode = $this->{sgh}->syngraph_matching_and_get_newnode('MT', $graph_1, $headbp_1, $graph_2, $headbp_2, $result);
