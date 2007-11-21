@@ -1,3 +1,8 @@
+2007-11-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	同義語抽出の部分で、長い関数を分割
+
 2007-11-20  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/CalcSimWithSynGraph.pm, perl/SynGraph.pm: 関数名の変更
