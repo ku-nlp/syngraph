@@ -1,5 +1,10 @@
 2007-12-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* ExtractSynfromDic/scripts/x4syn.pl: wikipedia用の後処理を追加
+
+	* ExtractSynfromDic/tools/def_sentence.rule: 「〜の１つ」を追加
+	「〜の(ひと/一/１)つである」を追加
+
 	* ExtractSynfromDic/tools/def_sentence.rule: 「〜のひとつ」を追加
 
 	* ExtractSynfromDic/scripts/x4syn.pl:
