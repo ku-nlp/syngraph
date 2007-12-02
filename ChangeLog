@@ -1,3 +1,18 @@
+2007-12-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/tools/def_sentence.rule: 「〜のひとつ」を追加
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	wikipediaオプションの場合、括弧を削除、文末の「である」を削除
+
+	* ExtractSynfromDic/perl/MyHead.pm:
+	同義語、上位語などが付与されない場合に、exitするのではなく、undefを返すように変更
+
+2007-12-01  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	Wikipediaから類義表現抽出を行うオプション(-wikipedia)を追加
+
 2007-11-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* ExtractSynfromDic/scripts/x4syn.pl:
