@@ -6,6 +6,7 @@ SRC_DIR='.'
 # 同義表現データディレクトリ
 SIM_DIR_Dic=../dic/rsk_iwanami
 SIM_DIR_Web=../dic/web_news
+SIM_DIR_Wikipedia=../dic/wikipedia
 
 # 同義表現データマージ途中のディレクトリ
 SIM_M_DIR=../dic_middle
@@ -25,9 +26,13 @@ KAWAHARAPMDIR=/home/shibata/work/kawahara-pm/perl
 # Utilsdir
 UTILS=/home/shibata/work/Utils/perl
 
-while getopts h OPT
+wikipedia=0
+
+while getopts wh OPT
 do
   case $OPT in
+      w)  wikipedia=1
+          ;;
       h)  usage
           ;;
     esac
@@ -43,7 +48,7 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 
 # 全部削除する
-for f in definition.txt synonym_dic.txt isa.txt antonym.txt synonym_web_news.txt log_merge.txt; do
+for f in definition.txt synonym_dic.txt isa.txt isa-wikipedia.txt antonym.txt synonym_web_news.txt log_merge.txt; do
     if [ -e $SIM_C_DIR/$f ] ; then
 	rm -v $SIM_C_DIR/$f
     fi
@@ -112,3 +117,11 @@ eval $exe
 exe="perl -I$PERL_DIR disambiguation_hiragana.pl < $SIM_C_DIR/synonym_dic.txt.merge.add.postprocess > $SIM_C_DIR/synonym_dic.txt 2> $SIM_C_DIR/synonym_dic.hiragana_disambiguation.log"
 echo $exe
 eval $exe
+
+# Wikipediaから得られた類義表現のうち、国語辞典からも抽出されるものを削除
+if [ $wikipedia -eq 1 ]; then
+    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_DIR_Wikipedia/isa.txt > $SIM_C_DIR/isa-wikipedia.txt 2> $SIM_C_DIR/isa-wikipedia.log"
+    echo $exe
+    eval $exe
+fi
+
