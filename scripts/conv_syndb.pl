@@ -83,19 +83,19 @@ foreach my $file_type (@file) {
 	    next if (@syn_list > 40);
 	    
 	    # SYNIDの獲得
-	    my $synid = 's' . $syn_number . ":" . (split(/:/, $syn_list[0]))[0];
+	    my $synid = 's' . $syn_number . ':' . (split(/:/, $syn_list[0]))[0];
 	    $syn_number++;
 	    
 	    # 同義グループを作る
 	    my @log;
 	    foreach my $syn (@syn_list) {
-		my $syn_key = $syn . "$file_tag";
+		my $syn_key = $syn . $file_tag;
 		push (@{$syn_group{$synid}}, $syn_key);
 		push (@{$syn_hash{$syn}}, $synid);
 		
 		# 定義文がある場合も登録
 		if ($definition{$syn}) {
-		    my $def_key = $definition{$syn} . "<定義文>";
+		    my $def_key = $definition{$syn} . '<定義文>';
 		    push (@{$syn_group{$synid}}, $def_key);
 		    push (@{$syn_hash{$definition{$syn}}}, $synid);
 		    $def_delete{$syn} = 1 if (!defined $def_delete{$syn});
@@ -237,8 +237,8 @@ foreach my $midasi (keys %definition) {
     my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
     $syn_number++;
 
-    my $midasi_key = $midasi . "<DIC>";
-    my $def_key = $definition{$midasi} . "<定義文>";
+    my $midasi_key = $midasi . '<DIC>';
+    my $def_key = $definition{$midasi} . '<定義文>';
     push (@{$syn_group{$synid}}, $midasi_key);
     push (@{$syn_group{$synid}}, $def_key);
     push (@{$syn_hash{$midasi}}, $synid);
@@ -355,14 +355,14 @@ sub get_synid {
 	$syn_number++;
 	
         # グループに登録
-	my $word_key = $word . "<DIC>";
+	my $word_key = $word . '<DIC>';
 	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
 
         # 定義文があるとき
 	my @log;
         if ($definition{$word}) {
-	    my $def_key = $definition{$word} . "<定義文>";
+	    my $def_key = $definition{$word} . '<定義文>';
 	    push (@{$syn_group{$synid}}, $def_key);
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
