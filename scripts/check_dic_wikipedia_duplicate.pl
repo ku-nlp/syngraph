@@ -14,6 +14,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 use KNP;
+use Constant;
 
 my %opt;
 GetOptions(\%opt, 'dic=s', 'wikipedia=s');
@@ -45,7 +46,7 @@ while (<W>) {
     chomp;
 
     # アンパサンド 記号/きごう
-    my ($hyponym, $hypernym) = split;
+    my ($hyponym, $hypernym, $num) = split;
 
     # 長すぎる見出しはskip
     if (length $hyponym <= $LENGTH_MAX) { 
@@ -66,6 +67,6 @@ while (<W>) {
 	}
     }
 
-    print "$hyponym $hypernym\n";
+    print "$hyponym $hypernym $num\n";
 }
 close W;
