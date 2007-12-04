@@ -1,3 +1,20 @@
+2007-12-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/build.sh:
+	wikipediaから抽出した類義表現もコンパイルするオプション(-w)を追加
+
+	* scripts/conv_syndb.pl:
+	Wikipediaから抽出した上位下位関係を読み込むオプションを追加
+
+	* scripts/check_dic_wikipedia_duplicate.pl: 下位語数を読むように変更
+
+	* dic/wikipedia/isa.txt: 下位語数を付与
+
+2007-12-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh:
+	wikipediaから抽出した類義表現もマージ対象にするオプションを追加(-w)
+
 2007-12-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* ExtractSynfromDic/scripts/x4syn.pl: wikipedia用の後処理を追加
