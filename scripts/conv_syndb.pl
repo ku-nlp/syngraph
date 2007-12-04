@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -122,61 +122,63 @@ foreach my $file_type (@file) {
 # 上位・下位の読み込み
 # (上下関係は全てSYNIDで扱う)
 #
-if ($opt{isa}) {
-    open(ISA, '<:encoding(euc-jp)', $opt{isa}) or die;
-    my %rel_synid;
+my @file = ('isa', 'isa_wikipedia');
+foreach my $file_type (@file) {
+    if ($opt{$file_type}) {
+	open(ISA, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	my %rel_synid;
 
-    # 矛盾解消のログ
-    if ($option{log} and $opt{log_merge}) {
-	open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;
-    }
-
-    while (<ISA>) {
-        chomp;
-	my ($child, $parent, $number) = split(/ /, $_);
-
-	# SYNIDを獲得
-	my $childsyn_list = &get_synid($child);
-        my $parentsyn_list = &get_synid($parent);
-	if (&contradiction_check($parentsyn_list, $childsyn_list)) {
-	    if ($option{log} and $opt{log_merge}) {
-		print LM "X contradiction isa $child, $parent\n";
-	    }
-	    next;
+	# 矛盾解消のログ
+	if ($option{log} and $opt{log_merge}) {
+	    open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;
 	}
 
-	foreach my $child_synid (@$childsyn_list) {
-	    foreach my $parent_synid (@$parentsyn_list) {
-		$rel_synid{$child_synid}->{$parent_synid} = $number if ((!defined $rel_synid{$child_synid}->{$parent_synid}) or ($rel_synid{$child_synid}->{$parent_synid} < $number)); # 最大数を記録,要相談
-		# 上位下位のログ
-		if ($option{log}) {
-		    my $key_p = (split(/:/, $parent))[0];
-		    $key_p = (split(/\//, $parent))[0];
-		    my $key_c = (split(/:/, $child))[0];
-		    $key_c = (split(/\//, $child))[0];
-		    $log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c→$key_p" : "$key_c→$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c→$key_p/; # なければ保存
+	while (<ISA>) {
+	    chomp;
+	    my ($child, $parent, $number) = split(/ /, $_);
+
+	    # SYNIDを獲得
+	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') :  &get_synid($child);
+	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') : &get_synid($parent);
+	    if (&contradiction_check($parentsyn_list, $childsyn_list)) {
+		if ($option{log} and $opt{log_merge}) {
+		    print LM "X contradiction isa $child, $parent\n";
+		}
+		next;
+	    }
+
+	    foreach my $child_synid (@$childsyn_list) {
+		foreach my $parent_synid (@$parentsyn_list) {
+		    $rel_synid{$child_synid}->{$parent_synid} = $number if ((!defined $rel_synid{$child_synid}->{$parent_synid}) or ($rel_synid{$child_synid}->{$parent_synid} < $number)); # 最大数を記録,要相談
+		    # 上位下位のログ
+		    if ($option{log}) {
+			my $key_p = (split(/:/, $parent))[0];
+			$key_p = (split(/\//, $parent))[0];
+			my $key_c = (split(/:/, $child))[0];
+			$key_c = (split(/\//, $child))[0];
+			$log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c→$key_p" : "$key_c→$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c→$key_p/; # なければ保存
+		    }
 		}
 	    }
 	}
-    }
-    foreach my $child_synid (keys %rel_synid) {
-	foreach my $parent_synid (keys %{$rel_synid{$child_synid}}) {
-	    # 上位グループ
-	    $relation_parent{$child_synid} .= ($relation_parent{$child_synid} ? "|$parent_synid" : $parent_synid) . ",$rel_synid{$child_synid}->{$parent_synid}";
-	    # 下位グループ(CGI用)
-	    if ($option{log}) {
-		$relation_child{$parent_synid} .= ($relation_child{$parent_synid} ? "|$child_synid" : $child_synid);
+	foreach my $child_synid (keys %rel_synid) {
+	    foreach my $parent_synid (keys %{$rel_synid{$child_synid}}) {
+		# 上位グループ
+		$relation_parent{$child_synid} .= ($relation_parent{$child_synid} ? "|$parent_synid" : $parent_synid) . ",$rel_synid{$child_synid}->{$parent_synid}";
+		# 下位グループ(CGI用)
+		if ($option{log}) {
+		    $relation_child{$parent_synid} .= ($relation_child{$parent_synid} ? "|$child_synid" : $child_synid);
+		}
 	    }
 	}
-    }
 
-    if ($option{log} and $opt{log_merge}) {
-	close(LM);
-    }
+	if ($option{log} and $opt{log_merge}) {
+	    close(LM);
+	}
 
-    close(ISA);
+	close(ISA);
+    }
 }
-
 
 #
 # 反義語の読み込み
@@ -257,14 +259,14 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/<(定義文|DIC|Web)>$//g;
+	    my $tag = $1 if $expression =~ s/<(定義文|DIC|Web|Wikipedia)>$//g;
 	    
 	    # :1/1:1/1:1/1を取る
 	    ($expression, my $word_id) = split(/:/, $expression, 2);
 	    $word_id = ":$word_id" if $word_id;
 
             # 出力
-            print CF "# S-ID:$synid,$expression$word_id\n";
+            print CF "# S-ID:$synid,$expression$word_id $tag\n";
             print CF "$expression\n";
             
 	    # 同義グループ情報
@@ -343,7 +345,7 @@ print STDERR scalar(localtime), "辞書のコンバート終了\n";
 # SYNIDを取得、なければ同義グループを作る
 #
 sub get_synid {
-    my ($word) = @_;
+    my ($word, $type) = @_;
 
     # 同義グループにある場合はそのSYNIDを返す
     if (defined $syn_hash{$word}) {
@@ -355,7 +357,8 @@ sub get_synid {
 	$syn_number++;
 	
         # グループに登録
-	my $word_key = $word . '<DIC>';
+	$type = '<DIC>' unless $type; # defaultは<DIC>
+	my $word_key = $word . $type;
 	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
 
