@@ -139,7 +139,7 @@ foreach my $file_type (@file) {
 
 	    # SYNIDを獲得
 	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') :  &get_synid($child);
-	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') : &get_synid($parent);
+	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($parent, '<Wikipedia>') : &get_synid($parent);
 	    if (&contradiction_check($parentsyn_list, $childsyn_list)) {
 		if ($option{log} and $opt{log_merge}) {
 		    print LM "X contradiction isa $child, $parent\n";
