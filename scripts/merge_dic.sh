@@ -48,7 +48,7 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 
 # 全部削除する
-for f in definition.txt synonym_dic.txt isa.txt isa-wikipedia.txt antonym.txt synonym_web_news.txt log_merge.txt; do
+for f in definition.txt synonym_dic.txt isa.txt isa_wikipedia.txt antonym.txt synonym_web_news.txt log_merge.txt; do
     if [ -e $SIM_C_DIR/$f ] ; then
 	rm -v $SIM_C_DIR/$f
     fi
@@ -120,7 +120,7 @@ eval $exe
 
 # Wikipediaから得られた類義表現のうち、国語辞典からも抽出されるものを削除
 if [ $wikipedia -eq 1 ]; then
-    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_DIR_Wikipedia/isa.txt > $SIM_C_DIR/isa-wikipedia.txt 2> $SIM_C_DIR/isa-wikipedia.log"
+    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_DIR_Wikipedia/isa.txt > $SIM_C_DIR/isa_wikipedia.txt 2> $SIM_C_DIR/isa_wikipedia.log"
     echo $exe
     eval $exe
 fi
