@@ -24,7 +24,8 @@ GetOptions(\%opt, 'help', 'debug');
 my $DISAMBIGUATE_TH = 0.3;
 my $DISAMBIGUATE_RATIO = 3;
 
-my $knp = new KNP( -JumanCommand => $Constant::JumanCommand,
+my $knp = new KNP( -Option => '-tab -dpnd',
+		   -JumanCommand => $Constant::JumanCommand,
 		   -JumanRcfile => $Constant::JumanRcfile);
 
 my $cscf = new CalcSimilarityByCF( {debug => $opt{debug}} );

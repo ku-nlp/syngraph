@@ -21,7 +21,8 @@ GetOptions(\%opt, 'dic=s', 'wikipedia=s');
 
 my $LENGTH_MAX = 10;
 
-my $knp = new KNP( -JumanCommand => $Constant::JumanCommand,
+my $knp = new KNP( -Option => '-tab -dpnd',
+		   -JumanCommand => $Constant::JumanCommand,
 		   -JumanRcfile => $Constant::JumanRcfile);
 
 my %DIC;
