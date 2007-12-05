@@ -57,6 +57,7 @@ while (keys %{$sgh->{syndata}}) {
 
     foreach my $sid (sort keys %{$sgh->{syndata}}) {
 
+	next if $sid =~ /Wikipedia/;
         # SYNノードがこれ以上追加されなくなると終了
         goto COMPILE_END if ($sgh->{regnode} eq $sid);
 
