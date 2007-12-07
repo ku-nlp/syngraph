@@ -37,6 +37,9 @@ $sgh->{mode} = 'compile';
 while (my $knp_result = $sgh->read_parsed_data) {
     my $sid = $knp_result->id;
 
+    # 文字化け対策
+    next if $sid =~ /\?/;
+
     # 木を作る
     $sgh->make_tree($knp_result, $sgh->{syndata}, $option);
 

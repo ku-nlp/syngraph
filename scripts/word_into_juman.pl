@@ -7,11 +7,12 @@
 
 use strict;
 use Getopt::Long;
+use Encode;
 use Dumpvalue;
 use Juman;
 use utf8;
 binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
+#binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
@@ -23,29 +24,42 @@ $option{"-Rcfile"} = $opt{Rcfile} if ($opt{Rcfile});
 
 my $juman = new Juman(%option);
 
+my $comment;
+my $skip_flag = 0;
+
 # 「朝飯/あさはん」が入力
 while (<>) { # 代表表記
     chomp;
 
     if ($_ =~ /^\#/) { # 「#」行はそのまま出す。
-	print "$_\n";
+#	print encode('euc-jp', "$_\n");
+	$comment = $_;
+	$comment = eval{encode('euc-jp', $comment, Encode::FB_CROAK)};
+	# EUCにマップできない
+	if ($@) {
+	    $skip_flag = 0;
+	}
     }
     else {
+	if ($skip_flag) {
+	    $skip_flag = 0;
+	    next;
+	}
 	my $word = $_;
 	my $result;
 	if ($word =~ /^(.+?)\/.+?$/) { # $wordが代表表記
 	    $result = $juman->analysis("$1");
 	    my $flag;
 	    if ($opt{test}) {
-		print $result->all();
-		print "EOS\n";
+		&print_result_all($result->all());
 	    }
 	    else {
 		foreach my $r_str (split(/\n/, $result->all())) {
 		    if ($r_str =~ /代表表記:(.+?\/.+?)\"/) {
 			if ($word eq $1) { # $wordにあたる解析行
 			    $r_str =~ s/^@ //g;
-			    print "$r_str\n";
+			    print $comment, "\n";
+			    print encode('euc-jp', "$r_str\n");
 			    $flag = 1;
 			}
 		    }
@@ -54,14 +68,26 @@ while (<>) { # 代表表記
 		    print "EOS\n";
 		}
 		else { # $wordにあたる解析行がなかった
-		    print $result->all();
-		    print "EOS\n";
+		    &print_result_all($result->all());
 		}
 	    }
 	}
 	else { # 代表表記でない
 	    $result = $juman->analysis("$word");
-	    print $result->all();
+	    &print_result_all($result->all());
+	}
+    }
+}
+
+sub print_result_all {
+    my ($all) = @_;
+
+    unless ($@) {
+	$all = eval{encode('euc-jp', $all, Encode::FB_CROAK)};
+
+	unless ($@) {
+	    print $comment, "\n";
+	    print $all;
 	    print "EOS\n";
 	}
     }
