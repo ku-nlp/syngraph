@@ -244,19 +244,18 @@ sub make_bp {
 		my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
  		# synidがマッチするか調べる(付属語・素性などは考慮しない)
-		$this->{matching} = 'matching';
-		my $result = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
-		next if $this->{matching} eq 'unmatch';
+		my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		next if $result_rough == 0;
 
 		# 付属語・素性などを考慮してSynGraphマッチング
 		# マッチする場合は新たに付与するnodeを得る
-		my $newnode = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $result);
-		next if ($this->{matching} eq 'unmatch');
+		my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose);
+		next if ($result eq 'unmatch');
 
 		# NODEのLOG
 		my $log;
 		if ($option->{log}) {
-		    $log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $result);
+		    $log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $match_verbose);
 		}
 
 		$this->_regnode({ref            => $ref,
@@ -359,18 +358,17 @@ sub st_make_bp {
                 }
                 
  		# synidがマッチするか調べる(付属語・素性などは考慮しない)
-		$this->{matching} = 'matching';
-		my $result = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
+		my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp,
 							    \%body, $matching_option);
-		if ($this->{matching} eq 'unmatch') {
+		if ($result_rough == 0) {
 		    delete $this->{tm_sg}{$tmid};
 		    next;
 		}
 
 		# 付属語・素性などを考慮してSynGraphマッチング
 		# マッチする場合は新たに付与するnodeを得る
-		my $newnode = $this->syngraph_matching_and_get_newnode('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $result, $option);
-		if ($this->{matching} eq 'unmatch') {
+		my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('MT', $ref->{$sid}, $bp, $this->{tm_sg}{$tmid}, $headbp, $match_verbose, $option);
+		if ($result == 0) {
 		    delete $this->{tm_sg}{$tmid};
 		    next;
 		}
@@ -400,7 +398,7 @@ sub st_make_bp {
 		# アライメントのLOG
 		my $log;
 		if ($option->{log}) {
-		    $log = $this->st_make_log($ref->{$sid}, $this->{tm_sg}{$tmid}, $tmid, $result);		    
+		    $log = $this->st_make_log($ref->{$sid}, $this->{tm_sg}{$tmid}, $tmid, $match_verbose);
 		}
 
 		delete $this->{tm_sg}{$tmid} if ($option->{clear_cache});
@@ -910,7 +908,8 @@ sub syngraph_matching_rough {
     my %matchnode_unmatch_feature;
     my $matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
 
-    my $result;
+    my $result = 0;
+    my %match_verbose;
 
     # BP内でマッチするノードを探す
     my $node_index1 = -1;
@@ -966,24 +965,23 @@ sub syngraph_matching_rough {
     
     # BPがマッチしない
     if ($matchnode_score == 0){
-	$result->{$nodebp_2}{unmatch_reason} = 'no_matchnode';
-	$this->{matching} = 'unmatch';
-	return $result;
+	$match_verbose{$nodebp_2}{unmatch_reason} = 'no_matchnode';
+	return (0, \%match_verbose);
     }
     
     # BPがマッチした
     # 対応する基本句番号
     my $matchbp_1 = join(',', ($matchnode_1->{matchbp} ? sort (keys %{$matchnode_1->{matchbp}}, $nodebp_1) : ($nodebp_1)));
     my $matchbp_2 = join(',', ($matchnode_2->{matchbp} ? sort (keys %{$matchnode_2->{matchbp}}, $nodebp_2) : ($nodebp_2)));
-    $result->{$nodebp_2}{matchbp1} = $matchbp_1;
-    $result->{$nodebp_2}{matchbp2} = $matchbp_2;
+    $match_verbose{$nodebp_2}{matchbp1} = $matchbp_1;
+    $match_verbose{$nodebp_2}{matchbp2} = $matchbp_2;
     # マッチしたノードの情報の居場所
-    $result->{$nodebp_2}{nodedata1} = "$nodebp_1-$matchnode_index1";
-    $result->{$nodebp_2}{nodedata2} = "$nodebp_2-$matchnode_index2";
+    $match_verbose{$nodebp_2}{nodedata1} = "$nodebp_1-$matchnode_index1";
+    $match_verbose{$nodebp_2}{nodedata2} = "$nodebp_2-$matchnode_index2";
     # マッチのスコア,素性の違い
-    $result->{$nodebp_2}{score} = $matchnode_score;
+    $match_verbose{$nodebp_2}{score} = $matchnode_score;
     foreach my $type (keys %matchnode_unmatch_feature) {
-	$result->{$nodebp_2}{unmatch_feature}{$type} = 1;
+	$match_verbose{$nodebp_2}{unmatch_feature}{$type} = 1;
     }
 
     # $graph_2の検索対象となる子どもを取得
@@ -1007,9 +1005,8 @@ sub syngraph_matching_rough {
 	    
 	    # graph_1の子の数よりgraph_2の子の数の方が多い場合はマッチ失敗
 	    if (@childbp_1 < @childbp_2) {
-		$result->{$nodebp_2}{unmatch_reason} = 'child_less';
-		$this->{matching} = 'unmatch';
-		return $result;
+		$match_verbose{$nodebp_2}{unmatch_reason} = 'child_less';
+		return (0, \%match_verbose);
 	    }
 	    
 	    # graph_2の各子供にマッチするgraph_1の子供を見つける
@@ -1021,12 +1018,11 @@ sub syngraph_matching_rough {
 		    next if ($child_1_check{$child_1});
 		    
 		    # 子供同士のマッチング
-		    $this->{matching} = 'matching';
-		    my $res = $this->syngraph_matching_rough($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
-		    next if ($this->{matching} eq 'unmatch');
+		    my ($result_child, $match_verbose_child) = $this->syngraph_matching_rough($graph_1, $child_1, $graph_2, $child_2, $body_hash, $matching_option);
+		    next if ($result_child == 0);
 	
-		    foreach my $nodebp (keys %{$res}) {
-			$result->{$nodebp} = $res->{$nodebp};
+		    foreach my $nodebp (keys %{$match_verbose_child}) {
+			$match_verbose{$nodebp} = $match_verbose_child->{$nodebp};
 		    }
 
 		    $child_1_check{$child_1} = 1;
@@ -1036,25 +1032,24 @@ sub syngraph_matching_rough {
 
 		# マッチする子がなかったらマッチ失敗
 		unless ($match_flag) {
-		    $result->{$nodebp_2}{unmatch_reason} = "child_unmatch:$graph_2->[$child_2]{midasi}";
-		    $this->{matching} = 'unmatch';
-		    return $result;
+		    $match_verbose{$nodebp_2}{unmatch_reason} = "child_unmatch:$graph_2->[$child_2]{midasi}";
+		    return (0, \%match_verbose);
 		}
 	    }
-	    return $result;
+	    return (1, \%match_verbose);
 	}
 
 	# graph_1に子がない場合はマッチ失敗
 	else {
-	    $result->{$nodebp_2}{unmatch_reason} = 'child_less';
-	    $this->{matching} = 'unmatch';
-	    return $result;
+	    $match_verbose{$nodebp_2}{unmatch_reason} = 'child_less';
+	    return (0, \%match_verbose);
 	}
     }
 
     # graph_2に子がない
     else {
-	return $result;
+	$result = 1;
+	return (1, \%match_verbose);
     }
 }
 
@@ -1062,35 +1057,36 @@ sub syngraph_matching_rough {
 # 付属語・素性などを考慮してSynGraphマッチング
 # マッチする場合は新たに付与するnodeを得る
 sub syngraph_matching_and_get_newnode {
-    my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $mres, $option) = @_;
+    my ($this, $mode, $graph1, $headbp1, $graph2, $headbp2, $match_verbose, $option) = @_;
     my $newnode = {};
     my $score;
     my @match;
     my @child;
 
+    my $result = 0;
+
     my $num;
-    foreach my $matchkey (keys %{$mres}) {
+    foreach my $matchkey (keys %{$match_verbose}) {
 
 	# マッチしたノード情報のありか
-	my ($bp1, $node_index1) = split(/-/, $mres->{$matchkey}{nodedata1});
-	my ($bp2, $node_index2) = split(/-/, $mres->{$matchkey}{nodedata2});
+	my ($bp1, $node_index1) = split(/-/, $match_verbose->{$matchkey}{nodedata1});
+	my ($bp2, $node_index2) = split(/-/, $match_verbose->{$matchkey}{nodedata2});
 
 	# ★headを早く見つけることで高速化可能★odani0529
 	# headでの処理
 	if ($headbp2 == $matchkey) {
 	    
 	    if ($mode eq 'syn') {
-		if ($mres->{$matchkey}{unmatch_feature}) {
+		if ($match_verbose->{$matchkey}{unmatch_feature}) {
 		    # 新たなSYNノードとして貼り付けてよいかどうかをチェック(headに違いがありgraph_2に引き継ぎ不可)
 		    # headの素性を引き継ぐ
-		    foreach my $type (keys %{$mres->{$matchkey}{unmatch_feature}}) {
+		    foreach my $type (keys %{$match_verbose->{$matchkey}{unmatch_feature}}) {
 			if ($type eq 'negation') {
 			    $newnode->{$type} = 1;
 			}
 			else {
 			    if ($graph2->[$bp2]{nodes}[$node_index2]{$type}) { # 引き継げない
-				$this->{matching} = 'unmatch';
-				return;
+				return 0;
 			    }
 			    else {
 				$newnode->{$type} = $graph1->[$bp1]{nodes}[$node_index1]{$type};
@@ -1100,9 +1096,9 @@ sub syngraph_matching_and_get_newnode {
 		}
 	    }
 	    elsif($mode eq 'MT') {
-		if ($mres->{$matchkey}{unmatch_feature}) {
+		if ($match_verbose->{$matchkey}{unmatch_feature}) {
 		    # MTでアライメントをとるときはheadでの違いは否定以外はみない。
-		    $newnode->{negation} = 1 if ($mres->{$matchkey}{unmatch_feature}{negation});
+		    $newnode->{negation} = 1 if ($match_verbose->{$matchkey}{unmatch_feature}{negation});
 		}
 	    }
 	}
@@ -1110,8 +1106,8 @@ sub syngraph_matching_and_get_newnode {
 	# その他での処理
 	else {
 	    # 素性の不一致ごとにスコアにペナルティをかける
-	    if ($mres->{$matchkey}{unmatch_feature}) {
-		foreach my $type (keys %{$mres->{$matchkey}{unmatch_feature}}) {
+	    if ($match_verbose->{$matchkey}{unmatch_feature}) {
+		foreach my $type (keys %{$match_verbose->{$matchkey}{unmatch_feature}}) {
 		    # 片一方にでも格がなければペナルティをかけない
 		    if ($type eq 'case') {
 			next if (!$graph1->[$bp1]{nodes}[$node_index1]{$type}
@@ -1119,19 +1115,18 @@ sub syngraph_matching_and_get_newnode {
 		    }
 		    # 付属語が不一致があった場合はマッチさせないオプション
 		    elsif ($type eq 'fuzoku' and defined $option->{force_match}{$type}) {
-			$this->{matching} = 'unmatch';
-			return;
+			return 0;
 		    }
-		    $mres->{$matchkey}{score} *= $penalty->{$type};
+		    $match_verbose->{$matchkey}{score} *= $penalty->{$type};
 		}
 	    }
 	}
 
 	# スコア
-	$score += $mres->{$matchkey}{score};
+	$score += $match_verbose->{$matchkey}{score};
 	
 	# マッチした基本句
-	push (@match, split(/,/, $mres->{$matchkey}{matchbp1}));
+	push (@match, split(/,/, $match_verbose->{$matchkey}{matchbp1}));
 
 	# 関係フラグ
 	$newnode->{relation} = 1 if ($graph1->[$bp1]{nodes}[$node_index1]{relation} or $graph2->[$bp2]{nodes}[$node_index2]{relation});
@@ -1139,8 +1134,8 @@ sub syngraph_matching_and_get_newnode {
 
 	# MTのアライメント用
 	if ($mode eq 'MT') {
-	    my @match1 = split(/,/, $mres->{$matchkey}{matchbp1});
-	    my @match2 = split(/,/, $mres->{$matchkey}{matchbp2});
+	    my @match1 = split(/,/, $match_verbose->{$matchkey}{matchbp1});
+	    my @match2 = split(/,/, $match_verbose->{$matchkey}{matchbp2});
 	    push(@{$newnode->{match}}, {graph_1 => \@match1, graph_2 => \@match2});
 	    push(@{$newnode->{matchpair}}, {graph_1 => $graph1->[$bp1]{midasi} , graph_2 => $graph2->[$bp2]{midasi}});
 	    push(@{$newnode->{matchid}}, {graph_1 => $graph1->[$bp1]{nodes}[$node_index1]{id}, graph_2 => $graph2->[$bp2]{nodes}[$node_index2]{id}});
@@ -1148,7 +1143,7 @@ sub syngraph_matching_and_get_newnode {
     }
 
     # SYNノードのスコア
-    my $num = (keys %{$mres});
+    my $num = (keys %{$match_verbose});
     $newnode->{score} = $score / $num;
 
     # SYNノードのその他の素性
@@ -1166,7 +1161,7 @@ sub syngraph_matching_and_get_newnode {
 	$newnode->{childbp}{$childbp1} = 1;
     }
 
-    return $newnode;
+    return (1, $newnode);
 }
     
 
@@ -1242,7 +1237,7 @@ sub make_basicnode_log {
 }
 
 sub make_synnode_log {
-    my ($this, $graph1, $graph2, $mid, $mres) = @_;
+    my ($this, $graph1, $graph2, $mid, $match_verbose) = @_;
     my $result;
     
     # synid, expression1, expression2
@@ -1252,9 +1247,9 @@ sub make_synnode_log {
     # expression_orig, loglog
     my $expression_orig;
     my $loglog;
-    foreach (sort {$a <=> $b} keys %{$mres}) {
-	my ($bp1, $num1) = split(/-/, $mres->{$_}{nodedata1});
-	my ($bp2, $num2) = split(/-/, $mres->{$_}{nodedata2});
+    foreach (sort {$a <=> $b} keys %{$match_verbose}) {
+	my ($bp1, $num1) = split(/-/, $match_verbose->{$_}{nodedata1});
+	my ($bp2, $num2) = split(/-/, $match_verbose->{$_}{nodedata2});
 	$expression_orig .= $graph1->[$bp1]{midasi};
 	
 	# マッチした表現からDBの中の表現まで
@@ -1378,7 +1373,7 @@ sub make_relnode_log {
 }
 
 sub st_make_log {
-    my ($this, $graph1, $graph2, $tmid, $mres) = @_;
+    my ($this, $graph1, $graph2, $tmid, $match_verbose) = @_;
     my $result;
     
     # expression_orig
@@ -1386,9 +1381,9 @@ sub st_make_log {
     my $expression_exam;
     my $id_orig;
     my $id_exam;
-    foreach (sort {$a <=> $b} keys %{$mres}) {
-	my ($bp1, $num1) = split(/-/, $mres->{$_}{nodedata1});
-	my ($bp2, $num2) = split(/-/, $mres->{$_}{nodedata2});
+    foreach (sort {$a <=> $b} keys %{$match_verbose}) {
+	my ($bp1, $num1) = split(/-/, $match_verbose->{$_}{nodedata1});
+	my ($bp2, $num2) = split(/-/, $match_verbose->{$_}{nodedata2});
 	
 	# マッチした表現
 	$expression_orig .= $graph1->[$bp1]{midasi};
