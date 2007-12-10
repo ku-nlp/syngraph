@@ -39,18 +39,18 @@ $option->{coordinate_matching} = 1 if $opt{coordinate_matching};
 $option->{hypocut_matching} = $opt{hypocut_matching} if $opt{hypocut_matching};
 
 my $calcsim = new CalcSimWithSynGraph($option);
-my $result = $calcsim->Match(1, $zenbun, $query, $option);
+my ($result, $newnode) = $calcsim->Match(1, $zenbun, $query, $option);
 
-if ($result eq 'unmatch') {
+if ($result == 0) {
     print "unmatch\n";
 }
 else {
-    printf "類似度:%1.2f\n",$result->{score};
+    printf "類似度:%1.2f\n",$newnode->{score};
 
     if ($opt{match_print}){
 	printf "マッチング:\n";
-	foreach my $qmatch (keys %{$result->{matchbp}}){ 
-	    printf "$qmatch <=> $result->{matchbp}->{$qmatch}->{match_node}   <$result->{matchbp}->{$qmatch}->{match_type}>\n";
+	foreach my $qmatch (keys %{$newnode->{matchbp}}){ 
+	    printf "$qmatch <=> $newnode->{matchbp}->{$qmatch}->{match_node}   <$newnode->{matchbp}->{$qmatch}->{match_type}>\n";
 	}
     }
 }
