@@ -250,7 +250,7 @@ sub make_bp {
 		# 付属語・素性などを考慮してSynGraphマッチング
 		# マッチする場合は新たに付与するnodeを得る
 		my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose);
-		next if ($result eq 'unmatch');
+		next if ($result == 0);
 
 		# NODEのLOG
 		my $log;
