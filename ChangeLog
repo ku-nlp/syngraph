@@ -1,3 +1,11 @@
+2007-12-10  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl, perl/CalcSimWithSynGraph.pm:
+	関数syngraph_matching_and_get_newnodeの変更に対応
+
+	* perl/SynGraph.pm:
+	関数syngraph_matching_rough, syngraph_matching_and_get_newnodeまわりの変数名, 返り値を大幅変更
+
 2007-12-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/build.sh:
