@@ -313,7 +313,7 @@ sub st_make_bp {
 	    # 翻訳時のみ、子がある場合は、"子->親"のキーも探索
 	    if ($option->{mt_trans}) {
 		foreach my $c (keys %{$node->{childbp}}) {
-		    foreach my $child_node (@{$ref->{$sid}[$c]}) {
+		    foreach my $child_node (@{$ref->{$sid}[$c]{nodes}}) {
 			next if ($node->{not_synnode});
 			my $head_key = $child_node->{id}."->".$node->{id};
 			push(@head_list, @{$this->{st_head}{$head_key}}) if ($this->{st_head}{$head_key});
