@@ -300,7 +300,7 @@ sub st_make_bp {
 
     # ノードはどんどん追加されるので、元のノードを退避してforeachをまわす
     # こうしないと、追加されたノードまで新たなキーとしてしまう
-    my @node_list = @{$ref->{$sid}[$bp]};
+    my @node_list = @{$ref->{$sid}[$bp]{nodes}};
     my %stid_tmp;
     foreach my $node (@node_list) {
         next if ($node->{weight} == 0);
@@ -1391,11 +1391,11 @@ sub st_make_log {
 
 	# マッチしたノードのID
 	$id_orig .= " + " if ($id_orig);
-	$id_orig .="<$graph1->[$bp1][$num1]{id}>";
+	$id_orig .="<$graph1->[$bp1]{nodes}[$num1]{id}>";
 	foreach (keys %{$penalty}) {
-	    if ($graph1->[$bp1][$num1]{$_}) {
+	    if ($graph1->[$bp1]{nodes}[$num1]{$_}) {
 		if ($_ eq 'fuzoku' or $_ eq 'case') {
-		    $id_orig .= "<$_:$graph1->[$bp1][$num1]{$_}>";
+		    $id_orig .= "<$_:$graph1->[$bp1]{nodes}[$num1]{$_}>";
 		}
 		else {
 		    $id_orig .= "<$_>";
@@ -1403,11 +1403,11 @@ sub st_make_log {
 	    }
 	}
 	$id_exam .= " + " if ($id_exam);
-	$id_exam .="<$graph2->[$bp2][$num2]{id}>";
+	$id_exam .="<$graph2->[$bp2]{nodes}[$num2]{id}>";
 	foreach (keys %{$penalty}) {
-	    if ($graph2->[$bp2][$num2]{$_}) {
+	    if ($graph2->[$bp2]{nodes}[$num2]{$_}) {
 		if ($_ eq 'fuzoku' or $_ eq 'case') {
-		    $id_exam .= "<$_:$graph2->[$bp2][$num2]{$_}>";
+		    $id_exam .= "<$_:$graph2->[$bp2]{nodes}[$num2]{$_}>";
 		}
 		else {
 		    $id_exam .= "<$_>";
