@@ -1929,8 +1929,13 @@ sub _mldbm_retrieve {
 sub get_st_data_value {
     my ($this, $ref, $key) = @_;
 
-    foreach my $st_data (@{$ref}) {
-        return $st_data->{$key} if (defined $st_data->{$key});
+    if (ref $ref eq 'ARRAY') {
+	foreach my $st_data (@{$ref}) {
+	    return $st_data->{$key} if (defined $st_data->{$key});
+	}
+    }
+    else {
+	return $this->{st_data}->{$key};
     }
 }
 
