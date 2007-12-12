@@ -1100,6 +1100,12 @@ sub syngraph_matching_and_get_newnode {
 		    # MTでアライメントをとるときはheadでの違いは否定以外はみない。
 		    $newnode->{negation} = 1 if ($match_verbose->{$matchkey}{unmatch_feature}{negation});
 		}
+
+		# 付属語が異なり、かつ、$graph2の方にfuzokuがあれば、マッチさせない
+		# 例: 「あり <=> あるとすれば」などをマッチさせない
+		if (defined $match_verbose->{$matchkey}{unmatch_feature}{fuzoku} && $graph2->[$bp2]{nodes}[$node_index2]{fuzoku}) {
+		    return 0;
+		}
 	    }
 	}
 
