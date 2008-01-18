@@ -1,3 +1,8 @@
+2008-01-19  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl
+	store_fstringを有効にするオプションを追加(-store_fstring)
+	
 2008-01-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/knp_syn.pl:
