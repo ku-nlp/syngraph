@@ -186,6 +186,8 @@ sub make_tree {
 
 	    $tree_ref->{$sid}[$bp_num]{parentbp} = $node->{parent} if $node->{parent};
 
+	    $tree_ref->{$sid}[$bp_num]{fstring} = $node->{fstring} if $option->{store_fstring};
+
 	    # SYNGRAPHに登録
             $this->_regnode({ref         => $tree_ref,
                              sid         => $sid,
@@ -689,6 +691,12 @@ sub _get_keywords {
 		}
 	    }
 	}
+
+	# fstring
+	if ($option->{store_fstring}) {
+	    $tmp{fstring} = $tag->fstring;
+	}
+
 	push(@{$keywords[$tag->{id}]}, \%tmp);
 	
 	# ALTの処理(意味有が1形態素と仮定)
