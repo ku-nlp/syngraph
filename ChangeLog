@@ -1,3 +1,12 @@
+2008-01-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl:
+	store_fstringを有効にするオプションを追加(-fstring)
+	(-store_fstringにしなかったのは-sentenceとバッティングしないようにするため)
+
+	* perl/SynGraph.pm:
+	SynGraphに基本句のfstringを持たせるオプションを追加(store_fstring)
+
 2007-12-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm:
