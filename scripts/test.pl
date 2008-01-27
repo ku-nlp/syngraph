@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'debug', 'match_print', 'no_case', 'postprocess', 'store_fstring','relation', 'antonym', 'hypocut_attachnode=s', 'coordinate_matching', 'hypocut_matching=s', 'orchid');
+my %opt; GetOptions(\%opt, 'debug', 'match_print', 'no_case', 'postprocess', 'store_fstring','relation', 'antonym', 'hypocut_attachnode=s', 'coordinate_matching', 'hypocut_matching=s', 'orchid', 'relation_recursive');
 
 my ($zenbun, $query);
 if ($ARGV[0] && $ARGV[1]) {
@@ -34,6 +34,7 @@ $option->{no_case} = 1 if $opt{no_case};
 $option->{postprocess} = 1 if $opt{postprocess};
 $option->{store_fstring} = 1 if $opt{store_fstring};
 $option->{relation} = 1 if $opt{relation};
+$option->{relation_recursive} = 1 if $opt{relation_recursive};
 $option->{antonym} = 1 if $opt{antonym};
 $option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 $option->{coordinate_matching} = 1 if $opt{coordinate_matching};
