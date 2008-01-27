@@ -753,7 +753,8 @@ sub _regnode {
     return if ($this->{mode} eq 'repeat' and $bp == @{$ref->{$sid}} - 1 and !$childbp);
 
     # スコアが小さいIDは登録しない
-    if ($score >= $regnode_threshold or ($this->{mode} =~ /irex/ and $weight == 0)) {
+    # ただし、上位語を再帰的にはりつけるオプション(relation_recursive)の時はスコアチェックをしない
+    if (($regnode_option->{relation_recursive} || !$regnode_option->{relation_recursive} && $score >= $regnode_threshold) or ($this->{mode} =~ /irex/ and $weight == 0)) {
         # 既にそのIDが登録されていないかチェック
         if ($ref->{$sid}[$bp]) {
             foreach my $i (@{$ref->{$sid}[$bp]{nodes}}) {
@@ -806,7 +807,8 @@ sub _regnode {
         push(@{$ref->{$sid}[$bp]{nodes}}, $newid);
 
 	# 上位IDがあれば登録(ただし上位語の上位語や、反義語の上位語は登録しない)
-	if ($regnode_option->{relation} and $relation != 1 and $antonym != 1 and !$not_synnode){
+	# 上位語を再帰的にはりつけるオプション(relation_recursive)
+	if ($regnode_option->{relation} and ($regnode_option->{relation_recursive} || (!$regnode_option->{relation_recursive} && $relation != 1)) and $antonym != 1 and !$not_synnode){
 
 	    # キャッシュしておく
 	    $this->{synparentcache}{$id} = $this->GetValue($this->{synparent}{$id}) if (!defined $this->{synparentcache}{$id});
