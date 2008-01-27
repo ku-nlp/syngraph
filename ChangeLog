@@ -1,8 +1,18 @@
-2008-01-19  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+2008-01-27  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
-	* scripts/test.pl
+	* scripts/test.pl:
+	上位語を再帰的にはりつけるオプション(-relation_recursive)を追加
+
+	* perl/CalcSimWithSynGraph.pm:
+	上位語を再帰的にはりつけるオプション(relation_recursive)を追加
+
+	* perl/SynGraph.pm: 上位語を再帰的にはりつけるオプションを追加
+
+2008-01-18  odani  <odani@reed.kuee.kyoto-u.ac.jp>
+
+	* scripts/test.pl:
 	store_fstringを有効にするオプションを追加(-store_fstring)
-	
+
 2008-01-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/knp_syn.pl:
