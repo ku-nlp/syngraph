@@ -137,6 +137,9 @@ foreach my $file_type (@file) {
 	    chomp;
 	    my ($child, $parent, $number) = split(/ /, $_);
 
+	    # 文字化け対策
+	    next if $child =~ /\?/ || $parent =~ /\?/;
+
 	    # SYNIDを獲得
 	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') :  &get_synid($child);
 	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($parent, '<Wikipedia>') : &get_synid($parent);
