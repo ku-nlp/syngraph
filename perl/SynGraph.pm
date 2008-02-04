@@ -160,6 +160,13 @@ sub make_tree {
     my ($this, $knp_result, $tree_ref, $option) = @_;
     my $sid = $knp_result->id;
 
+    # KNP.pmのmake_ssを使う
+    if ($option->{use_make_ss}) {
+	my $ss = $knp_result->make_ss;
+
+	Dumpvalue->new->dumpValue($ss) if $option->{debug};
+    }
+
     my @keywords = $this->_get_keywords($knp_result, $option);
 
     return if (@keywords == 0);
