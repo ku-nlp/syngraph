@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss');
 
 my $option;
 my $knp_option;
@@ -27,6 +27,7 @@ $option->{orchid} = 1 if $opt{orchid};
 $option->{log} = 1 if $opt{log};
 $option->{cgi} = 1 if $opt{cgi};
 $option->{store_fstring} = 1 if $opt{fstring};
+$option->{use_make_ss} = 1 if $opt{use_make_ss};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
 $knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};
