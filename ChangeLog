@@ -1,5 +1,12 @@
 2008-02-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/scripts/mkdb.pl:
+	表記に小文字アルファベットを含む場合、見出しからラベルをとるように
+	半角英字を全角に変換
+
+	* MakeDic/scripts/mkdb.pl:
+	デバッグ用にデータベースを作らないオプション(-nomakedb)を追加
+
 	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/iwa.db, MakeDic/orig/iwa.xml, MakeDic/perl/Iwa2Rsk.pm:
 	記号に関する処理の修正
 
