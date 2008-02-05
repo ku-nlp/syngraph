@@ -1,3 +1,16 @@
+2008-02-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/iwa.db, MakeDic/orig/iwa.xml, MakeDic/perl/Iwa2Rsk.pm:
+	記号に関する処理の修正
+
+2008-02-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl:
+	KNP.pmのmake_ssを使うオプション(use_make_ss)を追加
+
+	* perl/SynGraph.pm:
+	KNP.pmのmake_ssを使うオプション(use_make_ss)を追加(そのうちデフォルトに)
+
 2008-02-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/knp_syn.pl:
@@ -8,7 +21,7 @@
 
 2008-01-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
-	* perl/Constant.pm: ContenW.dicへのパスを追加
+	* perl/Constant.pm: ContentW.dicへのパスを追加
 
 2008-01-28  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
