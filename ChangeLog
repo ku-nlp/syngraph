@@ -1,3 +1,8 @@
+2008-02-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/scripts/mkdic.pl:
+	ContentW.dicからすべての代表表記を得る際に、重複を除去するように変更
+
 2008-02-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/scripts/mkdb.pl:
