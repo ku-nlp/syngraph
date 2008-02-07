@@ -1,4 +1,34 @@
+2008-02-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db:
+	表記の英字を全角に
+
+	* MakeDic/scripts/mkdb.pl:
+	RSKの構造体メンバであるbufに対して、正規表現をかけるように変更
+
+	* MakeDic/perl/Rsk.pm: 表記の英字を全角に
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/scripts/mkdb.pl:
+	ラベルの代表表記の曖昧性を解消する場合に、読みがカタカナであればひらがなに変換して、それがマッチするかどうかもチェックするように
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/orig/iwa.xml, MakeDic/perl/Iwa2Rsk.pm:
+	スペルから得た表記を<表記アルファベット>というタグにして、もともとの表記と区別するように変更
+
 2008-02-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/orig/iwa.xml, MakeDic/perl/Iwa2Rsk.pm:
+	スペルから表記を得る際に、すでにある表記と重複がないかをチェックするように修正
+
+	* MakeDic/result/case3.dic, MakeDic/scripts/mkdic.pl:
+	エントリーが2つ以上登録されている場合に、「</項目>」が出力されないバグを修正
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	rep2hinsi.db, rep2bunrui.dbのパス変更
+
+	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db:
+	最新のJUMANで解析
+
+	* MakeDic/scripts/mkdb.pl: 定数をConstant.pmからとるように変更
 
 	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/scripts/mkdic.pl:
 	ContentW.dicからすべての代表表記を得る際に、重複を除去するように変更
