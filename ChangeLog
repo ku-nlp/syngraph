@@ -1,4 +1,21 @@
+2008-02-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case3.dic, MakeDic/scripts/mkdic.pl:
+	エントリが二つ以上ある場合に、一番最初に決め打って出力するのではなく、表記/見出/代表表記の一致をみて一番いいものを出力するように変更
+
+	* MakeDic/orig/iwa.xml, MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/perl/Iwa2Rsk.pm:
+	「↓」に関する処理の微調整
+
+	* ExtractSynfromDic/scripts/x4syn.pl: 表記の扱いの微調整
+
+	* ExtractSynfromDic/scripts/make_rep_db.pl:
+	ContentW.dicのパスをConstant.pmから取得
+
 2008-02-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic: 最新のJUMANで解析
+
+	* MakeDic/scripts/mkdic.pl: ContentW.dicのパスをConstant.pmから取得
 
 	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db:
 	表記の英字を全角に
