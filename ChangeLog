@@ -1,3 +1,22 @@
+2008-02-09  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: notationの変更に対応
+
+	* scripts/conv_syndb.pl: notationの変更
+
+	* scripts/calc-similarity-synonym.pl: ナ形容詞、ナノ形容詞の扱いの変更
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/antonym.txt, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/web_news.txt.log, dic_middle/antonym.txt.merge, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add:
+	辞書変換プログラムの更新
+
+	* dic/web_news/www.txt.jumanremoved.log: JUMANの更新に対応
+
+	* dic/rsk_iwanami/isa.txt.filtered, dic/rsk_iwanami/antonym.txt, dic/rsk_iwanami/definition.txt, dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/same_definition.txt, dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt, dic/rsk_iwanami/synonym.txt.filtered:
+	辞書変換プログラムの更新
+
+	* ExtractSynfromDic/db/rep2bunrui.db, ExtractSynfromDic/db/rep2hinsi.db:
+	最新のJUMANのものに更新
+
 2008-02-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* MakeDic/result/case3.dic, MakeDic/scripts/mkdic.pl:
