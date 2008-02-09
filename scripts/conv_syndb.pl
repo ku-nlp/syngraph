@@ -68,10 +68,10 @@ my @file = ('synonym_dic', 'synonym_web_news');
 foreach my $file_type (@file) {
     my $file_tag;
     if ($file_type eq 'synonym_dic') {
-	$file_tag = '<DIC>';
+	$file_tag = '[DIC]';
     }
     elsif ($file_type eq 'synonym_web_news') {
-	$file_tag = '<Web>';
+	$file_tag = '[Web]';
     }
     if ($opt{$file_type}) {
 	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
@@ -95,7 +95,7 @@ foreach my $file_type (@file) {
 		
 		# 定義文がある場合も登録
 		if ($definition{$syn}) {
-		    my $def_key = $definition{$syn} . '<定義文>';
+		    my $def_key = $definition{$syn} . '[定義文]';
 		    push (@{$syn_group{$synid}}, $def_key);
 		    push (@{$syn_hash{$definition{$syn}}}, $synid);
 		    $def_delete{$syn} = 1 if (!defined $def_delete{$syn});
@@ -141,8 +141,8 @@ foreach my $file_type (@file) {
 	    next if $child =~ /\?/ || $parent =~ /\?/;
 
 	    # SYNIDを獲得
-	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '<Wikipedia>') :  &get_synid($child);
-	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($parent, '<Wikipedia>') : &get_synid($parent);
+	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '[Wikipedia]') :  &get_synid($child);
+	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($parent, '[Wikipedia]') : &get_synid($parent);
 	    if (&contradiction_check($parentsyn_list, $childsyn_list)) {
 		if ($option{log} and $opt{log_merge}) {
 		    print LM "X contradiction isa $child, $parent\n";
@@ -242,8 +242,8 @@ foreach my $midasi (keys %definition) {
     my $synid = 's' . $syn_number . ":" . (split(/:/, $midasi))[0];
     $syn_number++;
 
-    my $midasi_key = $midasi . '<DIC>';
-    my $def_key = $definition{$midasi} . '<定義文>';
+    my $midasi_key = $midasi . '[DIC]';
+    my $def_key = $definition{$midasi} . '[定義文]';
     push (@{$syn_group{$synid}}, $midasi_key);
     push (@{$syn_group{$synid}}, $def_key);
     push (@{$syn_hash{$midasi}}, $synid);
@@ -262,14 +262,14 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/<(定義文|DIC|Web|Wikipedia)>$//g;
+	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//g;
 	    
 	    # :1/1:1/1:1/1を取る
 	    ($expression, my $word_id) = split(/:/, $expression, 2);
 	    $word_id = ":$word_id" if $word_id;
 
             # 出力
-            print CF "# S-ID:$synid,$expression$word_id $tag\n";
+            print CF "# S-ID:$synid,$expression$word_id\[$tag\]\n";
             print CF "$expression\n";
             
 	    # 同義グループ情報
@@ -277,10 +277,10 @@ if ($opt{convert_file}) {
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
 	    if ($tag eq 'DIC') {
-		$expression .= "$word_id" . "<$tag>";
+		$expression .= "$word_id" . "[$tag]";
 	    }
 	    else { # '定義文''Web'
-		$expression .= "<$tag>";
+		$expression .= "[$tag]";
 	    }
 	    $syndb{$synid} .= $syndb{$synid} ? "|$expression" : "$expression";
 	}
@@ -360,7 +360,7 @@ sub get_synid {
 	$syn_number++;
 	
         # グループに登録
-	$type = '<DIC>' unless $type; # defaultは<DIC>
+	$type = '[DIC]' unless $type; # defaultは[DIC]
 	my $word_key = $word . $type;
 	push (@{$syn_group{$synid}}, $word_key);
         push (@{$syn_hash{$word}}, $synid);
@@ -368,7 +368,7 @@ sub get_synid {
         # 定義文があるとき
 	my @log;
         if ($definition{$word}) {
-	    my $def_key = $definition{$word} . '<定義文>';
+	    my $def_key = $definition{$word} . '[定義文]';
 	    push (@{$syn_group{$synid}}, $def_key);
 	    push (@{$syn_hash{$definition{$word}}}, $synid);
 	    $def_delete{$word} = 1 if (!defined $def_delete{$word});
