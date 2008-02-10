@@ -8,13 +8,14 @@ use strict;
 use Getopt::Long;
 use KNP;
 use utf8;
+use Constant;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
 # merge: A=B, B=C, C=A のマージ
-my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'debug');
+my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'read_multiple_entries', 'distributional_similarity', 'debug');
 
 my $edit_distance;
 
@@ -22,12 +23,23 @@ my $edit_distance;
 # ＷＴＯ 国際貿易機関 世界観光機関 6 0.769830750246244
 my $MERGE_TH_EDITDISTANCE = 0.5;
 
+my $MERGE_TH_DISTRIBUTIONAL_SIMILARITY = 0.5;
+
 if ($opt{editdistance}) {
     require EditDistance;
 
     $edit_distance = new EditDistance({del_penalty => 1,
 				      ins_penalty => 1,
 				      rep_penalty => 1.5});
+}
+
+my $cscf;
+if ($opt{distributional_similarity}) {
+    require CalcSimilarityByCF;
+
+    $cscf = new CalcSimilarityByCF({ method => 'Simpson' });
+
+    $cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
 }
 
 my $knp = new KNP(-Option => '-tab -dpnd');
@@ -40,49 +52,84 @@ my $rnsame_counter = 0;
 
 my @line;
 
-while (<>) {
-    chomp;
+my (%editdata);
+my (%distributional_similarity_data);
 
-    my ($word1, $word2) = split;
+if ($opt{read_multiple_entries}) {
+    &read_input_multiple_entries;
+}
+else {
+    &read_input;
+}
 
-    if ($word1 eq $word2) {
-	print STDERR "★same entry synonym_web_news: $word1, $word2\n";
-	$same_counter++;
-	next;
-    }
+&calculate_editdistance if $opt{editdistance};
 
-    if ($word1 gt $word2) {
-	my $tmp = $word1;
-	$word1 = $word2;
-	$word2 = $tmp;
-    }
+&calculate_distributional_similarity if $opt{distributional_similarity};
 
-    if (defined $data{$word1}{$word2}) {
-	print STDERR "★duplicate entry synonym_web_news: $word1, $word2\n";
-	$dup_counter++;
-    }
-    else {
-	$data{$word1}{$word2} = 1;
+&merge if $opt{merge};
 
-	$alldata{$word1}{$word2} = 1;
-	$alldata{$word2}{$word1} = 1;
+sub read_input {
+    while (<>) {
+	chomp;
 
-	# 代表表記が同じ
-	if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
-	    print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2\n";
-	    $rnsame_counter++;
+	my ($word1, $word2) = split;
+
+	if ($word1 eq $word2) {
+	    print STDERR "★same entry synonym_web_news: $word1, $word2\n";
+	    $same_counter++;
 	    next;
 	}
 
-	print "$word1 $word2\n" unless $opt{merge};
-	push @line, [ $word1, $word2 ];
+	if ($word1 gt $word2) {
+	    my $tmp = $word1;
+	    $word1 = $word2;
+	    $word2 = $tmp;
+	}
 
+	if (defined $data{$word1}{$word2}) {
+	    print STDERR "★duplicate entry synonym_web_news: $word1, $word2\n";
+	    $dup_counter++;
+	}
+	else {
+	    $data{$word1}{$word2} = 1;
+
+	    $alldata{$word1}{$word2} = 1;
+	    $alldata{$word2}{$word1} = 1;
+
+	    # 代表表記が同じ
+	    if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
+		print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2\n";
+		$rnsame_counter++;
+		next;
+	    }
+
+	    print "$word1 $word2\n" unless $opt{merge};
+	    push @line, [ $word1, $word2 ];
+
+	}
     }
 }
 
-my %editdata;
-my %editdistance;
-if ($opt{editdistance}) {
+sub read_input_multiple_entries {
+    while (<>) {
+	chomp;
+
+#	$_ = Encode::decode('euc-jp', $_);
+	my (@words) = split;
+
+	for (my $i = 0; $i < @words; $i++) {
+	    for (my $j = $i + 1; $j < @words; $j++) {
+
+		$alldata{$words[$i]}{$words[$j]} = 1;
+		$alldata{$words[$j]}{$words[$i]} = 1;
+	    }
+	}
+	push @line, \@words;
+    }
+}
+
+# 編集距離の計算
+sub calculate_editdistance {
     foreach my $target_word (keys %alldata) {
 	foreach my $word1 (keys %{$alldata{$target_word}}) {
 	    foreach my $word2 (keys %{$alldata{$target_word}}) {
@@ -92,7 +139,7 @@ if ($opt{editdistance}) {
 		# 語長で正規化
 		my $distance_normalized = $distance / (log(length($word1)) + 1) / (log(length($word2)) + 1);
 
-		$editdistance{$word1}{$word2} = $distance_normalized;
+#		$editdistance{$word1}{$word2} = $distance_normalized;
 
 		if ($distance_normalized < $MERGE_TH_EDITDISTANCE) {
 		    print STDERR "☆Editdistance $target_word: $word1 <-> $word2 $distance $distance_normalized\n";
@@ -105,8 +152,28 @@ if ($opt{editdistance}) {
     }
 }
 
+# 分布類似度の計算
+sub calculate_distributional_similarity {
+    foreach my $target_word (keys %alldata) {
+	foreach my $word1 (keys %{$alldata{$target_word}}) {
+	    foreach my $word2 (keys %{$alldata{$target_word}}) {
+		next if $word1 ge $word2;
+
+		my $score = $cscf->CalcSimilarity($word1, $word2, { use_normalized_repname => 1, mifilter => 1 });
+
+		if ($score >= $MERGE_TH_DISTRIBUTIONAL_SIMILARITY) {
+		    print STDERR "☆DistributionalSimilarity $target_word: $word1 <-> $word2 $score\n";
+
+		    $distributional_similarity_data{$word1}{$word2} = $target_word;
+		    $distributional_similarity_data{$word2}{$word1} = $target_word;
+		}
+	    }
+	}
+    }
+}
+
 # A=B, B=C, C=Aのマージ
-if ($opt{merge}) {
+sub merge {
     my @merged_group;
 
     foreach my $line (@line) {
@@ -120,7 +187,8 @@ if ($opt{merge}) {
 		foreach my $synonym_word (keys %{$synonym_group}) {
 		    if ($word eq $synonym_word ||
 			(defined $alldata{$word}{$synonym_word} || defined $alldata{$synonym_word}{$word}) || 
-			$opt{editdistance} && $editdata{$synonym_word}{$word} || $editdata{$word}{$synonym_word}) {
+			($opt{editdistance} && $editdata{$synonym_word}{$word} || $editdata{$word}{$synonym_word}) ||
+			($opt{distributional_similarity} && $distributional_similarity_data{$synonym_word}{$word} || $distributional_similarity_data{$word}{$synonym_word})) {
 			;
 		    }
 		    else {
