@@ -259,11 +259,18 @@ if ($opt{convert_file}) {
 
     foreach my $synid (keys %syn_group) {
 	my %check; # 曖昧性のある語の展開をチェック
+	my %definition_check;
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
 	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//g;
-	    
+
+	    # 定義文の重複を除く
+	    if ($tag eq '定義文') {
+		next if defined $definition_check{$expression};
+		$definition_check{$expression} = 1;
+	    }
+
 	    # :1/1:1/1:1/1を取る
 	    ($expression, my $word_id) = split(/:/, $expression, 2);
 	    $word_id = ":$word_id" if $word_id;
