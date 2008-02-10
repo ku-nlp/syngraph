@@ -18,10 +18,11 @@ our $JumanShareCommand = '/share/usr/bin/juman';
 our $KnpShareCommand = '/share/usr/bin/knp';
 
 # for CGI
-our $RSK4CGIdb = '/home/harashima/tools/dictionary/rsk/rsk4cgi.db';
+our $RSK4CGIdb = $SynGraphBaseDir . '/ExtractSynfromDic/db/rsk4cgi.db';
 
 # 分布類似度計算用のデータベース
 our $CalcsimMidbfile = '/home/shibata/work/CalcSimilarityByCF/db/all-mi';
+our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2/all-mi';
 
 our $ContentWdic = '/home/shibata/download/juman/dic/ContentW.dic';
 
