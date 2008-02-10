@@ -10,6 +10,8 @@ use strict;
 use encoding 'euc-jp';
 use Getopt::Long;
 use JumanLib;
+use Constant;
+use CalcSimilarityByCF;
 binmode STDERR, ':encoding(euc-jp)';
 
 my (%opt);
@@ -21,6 +23,12 @@ unless ( -e $opt{jumandicdir} ) {
     print STDERR "Please specify Jumandicdir!!\n";
     exit;
 }
+
+my $cscf = new CalcSimilarityByCF({ method => 'Simpson' });
+
+$cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
+
+my $TH_DISTRIBUTIONAL_SIMILARITY = 0.4;
 
 # Jumanの辞書の読み込み
 for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
@@ -52,12 +60,18 @@ while (<>) {
 	print STDERR "☆$word1 $word2\n";
 	next;
     }
-    # とりあえず保留
-    elsif (defined $MIDASI{$word1}) {
-	print STDERR "★$word1 $word2\n";
-    }
-    elsif (defined $MIDASI{$word2}) {
-	print STDERR "★$word2 $word1\n";
+    # 片方が登録されている -> 分布類似度が高ければ採用
+    elsif (defined $MIDASI{$word1} || defined $MIDASI{$word2}) {
+	my $score = $cscf->CalcSimilarity($word1, $word2, { use_normalized_repname => 1, mifilter => 1 });
+	print STDERR "★$word1 $word2 $score";
+
+	if ($score < $TH_DISTRIBUTIONAL_SIMILARITY) {
+	    print STDERR " discarded\n";
+	    next;
+	}
+	else {
+	    print STDERR "\n";
+	}
     }
     print;
 }
