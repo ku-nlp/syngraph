@@ -1,3 +1,10 @@
+2008-02-10  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, scripts/conv_syndb.pl:
+	同義グループ内の定義文の重複を除去
+
+	* perl/Constant.pm: 複合名詞の相互情報量データベースを追加
+
 2008-02-09  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* cgi/index.cgi: notationの変更に対応
