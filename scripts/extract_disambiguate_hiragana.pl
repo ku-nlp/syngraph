@@ -43,8 +43,9 @@ for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
 	next unless $imis_dic; # 意味情報がないならスキップ
 
 	my $repname;
-	if ($imis_dic =~ /代表表記:(.+?) ?$/) {
+	if ($imis_dic =~ /代表表記:(\S+?) ?$/) {
 	    $repname = $1;
+	    next unless $repname =~ /^\p{Han}+\//;
 	}
 	else {
 	    next;
