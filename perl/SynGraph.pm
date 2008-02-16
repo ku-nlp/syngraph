@@ -551,26 +551,7 @@ sub _get_keywords {
 		# -copulaのとき、判定詞には<意味有>がないので、特別処理
 		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
 
-		my $nodename_str;
-		# 可能動詞であれば戻す
-		if ($mrph->{fstring} =~ /<可能動詞:([^\s\">]+)/) {
-		    $nodename_str = $1;
-		}
-		# 尊敬動詞であれば戻す
-		elsif ($mrph->{fstring} =~ /<尊敬動詞:([^\s\">]+)/) {
-		    $nodename_str = $1;
-		}
-                # 代表表記
-                elsif ($mrph->{fstring} =~ /<代表表記:([^\s\">]+)/) {
-		    $nodename_str = $1;
-                }
-                # 擬似代表表記
-                elsif ($mrph->{fstring} =~ /<疑似代表表記:([^\s\">]+)/) {
-		    $nodename_str = $1;
-                }
-                else {
-		    $nodename_str = $mrph->{genkei};
-                }
+		my $nodename_str = &get_nodename_str($mrph);
 
 		# 数詞の汎化
 		if ($mrph->{hinsi} eq "名詞" && $mrph->{bunrui} eq "数詞" &&
@@ -582,51 +563,7 @@ sub _get_keywords {
 		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
 		}
 
-                # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
-		# 用言/名詞曖昧性解消されてない場合、ALTの情報からSynノードを作る
-		unless ($mrph->fstring =~ /<(?:名詞|用言)曖昧性解消>/) {
-		    if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
-			foreach (@tmp){
-			    # 可能動詞であれば戻す
-			    if ($_ =~ /可能動詞:([^\s\">]+)/) {
-				push(@alt,$1);
-			    }
-			    # 尊敬動詞であれば戻す
-			    elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
-				push(@alt,$1);
-			    }
-			    # 代表表記
-			    elsif ($_ =~ /代表表記:([^\s\">]+)/){
-				push(@alt,$1);
-			    }
-			}
-		    }
-		}
-#                 # コンパイル時はALTは使わない場合
-#                 if ($this->{mode} eq 'compile' and @alt > 0) {
-#                     undef @alt;
-#                 }
-
-                # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
-		# 「歩き方」＝「歩く方法」
-		# ただし利用は文末以外
-		if ($tag->{parent}) {
-		    while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
-			# 代表表記
-			if ($1 =~ /代表表記:([^\s\">]+)/){
-			    push(@alt,$1);		
-			}
-		    }
-		}
-
-                # 同義<同義:方法/ほうほう>
-                while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
-		    # 代表表記
-		    if ($1 =~ /同義:([^\s\">]+)/){
-			push(@alt,$1);		
-		    }
-		}
-
+		push @alt, &get_alt($mrph, $tag);
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
@@ -650,15 +587,6 @@ sub _get_keywords {
 	    }
         }
 
-#         # チェック用
-#         unless ($nodename) {
-#           return;
-#             print $knp_result->all;
-#             use Dumpvalue;
-#             Dumpvalue->new->dumpValue(\@keywords);
-#             print "--------\n";
-#         }
-	
 	# 'name' => '最寄り/もより'
 	# 'fuzoku' => 'の'
 	# 'midasi' => '最寄りの'
@@ -688,6 +616,7 @@ sub _get_keywords {
 	$tmp{parent}      = $parent if ($parent);
 	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	$tmp{kakari_type} = $kakari_type if ($kakari_type);
+
 	# 格情報登録
 	if ($child->{$tag->{id}}) {
 	    foreach my $childbp (keys %{$child->{$tag->{id}}}) {
@@ -725,6 +654,81 @@ sub _get_keywords {
     }
     
     return @keywords;
+}
+
+sub get_nodename_str {
+    my ($mrph) = @_;
+
+    my $nodename_str;
+    # 可能動詞であれば戻す
+    if ($mrph->fstring =~ /<可能動詞:([^\s\">]+)/) {
+	$nodename_str = $1;
+    }
+    # 尊敬動詞であれば戻す
+    elsif ($mrph->fstring =~ /<尊敬動詞:([^\s\">]+)/) {
+	$nodename_str = $1;
+    }
+    # 代表表記
+    elsif ($mrph->fstring =~ /<代表表記:([^\s\">]+)/) {
+	$nodename_str = $1;
+    }
+    # 擬似代表表記
+    elsif ($mrph->fstring =~ /<疑似代表表記:([^\s\">]+)/) {
+	$nodename_str = $1;
+    }
+    else {
+	$nodename_str = $mrph->genkei;
+    }
+    return $nodename_str;
+}
+
+sub get_alt {
+    my ($mrph, $tag) = @_;
+
+    my @alt;
+
+    # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
+    # 用言/名詞曖昧性解消されてない場合、ALTの情報からSynノードを作る
+    unless ($mrph->fstring =~ /<(?:名詞|用言)曖昧性解消>/) {
+	if (my @tmp = ($mrph->{fstring} =~ /(<ALT.+?>)/g)) {
+	    foreach (@tmp){
+		# 可能動詞であれば戻す
+		if ($_ =~ /可能動詞:([^\s\">]+)/) {
+		    push(@alt,$1);
+		}
+		# 尊敬動詞であれば戻す
+		elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
+		    push(@alt,$1);
+		}
+		# 代表表記
+		elsif ($_ =~ /代表表記:([^\s\">]+)/){
+		    push(@alt,$1);
+		}
+	    }
+	}
+    }
+
+    # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
+    # 「歩き方」＝「歩く方法」
+    # ただし利用は文末以外
+    if ($tag->{parent}) {
+	while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
+	    # 代表表記
+	    if ($1 =~ /代表表記:([^\s\">]+)/){
+		push(@alt,$1);		
+	    }
+	}
+    }
+
+    # 同義<同義:方法/ほうほう>
+    while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
+	# 代表表記
+	if ($1 =~ /同義:([^\s\">]+)/){
+	    push(@alt,$1);		
+	}
+    }
+
+    return @alt;
 }
 
 #
