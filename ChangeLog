@@ -1,3 +1,40 @@
+2008-02-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
+	類語タグから同義語を抽出するように
+	多義でなく、双方向に同義語の場合、分布類似度が低くても削除しないように変更
+
+	* dic_change/change.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/web_news.txt.log, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log:
+	類語タグから同義語を抽出するように
+	多義でなく、双方向に同義語の場合、分布類似度が低くても削除しないように変更
+
+	* dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt.filtered, scripts/calc-similarity-synonym.pl:
+	多義でなく、双方向に同義語の場合、分布類似度が低くても削除しないように変更
+
+	* dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt, dic/rsk_iwanami/synonym.txt.filtered:
+	類語タグから同義語を抽出するように
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	類語タグから同義語を抽出するように（治療=医療）
+
+	* MakeDic/result/case3.dic, MakeDic/result/case4.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/orig/iwa.xml, MakeDic/scripts/iwa2rsk.pl:
+	品詞の「名(038)」を「形容動詞‐だ‐で‐な‐に」に変換
+
+2008-02-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: Wikipediaを追加
+
+2008-02-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case1.dic: 重複エントリの処理を追加
+
+	* MakeDic/scripts/mkdic.pl: case1においても重複エントリの処理を追加
+
+2008-02-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic, MakeDic/db/rsk.db, MakeDic/db/iwa.db, MakeDic/perl/Iwanami.pm:
+	表記の整形
+
 2008-02-10  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
