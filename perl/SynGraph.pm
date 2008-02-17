@@ -30,7 +30,9 @@ our $penalty = {fuzoku => 1.0,     # 付属語
 		sonnkei => 1,      # 尊敬表現
 		ukemi => 0.3,      # 受身表現
 		shieki => 0.3,     # 使役表現
-		negation => 0.3};  # 否定
+		negation => 0.3,   # 否定
+		semicontentword => 0.8 # 準内容語
+	    };  
 
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
@@ -209,7 +211,7 @@ sub make_tree {
                              ukemi       => $node->{ukemi},
 			     shieki      => $node->{shieki},
 			     negation    => $node->{negation},
-                             score       => 1,
+                             score       => $node->{score},
                              weight      => $weight});
         }
     }
@@ -543,7 +545,10 @@ sub _get_keywords {
 	    $level .= $1;
 	}
 
-        foreach my $mrph ($tag->mrph) {
+	my @mrphs = $tag->mrph;
+	for (my $i = 0; $i < @mrphs; $i++) {
+	    my $mrph = $mrphs[$i];
+
             next if ($mrph->{hinsi} eq '特殊' and $mrph->{bunrui} ne '記号');
 
             # 意味有
@@ -564,6 +569,12 @@ sub _get_keywords {
 		}
 
 		push @alt, &get_alt($mrph, $tag);
+
+		# 次の形態素が準内容語
+		# カウンタは除く
+		if ($option->{regist_exclude_semi_contentword} && defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
+		    push @alt, { name => &get_nodename_str($mrph), score => $penalty->{semicontentword} };
+		}
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
@@ -616,6 +627,7 @@ sub _get_keywords {
 	$tmp{parent}      = $parent if ($parent);
 	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	$tmp{kakari_type} = $kakari_type if ($kakari_type);
+	$tmp{score} = 1;
 
 	# 格情報登録
 	if ($child->{$tag->{id}}) {
@@ -636,12 +648,13 @@ sub _get_keywords {
 	push(@{$keywords[$tag->{id}]}, \%tmp);
 	
 	# ALTの処理(意味有が1形態素と仮定)
-	foreach my $alt_key (@alt) {
+	foreach my $alt (@alt) {
 	    # 表記が同じものは無視
-	    next if (grep($alt_key eq $_->{name}, @{$keywords[$tag->{id}]}));
+	    next if (grep($alt->{name} eq $_->{name}, @{$keywords[$tag->{id}]}));
 	    # 登録
 	    my %tmp2 = %tmp;
-	    $tmp2{name} = $alt_key;
+	    $tmp2{name} = $alt->{name};
+	    $tmp2{score} = $alt->{score};
 	    push(@{$keywords[$tag->{id}]}, \%tmp2);
 	}
 	
@@ -687,6 +700,8 @@ sub get_alt {
 
     my @alt;
 
+    my $score = 1; # ここで得られるものはすべてスコア1
+
     # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
     # 用言/名詞曖昧性解消されてない場合、ALTの情報からSynノードを作る
     unless ($mrph->fstring =~ /<(?:名詞|用言)曖昧性解消>/) {
@@ -694,15 +709,15 @@ sub get_alt {
 	    foreach (@tmp){
 		# 可能動詞であれば戻す
 		if ($_ =~ /可能動詞:([^\s\">]+)/) {
-		    push(@alt,$1);
+		    push @alt, { name => $1, score => $score };
 		}
 		# 尊敬動詞であれば戻す
 		elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
-		    push(@alt,$1);
+		    push @alt, { name => $1, score => $score };
 		}
 		# 代表表記
 		elsif ($_ =~ /代表表記:([^\s\">]+)/){
-		    push(@alt,$1);
+		    push @alt, { name => $1, score => $score };
 		}
 	    }
 	}
@@ -715,7 +730,7 @@ sub get_alt {
 	while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
 	    # 代表表記
 	    if ($1 =~ /代表表記:([^\s\">]+)/){
-		push(@alt,$1);		
+		push @alt, { name => $1, score => $score };
 	    }
 	}
     }
@@ -724,7 +739,7 @@ sub get_alt {
     while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
 	# 代表表記
 	if ($1 =~ /同義:([^\s\">]+)/){
-	    push(@alt,$1);		
+	    push @alt, { name => $1, score => $score };
 	}
     }
 
