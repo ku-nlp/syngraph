@@ -552,7 +552,7 @@ sub _get_keywords {
             next if ($mrph->{hinsi} eq '特殊' and $mrph->{bunrui} ne '記号');
 
             # 意味有
-            if ($mrph->{fstring} =~ /<意味有>/ ||
+            if ($mrph->{fstring} =~ /<準?内容語>/ ||
 		# -copulaのとき、判定詞には<意味有>がないので、特別処理
 		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
 
@@ -570,9 +570,10 @@ sub _get_keywords {
 
 		push @alt, &get_alt($mrph, $tag);
 
-		# 次の形態素が準内容語
+		# 次の形態素が準内容語(自分は内容語)
 		# カウンタは除く
-		if ($option->{regist_exclude_semi_contentword} && defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
+		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<内容語>/ &&
+		    defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
 		    push @alt, { name => &get_nodename_str($mrph), score => $penalty->{semicontentword} };
 		}
             }
