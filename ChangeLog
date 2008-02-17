@@ -1,3 +1,13 @@
+2008-02-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl:
+	準内容語を除いたものをノードに登録するオプションを追加
+
+	* perl/SynGraph.pm:
+	準内容語を除いたものをノードに登録するオプションを追加
+	(ネットワーク化 -> ネットワーク, 深み -> 深い)
+	※ただし準内容語がカウンタの場合はこの処理を行なわない
+
 2008-02-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
