@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword');
 
 my $option;
 my $knp_option;
@@ -34,6 +34,8 @@ $regnode_option->{relation} = 1 if $opt{relation};
 $regnode_option->{antonym} = 1 if $opt{antonym};
 $regnode_option->{cgi} = 1 if $opt{cgi};
 $regnode_option->{log} = 1 if $opt{log};
+
+$option->{regist_exclude_semi_contentword} = 1 if $opt{regist_exclude_semi_contentword};
 
 # 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけないオプション
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
