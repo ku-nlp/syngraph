@@ -1,3 +1,36 @@
+2008-02-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, scripts/calc-similarity-synonym.pl, dic_change/change.log, dic_change/isa.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic_middle/synonym_dic.txt, dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt.filtered, dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt.filtered:
+	同義/上位下位関係のいずれかの表現が複数文節の時の扱いのbug fix.
+
+2008-02-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: /share/usr/binを使わないように変更
+
+2008-02-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: small change.
+
+	* ChangeLog: updated.
+
+	* scripts/knp_syn.pl:
+	準内容語を除いたものをノードに登録するオプションを追加
+
+	* perl/SynGraph.pm:
+	準内容語を除いたものをノードに登録するオプションを追加
+	(ネットワーク化 -> ネットワーク, 深み -> 深い)
+	※ただし準内容語がカウンタの場合はこの処理を行なわない
+
+2008-02-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: コードの整理
+
+	* ChangeLog: updated.
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb:
+	類語タグから同義語を抽出するように
+	多義でなく、双方向に同義語の場合、分布類似度が低くても削除しないように変更
+
 2008-02-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/knp_syn.pl:
