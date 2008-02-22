@@ -1243,7 +1243,7 @@ sub OutputSynFormat {
 	}
 
     	# SYNGRPH情報の付与
-	$ret_string .= "$syngraph_string->[$bp]";
+	$ret_string .= $syngraph_string->[$bp];
 	$bp++;
     }
     $ret_string .= "EOS\n";
@@ -1511,17 +1511,16 @@ sub format_syngraph {
 		$matchbp .= !defined $matchbp ? "$_" : ",$_";
 	    }
 
-	    unless (grep($matchbp eq $_, keys %$res)) {
-
+	    if (!defined $res->{$matchbp}) {
 		# 親
 		my $parent;
 		if ($syn_bp->{$syngraph->[$bp_num]{parentbp}}) {
 		    foreach my $parentbp (keys %{$syn_bp->{$syngraph->[$bp_num]{parentbp}}}) {
-			# 親ノードとして正しいかチェック
+			# 自分のノードに属する基本句のどれかが親のノードの基本句のいずれかにマッチしたら親ノードとしない
 			my $flag;
-			foreach my $a (split(/,/, $parentbp)) {
-			    foreach my $b (split(/,/, $matchbp)) {
-				if ($a == $b) {
+			foreach my $pbp (split(/,/, $parentbp)) {
+			    foreach my $mbp (split(/,/, $matchbp)) {
+				if ($pbp == $mbp) {
 				    $flag = 1;
 				    last;
 				}
@@ -1531,8 +1530,7 @@ sub format_syngraph {
 			next if ($flag);
 			
 			$parent .= !defined $parent ? "$parentbp" : "/$parentbp";
-			}
-
+		    }
 		}
 		else { # 親が-1
 		    $parent = $syngraph->[$bp_num]{parentbp};
@@ -1565,14 +1563,14 @@ sub get_nodestr {
 
     # !行の出力を格納
     $string = "! $bp <SYNID:$node->{id}><スコア:$node->{score}>";
-    $string .= "<反義語>" if ($node->{antonym});
-    $string .= "<上位語>" if ($node->{relation});
+    $string .= '<反義語>' if ($node->{antonym});
+    $string .= '<上位語>' if ($node->{relation});
     $string .= "<下位語数:$node->{hypo_num}>" if ($node->{hypo_num});
-    $string .= "<否定>" if ($node->{negation});
-    $string .= "<可能>" if ($node->{kanou});
-    $string .= "<尊敬>" if ($node->{sonnkei});
-    $string .= "<受身>" if ($node->{ukemi});
-    $string .= "<使役>" if ($node->{shieki});
+    $string .= '<否定>' if ($node->{negation});
+    $string .= '<可能>' if ($node->{kanou});
+    $string .= '<尊敬>' if ($node->{sonnkei});
+    $string .= '<受身>' if ($node->{ukemi});
+    $string .= '<使役>' if ($node->{shieki});
 
     # nodeのdetail
     if ($option->{detail}) {
@@ -1603,9 +1601,6 @@ sub get_nodestr {
 	    $string .= "\t\t-----------------------------------------------------------\n";
 	}
     }
-
-
-
 
     return $string;
 }
