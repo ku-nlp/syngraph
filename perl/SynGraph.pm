@@ -1233,18 +1233,24 @@ sub OutputSynFormat {
     # KNPとSYNGRAPHを併せて出力
     $ret_string = $result->comment;
     my $bp = 0;
-    foreach my $tag ($result->tag) {
-	# knp解析結果を出力
-	$ret_string .= '+ ';
-	$ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
-	$ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
-	foreach my $mrph ($tag->mrph) {
-	    $ret_string .= $mrph->spec;
-	}
+    foreach my $bnst ($result->bnst) {
+	$ret_string .= '* ';
+	$ret_string .= $bnst->{parent} ? $bnst->{parent}->{id} : -1;
+	$ret_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
 
-    	# SYNGRPH情報の付与
-	$ret_string .= $syngraph_string->[$bp];
-	$bp++;
+	foreach my $tag ($bnst->tag) {
+	    # knp解析結果を出力
+	    $ret_string .= '+ ';
+	    $ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
+	    $ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
+	    foreach my $mrph ($tag->mrph) {
+		$ret_string .= $mrph->spec;
+	    }
+
+	    # SYNGRPH情報の付与
+	    $ret_string .= $syngraph_string->[$bp];
+	    $bp++;
+	}
     }
     $ret_string .= "EOS\n";
 
