@@ -7,12 +7,15 @@ package Constant;
 use strict;
 use utf8;
 
+my $uname = `uname -m`;
+chomp $uname;
+
 our $SynGraphBaseDir = '/home/shibata/work/SynGraph';
 
-our $JumanCommand = '/home/harashima/usr/bin/juman';
-our $JumanRcfile = '/home/harashima/usr/etc/jumanrc';
-our $KnpCommand = '/home/shibata/tool/bin/knp';
-our $KnpRcfile = '/home/shibata/.knprc';
+our $JumanCommand = '/home/shibata/tool-dic-analyze/bin/juman';
+our $JumanRcfile = '/home/shibata/tool-dic-analyze/etc/jumanrc';
+our $KnpCommand = $uname eq 'x86_64' ? '/home/shibata/tool-x86_64/bin/knp' : '/home/shibata/tool/bin/knp';
+our $KnpRcfile = $uname eq 'x86_64' ? '/home/shibata/.knprc-orchid' : '/home/shibata/.knprc';
 
 our $JumanShareCommand = '/share/usr/bin/juman';
 our $KnpShareCommand = '/share/usr/bin/knp';
