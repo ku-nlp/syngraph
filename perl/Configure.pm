@@ -24,6 +24,10 @@ our $RSK4CGIdb = $SynGraphBaseDir . '/ExtractSynfromDic/db/rsk4cgi.db';
 our $CalcsimMidbfile = '/home/shibata/work/CalcSimilarityByCF/db/all-mi';
 our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2/all-mi';
 
+# for calc-similarity-synonym.pl
+our $Oneformatted = '/home/shibata/work/CalcSimilarityByCF/one.formatted/080214.one.formatted';
+our $Oneformatteddb = $SynGraphBaseDir . '/db/080214.one.formatted.db';
+
 our $ContentWdic = '/home/shibata/download/juman/dic/ContentW.dic';
 
 1;
