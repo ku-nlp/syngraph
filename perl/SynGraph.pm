@@ -11,6 +11,7 @@ use BerkeleyDB;
 use Storable qw(freeze thaw);
 use MLDBM qw(BerkeleyDB::Hash Storable);
 use CDB_File;
+use Constant;
 
 #
 # 定数
@@ -66,6 +67,16 @@ sub new {
     $knp_pm_args{'-JumanCommand'} = $knp_option->{jumancommand} if defined $knp_option->{jumancommand};
     $knp_pm_args{'-JumanRcfile'} = $knp_option->{jumanrcfile} if defined $knp_option->{jumanrcfile};
 
+    # version
+    my $version;
+    my $version_file = "$Constant::SynGraphBaseDir/VERSION";
+    if (-e $version_file) {
+	open F, "< $version_file" or die;
+	$version = <F>;
+	chomp $version;
+	close F;
+    }
+
     $this = {
         mode       => '',
         regnode    => '',
@@ -96,6 +107,7 @@ sub new {
 	knp        => new KNP(%knp_pm_args),
 	# by NICT
 	fast       => $option->{fast},
+	version => $version
     };
     
     bless $this;
@@ -1232,6 +1244,13 @@ sub OutputSynFormat {
 
     # KNPとSYNGRAPHを併せて出力
     $ret_string = $result->comment;
+    chomp $ret_string; # 改行をとる
+    # version
+    if (defined $this->{version}) {
+	$ret_string .= " SynGraph:$this->{version}";
+    }
+    $ret_string .= "\n";
+
     my $bp = 0;
     foreach my $bnst ($result->bnst) {
 	$ret_string .= '* ';
