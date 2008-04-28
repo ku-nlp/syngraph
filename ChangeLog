@@ -1,3 +1,8 @@
+2008-04-28  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	リダイレクトから同義関係を抽出するオプションを追加
+
 2008-04-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* perl/SynGraph.pm: OutputSynFormatでversionをうめこむように
