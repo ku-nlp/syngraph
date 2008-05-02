@@ -1,3 +1,8 @@
+2008-05-02  Michitaka Odani  <odani@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl, ExtractSynfromDic/orig/wikipedia.txt:
+	&lt;!--…--&gt;に囲まれた部分をテキストと思わないように
+
 2008-04-28  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
