@@ -16,8 +16,10 @@ sub new {
 
     my $knp_option;
     $knp_option->{no_case} = 1;
-    $knp_option->{knpcommand} = '/home/harashima/usr/bin/knp';
-    $knp_option->{jumancommand} = '/home/harashima/usr/bin/juman';
+    $knp_option->{knpcommand} = $Constant::KnpCommand;
+    $knp_option->{knprc} = $Constant::KnpRcfile;
+    $knp_option->{jumancommand} = $Constant::JumanCommand;
+    $knp_option->{jumanrc} = $Constant::JumanRcfile;
 
     $this = {
 	log_merge      => {},
