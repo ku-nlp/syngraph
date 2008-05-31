@@ -15,7 +15,7 @@ binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
 # merge: A=B, B=C, C=A のマージ
-my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'read_multiple_entries', 'distributional_similarity', 'debug');
+my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'read_multiple_entries', 'distributional_similarity', 'dicfile=s', 'debug');
 
 my $edit_distance;
 
@@ -24,6 +24,14 @@ my $edit_distance;
 my $MERGE_TH_EDITDISTANCE = 0.5;
 
 my $MERGE_TH_DISTRIBUTIONAL_SIMILARITY = 0.5;
+
+my $juman;
+
+if ($opt{dicfile}) {
+    require Juman;
+    $juman = new Juman(-Command => $Constant::JumanCommand,
+		       -Rcfile => $Constant::JumanRcfile);
+}
 
 if ($opt{editdistance}) {
     require EditDistance;
@@ -54,6 +62,11 @@ my @line;
 
 my (%editdata);
 my (%distributional_similarity_data);
+my (%dic);
+my (%dic_data);
+
+# 国語辞典から曖昧性のない名詞間の同義関係を読み込む
+&read_dicfile if $opt{dicfile};
 
 if ($opt{read_multiple_entries}) {
     &read_input_multiple_entries;
@@ -61,6 +74,8 @@ if ($opt{read_multiple_entries}) {
 else {
     &read_input;
 }
+
+&replace_synonym_dic if $opt{dicfile};
 
 &calculate_editdistance if $opt{editdistance};
 
@@ -98,7 +113,8 @@ sub read_input {
 
 	    # 代表表記が同じ
 	    if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
-		print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2\n";
+		my $repname = &GetRepname($word1);
+		print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2 ($repname)\n";
 		$rnsame_counter++;
 		next;
 	    }
@@ -128,6 +144,85 @@ sub read_input_multiple_entries {
     }
 }
 
+sub read_dicfile {
+
+    open (F, "<:encoding(euc-jp)", $opt{dicfile}) || die;
+    while (<F>){
+	chomp;
+	my $line = $_;
+
+	# 名詞でない または 1/1:1/1でない（多義）があればパス
+	my $flag = 1;
+	my @words;
+	for my $word (split (' ', $line)) {
+	    # 精根/せいこん:1/1:1/1
+	    if ($word =~ /^([^:]+):?(.+)?$/) {
+		my $midasi = $1;
+		my $id = $2;
+
+		if ($midasi =~ /^(.+?)\//) {
+		    $midasi = $1;
+		}
+
+		if ($id && $id ne '1/1:1/1') {
+		    $flag = 0;
+		    last;
+		}
+		my $result = $juman->analysis($midasi);
+		# 名詞または名詞性名詞接尾辞（者、性など）でなければパス
+		if (($result->mrph)[-1]->hinsi ne '名詞' && ($result->mrph)[-1]->bunrui ne '名詞性名詞接尾辞') {
+		    $flag = 0;
+		    last;
+		}
+		else {
+		    push @words, $midasi;
+		}
+	    }
+	}
+	if ($flag) {
+#	    for (my $i = 1; $i < @words; $i++) {
+	    for (my $i = 0; $i < @words; $i++) {
+		$dic{$words[$i]} = $words[0];
+	    }
+#	    print STDERR join (' ', @words), "\n";
+	}
+    }
+    close F;
+}
+
+sub replace_synonym_dic {
+
+    foreach my $target_word (keys %alldata) {
+	my $replaced_word;
+
+	my $result = $juman->analysis($target_word);
+	my $replaced_flag = 0; # いずれかの形態素で置換されたかどうか
+
+	# 1形態素のものはここでマージしなくてもいい
+	next if scalar $result->mrph == 1;
+
+	for my $mrph ($result->mrph) {
+	    my $replaced_flag_mrph = 0; # この形態素が置換されたかどうか
+
+	    foreach my $word (keys %dic) {
+		if ($mrph->midasi eq $word) {
+#		    print STDERR $mrph->midasi, " -> $dic{$word} ($target_word)\n";
+		    $replaced_word .= $dic{$word};
+		    $replaced_flag_mrph = 1;
+		    $replaced_flag = 1;
+		    last;
+		}
+	    }
+	    unless ($replaced_flag_mrph) {
+		$replaced_word .= $mrph->midasi;
+	    }
+	}
+	if ($replaced_flag) {
+	    $dic_data{$target_word} = $replaced_word;
+	}
+    }
+}
+
 # 編集距離の計算
 sub calculate_editdistance {
     foreach my $target_word (keys %alldata) {
@@ -138,8 +233,6 @@ sub calculate_editdistance {
 		my ($distance) = $edit_distance->calc($word1, $word2);
 		# 語長で正規化
 		my $distance_normalized = $distance / (log(length($word1)) + 1) / (log(length($word2)) + 1);
-
-#		$editdistance{$word1}{$word2} = $distance_normalized;
 
 		if ($distance_normalized < $MERGE_TH_EDITDISTANCE) {
 		    print STDERR "☆Editdistance $target_word: $word1 <-> $word2 $distance $distance_normalized\n";
@@ -181,25 +274,35 @@ sub merge {
 	foreach my $synonym_group (@merged_group) {
 
 	    my $merge_flag = 1; # これが1のままの場合、すでにあるグループにマージする
-	    foreach my $word (@{$line}) {
+	    my %shared_word;
+ 	    foreach my $word (@{$line}) {
+		if (defined $synonym_group->{$word}) {
+		    $shared_word{$word} = 1;
+		}
+	    }
 
-		my $flag = 1;
+	    # 共有するものがなければnext
+	    next if scalar keys %shared_word == 0;
+
+ 	    foreach my $word (@{$line}) {
+		next if defined $shared_word{$word};
+
+		my $flag = 0;
 		foreach my $synonym_word (keys %{$synonym_group}) {
+		    next if defined $shared_word{$synonym_word};
+
 		    if ($word eq $synonym_word ||
 			(defined $alldata{$word}{$synonym_word} || defined $alldata{$synonym_word}{$word}) || 
+			($opt{dicfile} && defined $dic_data{$word} && defined $dic_data{$synonym_word} && $dic_data{$word} eq $dic_data{$synonym_word}) || 
 			($opt{editdistance} && $editdata{$synonym_word}{$word} || $editdata{$word}{$synonym_word}) ||
-			($opt{distributional_similarity} && $distributional_similarity_data{$synonym_word}{$word} || $distributional_similarity_data{$word}{$synonym_word})) {
-			;
-		    }
-		    else {
-			$flag = 0;
+ 			($opt{distributional_similarity} && $distributional_similarity_data{$synonym_word}{$word} || $distributional_similarity_data{$word}{$synonym_word})) {
+			$flag = 1;
 			last;
 		    }
-
 		}
-		# マージされない
 		unless ($flag) {
 		    $merge_flag = 0;
+		    last;
 		}
 	    }
 
