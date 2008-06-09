@@ -107,15 +107,21 @@ sub new {
 	knp        => new KNP(%knp_pm_args),
 	# by NICT
 	fast       => $option->{fast},
+	db_on_memory => $option->{db_on_memory},
 	version => $version
     };
     
     bless $this;
 
     if (defined $syndbdir and $syndbdir ne "") { # by NICT
-	# 類義表現DBをtie
-	$this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
-	
+	if ($option->{db_on_memory}) {
+	    $this->retrieve_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
+	}
+	else {
+	    # 類義表現DBをtie
+	    $this->tie_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
+	}
+
 	# CGI用
 	if (defined $option->{cgi}) {
 	    $this->tie_forsyndbcheck("$syndbdir/syndb.cdb", "$syndbdir/synnumber.cdb", "$syndbdir/synchild.cdb",
@@ -2200,7 +2206,7 @@ sub tie_cdb {
 sub GetValue {
     my ($this, $value) = @_;
 
-    return &decode('utf8', $value);
+    return $this->{db_on_memory} ? $value : &decode('utf8', $value);
 }
 
 
