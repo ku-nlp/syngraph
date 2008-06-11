@@ -1592,6 +1592,9 @@ sub get_nodestr {
     my ($node, $bp, $option) = @_;
     my $string;
 
+    # 内容語がない場合はidが空になる
+    return '' unless defined $node->{id};
+
     # !行の出力を格納
     $string = "! $bp <SYNID:$node->{id}><スコア:$node->{score}>";
     $string .= '<反義語>' if ($node->{antonym});
