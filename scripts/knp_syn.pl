@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym');
 
 my $option;
 my $knp_option;
@@ -61,7 +61,15 @@ my $sgh = new SynGraph($syndbdir, $knp_option, $option);
 if ($opt{sentence}) {
     my $input = decode('euc-jp', $opt{sentence});
     my $result = $sgh->{knp}->parse($input);
-    print $sgh->OutputSynFormat($result, $regnode_option, $option);
+
+    # 上位語を出力 (舞浜駅 -> 駅)
+    if ($opt{print_hypernym}) {
+	my $hypernym = $sgh->GetHypernym($result, $regnode_option, $option);
+	print $hypernym, "\n" if $hypernym;
+    }
+    else {
+	print $sgh->OutputSynFormat($result, $regnode_option, $option);
+    }
 }
 else {
     my ($sid, $knp_buf);
@@ -71,7 +79,12 @@ else {
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if ($sid);
-	    print $sgh->OutputSynFormat($result, $regnode_option, $option);
+	    if ($opt{print_hypernym}) {
+		print $sgh->GetHypernym($result, $regnode_option, $option), "\n";
+	    }
+	    else {
+		print $sgh->OutputSynFormat($result, $regnode_option, $option);
+	    }
 	    $knp_buf = "";
 	}
 	elsif (/\# S-ID:(.+) KNP:/) {
