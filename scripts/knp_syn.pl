@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s');
 
 my $option;
 my $knp_option;
@@ -42,7 +42,11 @@ $option->{regist_exclude_semi_contentword} = 1 if $opt{regist_exclude_semi_conte
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
 
 my $syndbdir;
-if ($option->{orchid}) {
+if ($opt{dbdir}) {
+    $syndbdir = $opt{dbdir};
+}
+# 以下デフォルト値
+elsif ($option->{orchid}) {
     $syndbdir = '../syndb/x86_64';
 }
 elsif ($option->{cgi}) {
