@@ -1282,6 +1282,53 @@ sub OutputSynFormat {
     return $ret_string;
 }
 
+# 入力全体の上位語を得る (舞浜駅 -> 駅)
+sub GetHypernym {
+    my ($this, $result, $regnode_option, $option) = @_;
+
+    my $syngraph = {};
+    my $syngraph_string;
+
+    # 入力をSynGraph化
+    $syngraph->{graph} = {};
+    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option, $option);
+
+    my $sg = $syngraph->{graph}{1};
+
+    Dumpvalue->new->dumpValue($sg) if ($option->{debug});
+
+    my $tagnum = scalar @{$sg};
+
+    my @hypernym_ids;
+
+    # 主辞のnode
+    for my $node (@{$sg->[$tagnum - 1]{nodes}}) {
+	# 上位語のみ
+	next unless defined $node->{relation};
+
+	# 全体をカバーするもののみ
+	my $flag = 1;
+	for (my $i = 0; $i < $tagnum - 1; $i++) {
+	    unless (defined $node->{matchbp}{$i}) {
+		$flag = 0;
+		last;
+	    }
+	}
+
+	if ($flag) {
+	    push @hypernym_ids, $node->{id};
+	}
+    }
+
+    # 曖昧性のないときだけ返す
+    if (scalar @hypernym_ids == 1) {
+	return $hypernym_ids[0];
+    }
+    else {
+	return '';
+    }
+}
+
 sub make_basicnode_log {
     my ($this, $node) = @_;
     my $log;
