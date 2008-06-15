@@ -1289,11 +1289,12 @@ sub GetHypernym {
     my $syngraph = {};
     my $syngraph_string;
 
+    my $id = $result->id;
     # 入力をSynGraph化
     $syngraph->{graph} = {};
-    $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option, $option);
+    $this->make_sg($result, $syngraph->{graph}, $id, $regnode_option, $option);
 
-    my $sg = $syngraph->{graph}{1};
+    my $sg = $syngraph->{graph}{$id};
 
     Dumpvalue->new->dumpValue($sg) if ($option->{debug});
 
