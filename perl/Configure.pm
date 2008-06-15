@@ -6,11 +6,16 @@ package Constant;
 
 use strict;
 use utf8;
+use File::Basename;
+
+my $SynGraphBaseDir;
+
+BEGIN {
+    $SynGraphBaseDir = dirname($INC{'Constant.pm'}) . '/..';
+}
 
 my $uname = `uname -m`;
 chomp $uname;
-
-our $SynGraphBaseDir = '/home/shibata/work/SynGraph';
 
 our $JumanCommand = '/home/shibata/tool-dic-analyze/bin/juman';
 our $JumanRcfile = '/home/shibata/tool-dic-analyze/etc/jumanrc';
