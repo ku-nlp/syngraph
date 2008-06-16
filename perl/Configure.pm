@@ -8,7 +8,7 @@ use strict;
 use utf8;
 use File::Basename;
 
-my $SynGraphBaseDir;
+our $SynGraphBaseDir;
 
 BEGIN {
     $SynGraphBaseDir = dirname($INC{'Constant.pm'}) . '/..';
