@@ -7,6 +7,7 @@ SRC_DIR='.'
 SIM_DIR_Dic=../dic/rsk_iwanami
 SIM_DIR_Web=../dic/web_news
 SIM_DIR_Wikipedia=../dic/wikipedia
+SIM_DIR_Wikipedia=../dic/wikipedia
 
 # 同義表現データマージ途中のディレクトリ
 SIM_M_DIR=../dic_middle
@@ -74,7 +75,11 @@ exe="perl -I$PERL_DIR -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdi
 echo $exe
 eval $exe
 
-exe="cat $SIM_DIR_Web/nation.txt $SIM_DIR_Web/news.txt $SIM_DIR_Web/www.txt.jumanremoved > $SIM_DIR_Web/all.txt.jumanremoved"
+exe="perl -I$PERL_DIR -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt > $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt.jumanremoved 2> $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.jumanremoved.log"
+echo $exe
+eval $exe
+
+exe="cat $SIM_DIR_Web/nation.txt $SIM_DIR_Web/news.txt $SIM_DIR_Web/www.txt.jumanremoved $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt.jumanremoved > $SIM_DIR_Web/all.txt.jumanremoved"
 echo $exe
 eval $exe
 
