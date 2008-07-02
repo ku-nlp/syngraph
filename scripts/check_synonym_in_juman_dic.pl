@@ -53,7 +53,8 @@ for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
 
 
 while (<>) {
-    my ($word1, $word2) = split;
+    chomp;
+    my ($word1, $word2) = split("\t", $_);
 
     # 両方登録されている -> 削除
     if (defined $MIDASI{$word1} && defined $MIDASI{$word2}) {
@@ -73,5 +74,5 @@ while (<>) {
 	    print STDERR "\n";
 	}
     }
-    print;
+    print "$word1\t$word2\n";
 }
