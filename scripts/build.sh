@@ -126,3 +126,7 @@ exe="mv $SYNDB_DIR/synhead_sort.cdb $SYNDB_DIR/synhead.cdb"
 echo $exe
 eval $exe
 
+if [ $noparse -eq 1 ]; then
+    rm -f syndb.parse
+fi
+
