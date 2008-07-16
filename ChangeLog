@@ -1,3 +1,93 @@
+2008-07-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
+	Wikipediaのリダイレクトから抽出した同義表現を追加
+
+2008-07-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: グラフ表示部分を大幅書き換え
+
+2008-07-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/rsk4cgi.pl: 大辞林の引き方を変更
+
+	* cgi/index.cgi: Wikipediaの見出しをひけるように
+	同義グループのグラフを表示
+	同義グループ一覧を表示
+
+2008-07-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log:
+	Wikipediaのリダイレクトから抽出した同義表現を追加
+
+	* dic/web_news/all.txt.jumanremoved:
+	Wikipediaのりダイレクトから抽出した同義表現を追加
+
+	* dic/wikipedia/redirect_synonym_share_character.txt, dic/wikipedia/redirect_synonym_share_character_frequent.txt, dic/wikipedia/redirect_synonym.txt:
+	タブ区切りに変更
+
+2008-07-01  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/arrange_redirect_synonym.pl:
+	複合名詞データベースをひいて、頻度の高いものだけを残すように
+
+	* dic/wikipedia/redirect_synonym.txt, dic/wikipedia/redirect_synonym_share_character.txt, ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	redirectを抽出するパターンを拡大
+
+	* ExtractSynfromDic/scripts/rsk4cgi.pl:
+	大辞林を読むオプションを追加(-djr)
+
+2008-06-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/tools/def_sentence.rule:
+	「〜の愛称」、「〜の別名」を追加
+
+	* ExtractSynfromDic/tools/def_sentence.rule: 「〜の略称」を追加
+
+2008-06-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/Constant.pm: Wikipediaの文データベースを追加
+
+	* dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt:
+	Wikipediaの上位語抽出において動詞をゆるさないように
+	Wikipedia用にルールを追加（〜の総称, 呼称, 通称など）
+
+2008-06-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/wikipedia/isa.txt:
+	Wikipediaの上位語抽出において動詞をゆるさないように
+	Wikipedia用にルールを追加（〜の総称, 呼称, 通称など）
+
+	* ExtractSynfromDic/tools/def_sentence.rule:
+	Wikipedia用にルールを追加（〜の総称, 呼称, 通称など）
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	Wikipediaの上位語抽出において動詞をゆるさないように
+
+2008-06-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: Wikipediaの定義文をひけるように
+
+2008-06-15  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: small fixed.
+
+	* scripts/knp_syn.pl: オプション -print_hypernym を追加
+
+	* perl/SynGraph.pm: 入力全体の上位語を得る関数を追加
+
+	* scripts/knp_syn.pl: dbdirを指定できるように
+
+2008-06-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	基本句に内容語がない場合に、空のノードを出力しないように変更
+
+2008-06-09  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl, perl/SynGraph.pm:
+	データベースをメモリに読むオプション(db_on_memory)を追加
+
 2008-06-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb:
