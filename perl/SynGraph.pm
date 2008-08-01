@@ -1776,7 +1776,196 @@ sub open_parsed_file {
     }
 }
 
+# for index.cgi, conv_syndb.pl
 
+sub read_synonym_pair {
+    my ($syngroup_words) = @_;
+
+    my $dicdir = $Constant::SynGraphBaseDir . '/dic/rsk_iwanami';
+
+    my (%FREQ, %FREQ_REP);
+    &SynGraph::tie_cdb($Constant::CN_DF_DB, \%FREQ);
+    &SynGraph::tie_cdb($Constant::DF_REP_DB, \%FREQ_REP);
+
+    my %allword;
+    my %alldata;
+    my %link;
+
+    open S, "<:encoding(euc-jp)", "$dicdir/synonym.txt.filtered.manual" or die;
+    while (<S>) {
+	chomp;
+
+	my ($target_word, @words) = split;
+
+	if (defined $syngroup_words->{$target_word}) {
+	    
+	    my $freq_target_word = &get_freq($target_word, \%FREQ, \%FREQ_REP);
+
+	    $allword{$target_word}{freq} = $freq_target_word;
+	    my $comma_freq = &process_num($freq_target_word);
+	    $allword{$target_word}{str} = qq("$target_word($comma_freq)");
+
+	    for my $word (@words) {
+		my $freq_word = &get_freq($word, \%FREQ, \%FREQ_REP);
+
+		$allword{$word}{freq} = $freq_word;
+		my $comma_freq = &process_num($freq_word);
+		$allword{$word}{str} = qq("$word($comma_freq)");
+	
+		$alldata{$target_word}{$word} = 1;
+		$link{$target_word}{$word} = 1;
+		$link{$word}{$target_word} = 1;
+	    }
+	}
+    }
+
+    close S;
+
+    open SD, "<:encoding(euc-jp)", "$dicdir/same_definition.txt" or die;
+    while (<SD>) {
+	chomp;
+
+	next if /^★/;
+
+	my @words = split;
+
+	my $flag = 0;
+	foreach my $word (@words) {
+	    if (defined $syngroup_words->{$word}) {
+		$flag = 1;
+		last;
+	    }
+	}
+
+	if ($flag) {
+	    foreach my $word (@words) {
+		foreach my $target_word (@words) {
+		    next if $word eq $target_word;
+
+		    next if $alldata{$target_word}{$word} eq 'samedefinition';
+
+		    $alldata{$word}{$target_word} = 'samedefinition';
+		    $link{$word}{$target_word} = 1;
+		    $link{$target_word}{$word} = 1;
+
+		    if (!defined $allword{$target_word}) {
+			my $target_midasi = (split('/', $target_word))[0];
+			my $freq_target_word = $FREQ{$target_midasi};
+			$allword{$target_word}{freq} = $freq_target_word;
+
+			my $comma_freq = &process_num($freq_target_word);
+			$allword{$target_word}{str} = qq("$target_word($comma_freq)");
+		    }
+
+		    if (!defined $allword{$word}) {
+			my $midasi = (split('/', $word))[0];
+			my $freq_word = $FREQ{$midasi};
+			$allword{$word}{freq} = $freq_word;
+
+			my $comma_freq = &process_num($freq_word);
+			$allword{$word}{str} = qq("$word($comma_freq)");
+		    }
+
+		}
+	    }
+	}
+    }
+    close SD;
+
+    open D, "<:encoding(euc-jp)", "$dicdir/definition.txt.manual" or die;
+    while (<D>) {
+	chomp;
+
+	my ($midasi, $definition) = split;
+
+	if (defined $alldata{$midasi}) {
+	    $alldata{$midasi}{$definition} = 1;
+	    $link{$midasi}{$definition} = 1;
+	    $link{$definition}{$midasi} = 1;
+
+	    $allword{$definition}{str} = $definition;
+	}
+    }
+    close D;
+
+    # マージ
+    my %change;
+    for my $word (keys %allword) {
+	# midasi -> word
+	# 赤ちゃん -> 赤ちゃん:1/1:1/1
+	# えんかい -> 宴会:1/1:1/1
+	if ($word =~ /(.+?):(.+)/) {
+	    my ($midasi, $id) = ($1, $2);
+
+	    if (defined $allword{$midasi}) {
+		$change{$midasi} = $word;
+		next;
+	    }
+
+	    my ($kanji, $yomi) = split('/', $midasi);
+	    if (defined $allword{$kanji}) {
+		$change{$kanji} = $word;
+	    }
+	    elsif (defined $allword{$yomi}) {
+		$change{$yomi} = $word;
+	    }
+	}
+	# idなしで漢字/ひらがなマッチ(★)
+	elsif ($word =~ /(.+?)\/(.+)/) {
+	    my ($kanji, $yomi) = ($1, $2);
+
+	    if (defined $allword{$kanji}) {
+		$change{$kanji} = $word;
+	    }
+	    elsif (defined $allword{$yomi}) {
+		$change{$yomi} = $word;
+	    }
+	}
+    }
+
+    for my $word1 (keys %alldata) {
+	for my $word2 (keys %{$alldata{$word1}}) {
+	    if (defined $change{$word2}) {
+		$alldata{$word1}{$change{$word2}} = $alldata{$word1}{$word2};
+		delete $alldata{$word1}{$word2};
+	    }
+	}
+    }
+
+    for my $word (keys %alldata) {
+	if (defined $change{$word}) {
+	    $alldata{$change{$word}} = $alldata{$word};
+	    delete $alldata{$word};
+	}
+    }
+
+    for my $word (keys %allword) {
+	if (defined $change{$word}) {
+	    delete $allword{$word};
+	}
+    }
+
+    my %WORD2FREQ;
+    &tie_cdb($Constant::SYNONYM_WORD2FREQ_DB, \%WORD2FREQ);
+
+    # rankをひく
+    for my $word (keys %allword) {
+	my $midasi = (split(':', $word))[0];
+
+	$allword{$word}{rank} = (split(':', $WORD2FREQ{$midasi}))[0];
+    }
+    return (\%allword, \%alldata, \%link);
+}
+
+sub get_freq {
+    my ($word, $FREQ, $FREQ_REP) = @_;
+
+    my $rep = (split(':', $word))[0];
+    my $midasi = (split('/', $word))[0];
+
+    return defined $FREQ->{"$midasi"} ? $FREQ->{"$midasi"} : defined $FREQ_REP->{$rep} ? (split(':', $FREQ_REP->{$rep}))[1] * 3 : undef;
+#    return $FREQ->{$midasi};
+}
 
 ################################################################################
 #                                                                              #
@@ -2526,5 +2715,12 @@ sub _read_xml {
     }
 }
 
+sub process_num {
+    my ($num) = @_;
+
+    while($num =~ s/(.*\d)(\d\d\d)/$1,$2/){} ;
+
+    return $num;
+}
 
 1;
