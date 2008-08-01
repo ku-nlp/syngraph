@@ -39,4 +39,8 @@ our $Oneformatteddb = $SynGraphBaseDir . '/db/080214.one.formatted.db';
 
 our $ContentWdic = '/home/shibata/download/juman/dic/ContentW.dic';
 
+our $CN_DF_DB = '/home/shibata/cns.100M.cls.df1000.cdb';
+our $DF_REP_DB = '/home/shibata/work/SynGraph/db/synonym_word2freq_all.db';
+our $SYNONYM_WORD2FREQ_DB = '/home/shibata/work/SynGraph/db/synonym_word2freq_all.db';
+
 1;
