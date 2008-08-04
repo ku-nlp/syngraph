@@ -28,11 +28,14 @@ KAWAHARAPMDIR=/home/shibata/work/kawahara-pm/perl
 UTILS=/home/shibata/work/Utils/perl
 
 wikipedia=0
+manual=0
 
-while getopts wh OPT
+while getopts whm OPT
 do
   case $OPT in
       w)  wikipedia=1
+          ;;
+      m)  manual=1
           ;;
       h)  usage
           ;;
@@ -88,8 +91,24 @@ exe="perl -I$PERL_DIR make_logdic.pl --synonym=$SIM_DIR_Dic/synonym.txt.filtered
 echo $exe
 eval $exe
 
+if [ $manual -eq 1 ]; then
+    # 人手による整理(辞書)
+    exe="perl -I$PERL_DIR read_manual_db.pl --synonymout=$SIM_DIR_Dic/synonym.txt.filtered.manual --definitionout=$SIM_DIR_Dic/definition.txt.manual --isaout=$SIM_DIR_Dic/isa.txt.filtered.manual --antonymout=$SIM_DIR_Dic/antonym.txt.manual -isa $SIM_DIR_Dic/isa.txt.filtered"
+    echo $exe
+    eval $exe
+
+    # 人手による整理(Web)
+    exe="perl -I$PERL_DIR read_manual_db_web.pl < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_DIR_Web/all.txt.jumanremoved.manual"
+    echo $exe
+    eval $exe
+fi
+
 # 辞書からの同義関係(synonym, same_difinition)の知識の連結
-exe="perl -I../perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered --same_definition=$SIM_DIR_Dic/same_definition.txt --synonym_filter_log=$SIM_DIR_Dic/synonym-filter.log > $SIM_M_DIR/synonym_dic.txt 2> $SIM_M_DIR/cat_synonym_same_def.log"
+if [ $manual -eq 1 ]; then
+    exe="perl -I../perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered.manual --same_definition=$SIM_DIR_Dic/same_definition.txt.manual --synonym_filter_log=$SIM_DIR_Dic/synonym-filter.log > $SIM_M_DIR/synonym_dic.txt 2> $SIM_M_DIR/cat_synonym_same_def.log"
+else
+    exe="perl -I../perl cat_synonym_same_def.pl --synonym_dic=$SIM_DIR_Dic/synonym.txt.filtered --same_definition=$SIM_DIR_Dic/same_definition.txt --synonym_filter_log=$SIM_DIR_Dic/synonym-filter.log > $SIM_M_DIR/synonym_dic.txt 2> $SIM_M_DIR/cat_synonym_same_def.log"
+fi
 echo $exe
 eval $exe
 
@@ -98,7 +117,11 @@ exe="perl -I../perl check_synonym_merge.pl < $SIM_M_DIR/synonym_dic.txt > $SIM_M
 echo $exe
 eval $exe
 
-exe="perl -I../perl check_antonym.pl < $SIM_DIR_Dic/antonym.txt > $SIM_M_DIR/antonym.txt.merge 2>$SIM_C_DIR/antonym.txt.merge.log"
+if [ $manual -eq 1 ]; then
+    exe="perl -I../perl check_antonym.pl < $SIM_DIR_Dic/antonym.txt.manual > $SIM_M_DIR/antonym.txt.merge 2>$SIM_C_DIR/antonym.txt.merge.log"
+else
+    exe="perl -I../perl check_antonym.pl < $SIM_DIR_Dic/antonym.txt > $SIM_M_DIR/antonym.txt.merge 2>$SIM_C_DIR/antonym.txt.merge.log"
+fi
 echo $exe
 eval $exe
 
@@ -108,7 +131,11 @@ echo $exe
 eval $exe
 
 # Webからの知識の整理
-exe="perl -I$PERL_DIR -I$UTILS check_duplicate_entry.pl -merge -rnsame -editdistance -dicfile $SIM_M_DIR/synonym_dic.txt.merge.add < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/synonym_web_news.txt.log"
+if [ $manual -eq 1 ]; then
+    exe="perl -I$PERL_DIR -I$UTILS check_duplicate_entry.pl -merge -rnsame -editdistance -dicfile $SIM_M_DIR/synonym_dic.txt.merge.add < $SIM_DIR_Web/all.txt.jumanremoved.manual > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/synonym_web_news.txt.log"
+else
+    exe="perl -I$PERL_DIR -I$UTILS check_duplicate_entry.pl -merge -rnsame -editdistance -dicfile $SIM_M_DIR/synonym_dic.txt.merge.add < $SIM_DIR_Web/all.txt.jumanremoved > $SIM_M_DIR/synonym_web_news.txt 2> $SIM_C_DIR/synonym_web_news.txt.log"
+fi
 echo $exe
 eval $exe
 
@@ -125,7 +152,11 @@ eval $exe
 
 # 辞書を整形(多義でない語に「:1/1:1/1」を付与、ひらがな２文字以下削除、半角を全角に)
 # 今は同義グループの連結をしない
-exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
+if [ $manual -eq 1 ]; then
+    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt.manual --isa=$SIM_DIR_Dic/isa.txt.filtered.manual --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
+else
+    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
+fi
 echo $exe
 eval $exe
 
