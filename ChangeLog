@@ -1,3 +1,33 @@
+2008-08-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_change/antonym.txt, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic_middle/antonym.txt.merge:
+	人手による修正を反映
+
+	* scripts/calc-similarity-synonym.pl:
+	接続詞同士は分布類似度によるフィルタリングを行なわないように
+
+	* scripts/merge_dic.sh: 人手による修正を適用するオプションを追加(-m)
+
+2008-08-01  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: 同義グループのグラフを描画する部分を更新
+
+	* perl/Constant.pm: 頻度データベースを追加
+
+	* perl/SynGraph.pm: 同義関係（二項ペア）を読み込む関数を追加
+
+2008-07-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/wikipedia/isa.txt, ExtractSynfromDic/scripts/x4syn.pl:
+	Wikipediaからの上位語抽出において動詞を捨てるように
+
+	* dic/wikipedia/isa.txt: 「〜のうちの一つ」「〜の一人」などを追加
+
+	* ExtractSynfromDic/scripts/add_count.pl: 重複を除くように変更
+
+	* ExtractSynfromDic/tools/def_sentence.rule:
+	「〜のうちの一つ」「〜の一人」などを追加
+
 2008-07-16  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
