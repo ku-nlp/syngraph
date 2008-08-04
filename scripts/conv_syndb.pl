@@ -275,6 +275,8 @@ if ($opt{convert_file}) {
 	    ($expression, my $word_id) = split(/:/, $expression, 2);
 	    $word_id = ":$word_id" if $word_id;
 
+	    next unless $expression;
+
             # 出力
             print CF "# S-ID:$synid,$expression$word_id\[$tag\]\n";
             print CF "$expression\n";
