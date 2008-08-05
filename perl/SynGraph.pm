@@ -500,7 +500,7 @@ sub _get_keywords {
     my $case = {};
 
     foreach my $tag ($knp_result->tag) {
-        my @alt;
+        my %alt;
         my $nodename;
         my $nodename_num; # 数字汎化用ID
         my $fuzoku;
@@ -563,6 +563,10 @@ sub _get_keywords {
 	    $level .= $1;
 	}
 
+	# for regist_exclude_semi_contentword
+	my %semi_contentword;
+	my %nodename_str;
+
 	my @mrphs = $tag->mrph;
 	for (my $i = 0; $i < @mrphs; $i++) {
 	    my $mrph = $mrphs[$i];
@@ -575,6 +579,7 @@ sub _get_keywords {
 		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
 
 		my $nodename_str = &get_nodename_str($mrph);
+		$nodename_str{$mrph->id} = $nodename_str;
 
 		# 数詞の汎化
 		if ($mrph->{hinsi} eq "名詞" && $mrph->{bunrui} eq "数詞" &&
@@ -586,14 +591,15 @@ sub _get_keywords {
 		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
 		}
 
-		push @alt, &get_alt($mrph, $tag);
+		push @{$alt{$mrph->id}}, &get_alt($mrph, $tag);
 
-		# 次の形態素が準内容語(自分は内容語)
-		# カウンタは除く
-		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<内容語>/ &&
-		    defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
-		    push @alt, { name => &get_nodename_str($mrph), score => $penalty->{semicontentword} };
+		# 準内容語にマーク(カウンタは除く)
+		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<準内容語>/ && $mrphs[$i]->fstring !~ /<カウンタ>/) {
+		    $semi_contentword{$mrph->id} = 1;
 		}
+# 		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<内容語>/ &&
+# 		    defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
+#		    push @{$alt{$mrph->id}}, { name => &get_nodename_str($mrph), score => $penalty->{semicontentword} };
             }
             elsif ($mrph->{hinsi} eq '接頭辞') {
 		# 接頭辞は無視
@@ -666,17 +672,46 @@ sub _get_keywords {
 
 	push(@{$keywords[$tag->{id}]}, \%tmp);
 	
-	# ALTの処理(意味有が1形態素と仮定)
-	foreach my $alt (@alt) {
-	    # 表記が同じものは無視
-	    next if (grep($alt->{name} eq $_->{name}, @{$keywords[$tag->{id}]}));
-	    # 登録
-	    my %tmp2 = %tmp;
-	    $tmp2{name} = $alt->{name};
-	    $tmp2{score} = $alt->{score};
-	    push(@{$keywords[$tag->{id}]}, \%tmp2);
+	# ALTの処理
+
+	# まずaltがあるかどうかをチェック
+	my $flag;
+	for my $mrphid (sort keys %nodename_str) {
+	    if (defined $alt{$mrphid}) {
+		$flag = 1;
+		last;
+	    }
 	}
-	
+
+	if ($flag) {
+	    my @alt_string = &get_alt_string(\%nodename_str, \%alt);
+
+	    foreach my $alt (@alt_string) {
+		# 表記が同じものは無視
+		next if (grep($alt eq $_->{name}, @{$keywords[$tag->{id}]}));
+		# 登録
+		my %tmp2 = %tmp;
+		$tmp2{name} = $alt;
+		push(@{$keywords[$tag->{id}]}, \%tmp2);
+	    }
+	}
+
+	# 準内容語を除いたものを登録
+	if ($option->{regist_exclude_semi_contentword} && defined %semi_contentword) {
+	    my @alt_string = &get_alt_string(\%nodename_str, \%alt, \%semi_contentword);
+
+	    foreach my $alt (@alt_string) {
+		# 表記が同じものは無視
+		next if (grep($alt eq $_->{name}, @{$keywords[$tag->{id}]}));
+		# 登録
+		my %tmp2 = %tmp;
+		$tmp2{name} = $alt;
+		$tmp2{score} = $penalty->{semicontentword};
+		push(@{$keywords[$tag->{id}]}, \%tmp2);
+	    }
+
+	}
+
 	# 数詞を汎化したidを登録
 	if ($option->{num_generalize} && $nodename_num =~ /<num>/) {
 	    my %tmp2 = %tmp;
@@ -686,6 +721,37 @@ sub _get_keywords {
     }
     
     return @keywords;
+}
+
+sub get_alt_string {
+    my ($nodename_str, $alt, $semi_contentword) = @_;
+
+    my @alt_string;
+    for my $mrphid (sort keys %{$nodename_str}) {
+	# 準内容語を除く
+	if (defined $semi_contentword) {
+	    next if defined $semi_contentword->{$mrphid};
+	}
+
+	my @new_alt_string;
+	if (@alt_string) {
+	    for my $alt_string (@alt_string) {
+		# 自分自身と曖昧性のあるものに対して
+		# 例: 克己/かつき と 克己/かつみ
+		for my $alt ($nodename_str->{$mrphid}, @{$alt->{$mrphid}}) {
+		    push @new_alt_string, $alt_string . '+' . $alt;
+		}
+	    }
+	    @alt_string = @new_alt_string;
+	}
+	else {
+	    for my $alt ($nodename_str->{$mrphid}, @{$alt->{$mrphid}}) {
+		push @alt_string, $alt;
+	    }
+	}
+    }
+
+    return @alt_string;
 }
 
 sub get_nodename_str {
@@ -719,8 +785,6 @@ sub get_alt {
 
     my @alt;
 
-    my $score = 1; # ここで得られるものはすべてスコア1
-
     # ALT<ALT-あえる-あえる-あえる-2-0-1-2-"ドメイン:料理・食事 代表表記:和える/あえる">
     # 用言/名詞曖昧性解消されてない場合、ALTの情報からSynノードを作る
     unless ($mrph->fstring =~ /<(?:名詞|用言)曖昧性解消>/) {
@@ -728,15 +792,15 @@ sub get_alt {
 	    foreach (@tmp){
 		# 可能動詞であれば戻す
 		if ($_ =~ /可能動詞:([^\s\">]+)/) {
-		    push @alt, { name => $1, score => $score };
+		    push @alt, $1;
 		}
 		# 尊敬動詞であれば戻す
 		elsif ($_ =~ /尊敬動詞:([^\s\">]+)/) {
-		    push @alt, { name => $1, score => $score };
+		    push @alt, $1;
 		}
 		# 代表表記
 		elsif ($_ =~ /代表表記:([^\s\">]+)/){
-		    push @alt, { name => $1, score => $score };
+		    push @alt, $1;
 		}
 	    }
 	}
@@ -749,7 +813,7 @@ sub get_alt {
 	while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
 	    # 代表表記
 	    if ($1 =~ /代表表記:([^\s\">]+)/){
-		push @alt, { name => $1, score => $score };
+		push @alt, $1;
 	    }
 	}
     }
@@ -758,7 +822,7 @@ sub get_alt {
     while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
 	# 代表表記
 	if ($1 =~ /同義:([^\s\">]+)/){
-	    push @alt, { name => $1, score => $score };
+	    push @alt, $1;
 	}
     }
 
