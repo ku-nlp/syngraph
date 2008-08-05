@@ -1,5 +1,8 @@
 2008-08-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm:
+	KNPで人名連続を分割したことに伴う更新
+
 	* syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm, syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, perl/SynGraph.pm:
 	一基本句に複数の内容語があり、いずれかの形態素に曖昧性がある場合のbug fixed.
 
