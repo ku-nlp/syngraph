@@ -1,0 +1,87 @@
+% $Id$
+\documentclass[a4j]{jarticle}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{ascmac}
+\usepackage{graphicx}
+
+\title{SYNGRAPH: 国語辞典とコーパスから自動抽出した\\同義・上位下位関係に
+基づく柔軟マッチング}
+
+\author{柴田 知秀 \and 小谷 通隆 \and 黒橋 禎夫}
+ \date{\today}
+
+\begin{document}
+\maketitle
+
+\section{概要}
+
+
+\section{国語辞典の整形・マージ}
+
+\section{国語辞典からの語の関係の抽出}
+
+国語辞典・コーパスから類義表現を抽出し、ゴミの削除、マージ、多義性解消な
+どを行なう。
+
+国語辞典から、以下の関係を抽出する。
+
+\begin{itemize}
+\item 同義表現
+
+\item 上位下位関係
+
+\item 反義関係
+
+\item 同義句
+\end{itemize}
+
+\subsection{上位下位関係}
+
+\subsection{同義表現}
+
+\subsection{反義関係}
+
+辞書の記号「反対語」を利用し、反義関係を抽出する。以下の例では、「みぎ」
+の反対語として「左」が抽出される。
+
+\begin{verbatim}
+みぎ
+    北を向いたときに、東にあたるほう。
+    <用例>右がわ。
+    <反対語>左。</反対語>
+\end{verbatim}
+
+
+
+\subsection{同義句}
+
+\section{括弧表現を利用したコーパスからの同義表現抽出}
+
+\section{類義表現の整理}
+
+\subsection{同義表現のマージ}
+
+複数の語が同一である類義表現のグループを、一つの類義表現のグループにマー
+ジする。副産物として、多義性が解消できる(場合がある)。
+
+以下の2つの類義表現のグループを、
+
+\begin{itemize}
+ \item 書籍/しょせき:1/1:1/1 本/ほん 書物/しょもつ 図書/としょ
+ \item 書物/しょもつ:1/1:1/1 本/ほん 書籍/しょせき
+\end{itemize}
+
+以下のようにマージする。
+
+\begin{itemize}
+\item 書物/しょもつ:1/1:1/1 本/ほん 書籍/しょせき:1/1:1/1 図書/としょ
+\end{itemize}
+
+\section{同義表現データベースのコンパイル}
+
+\section{SYNGRAPHフォーマット}
+
+KNPの解析結果にSYNGRAPHの情報をうめこむことができる。
+
+\end{document}
