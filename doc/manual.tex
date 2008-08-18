@@ -31,6 +31,29 @@
 
 \cite{Oonishi06, Odani07, Shibata08}を参照。
 
+SYNGRAPHのベースとなるのは、もとの文の依存構造木であり、そのノードは1つ
+の自立語と0個以上の付属語からなるもので、以下基本ノードとよぶ。そして、
+基本ノードの自立語に同義グループがあれば、そのSYNIDを別のノードとして与
+える（これをSYNノードとよぶ）。図\ref{fig:SYNGRAPH}では色のついたノードが基
+本ノード、それ以外のノードがSYNノードである基本ノードを同義表現のSYNノー
+ドと区別するのは、完全マッチを優先するためである。
+
+さらに、複数のノードに対応する表現に同義グループがあれば、そのSYNIDの
+ノードも加える。図\ref{SYNGRAPH}の＜最寄り＞がこのようなSYNノード
+である。そしてさらに、各SYNノードに対して、類義表現データベースにおい
+て上位の同義グループがあれば、そのSYNノードを加える。
+
+各ノードには、もとの文の表現からのずれに応じたスコア、NS(Node Score)
+を与える。
+
+  \begin{figure}[t]
+   \begin{center}
+    \includegraphics[width=8cm,keepaspectratio,clip]{eps/syngraphJ.eps}
+    \caption{SYNGRAPHの例}
+    \label{fig:SYNGRAPH}
+   \end{center}
+  \end{figure}
+
 \section{国語辞典の整形・マージ}
 
 \section{国語辞典からの語の関係の抽出}
