@@ -818,6 +818,14 @@ sub get_alt {
 	}
     }
 
+    # 名詞的形容詞語幹
+    if ($mrph->fstring =~ /<代表表記:.+a>/) {
+	# 代表表記
+	if ($mrph->fstring =~ /<代表表記変更:([^\s\">]+)/){
+	    push @alt, $1;
+	}
+    }
+
     # 同義<同義:方法/ほうほう>
     while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
 	# 代表表記
