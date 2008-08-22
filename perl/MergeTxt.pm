@@ -23,8 +23,8 @@ sub new {
 
     $this = {
 	log_merge      => {},
-	rep_cash       => {},
-	indexkey_cash  => {},
+	rep_cache       => {},
+	indexkey_cache  => {},
 	noambiguity_file => {},
 	sgh            => new SynGraph(undef, $knp_option, undef),
     };
@@ -492,7 +492,7 @@ sub regist_list4merge {
 	    foreach my $key ("$w","$kanji/", "/$kana") {
 #		push @{$word_index->{$key}}, $number unless (grep($number == $_, @{$word_index->{$key}}));
 		$word_index->{$key}{$number} = 1 unless ($word_index->{$key}{$number});
-		$this->{indexkey_cash}{$word}{$key} = 1 unless($this->{indexkey_cash}{$word}{$key});
+		$this->{indexkey_cache}{$word}{$key} = 1 unless($this->{indexkey_cache}{$word}{$key});
 	    }
 	}
 	# $wが代表表記でない
@@ -506,7 +506,7 @@ sub regist_list4merge {
 	    foreach my $key ("$w", split(/\?/, $rep_w_str)) {
 #		push @{$word_index->{$key}}, $number unless (grep($number == $_, @{$word_index->{$key}}));
 		$word_index->{$key}{$number} = 1 unless ($word_index->{$key}{$number});
-		$this->{indexkey_cash}{$word}{$key} = 1 unless($this->{indexkey_cash}{$word}{$key});
+		$this->{indexkey_cache}{$word}{$key} = 1 unless($this->{indexkey_cache}{$word}{$key});
 	    }
 	}
     }
@@ -525,7 +525,7 @@ sub regist_list4add {
 	if ((split(/:/, $word, 2))[1]) {
 #	    push @{$word_index->{$word}}, $number unless (grep($number == $_, @{$word_index->{$word}}));
 	    $word_index->{$word}{$number} = 1 unless ($word_index->{$word}{$number});
-	    $this->{indexkey_cash}{$word}{$word} = 1 unless($this->{indexkey_cash}{$word}{$word});
+	    $this->{indexkey_cache}{$word}{$word} = 1 unless($this->{indexkey_cache}{$word}{$word});
 	}
     }
 }
@@ -537,18 +537,18 @@ sub GetRepname {
     if ($word =~ /^.+\/.+$/) { # 代表表記
 	return $word;
     }
-    elsif ($this->{rep_cash}{$word}) {
-	return $this->{rep_cash}{$word};
+    elsif ($this->{rep_cache}{$word}) {
+	return $this->{rep_cache}{$word};
     }
     else {
 	my $result = $this->{sgh}{knp}->parse($word);
 	
 	if (scalar ($result->bnst) == 1) {
-	    $this->{rep_cash}{$word} = ($result->bnst)[0]->repname;
+	    $this->{rep_cache}{$word} = ($result->bnst)[0]->repname;
 	    return ($result->bnst)[0]->repname;
 	}
 	else { # ２文節になっているのは解析誤りの可能性
-	    $this->{rep_cash}{$word} = $word;
+	    $this->{rep_cache}{$word} = $word;
 	    return $word;
 	}
     }
@@ -560,8 +560,8 @@ sub delete_word_index {
     my ($this, $list, $delete_number, $word_index) = @_;
     
     foreach my $word (@{$list}) {
-	if ($this->{indexkey_cash}{$word}) {
-	    foreach my $key (keys %{$this->{indexkey_cash}{$word}}) {
+	if ($this->{indexkey_cache}{$word}) {
+	    foreach my $key (keys %{$this->{indexkey_cache}{$word}}) {
 		delete $word_index->{$key}{$delete_number};
 	    }
 	}
