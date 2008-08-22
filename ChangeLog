@@ -1,3 +1,19 @@
+2008-08-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm, perl/SynGraph.pm:
+	名詞的形容詞語幹の代表表記変更をSynノードとして登録するように変更
+
+2008-08-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	多義語を獲得するオプション(-aimai)を追加
+
+2008-08-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	XMLのまま読み込むオプションを追加(-usexml)
+	(デフォルトはXML::Simpleを使う。XML::LibXMLを使うときは-libxmlオプションをつける。)
+
 2008-08-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm:
