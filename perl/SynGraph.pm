@@ -108,12 +108,13 @@ sub new {
 	# by NICT
 	fast       => $option->{fast},
 	db_on_memory => $option->{db_on_memory},
+	cgi => $option->{cgi},
 	version => $version
     };
     
     bless $this;
 
-    if (defined $syndbdir and $syndbdir ne "") { # by NICT
+    if (defined $syndbdir and $syndbdir ne '') { # by NICT
 	if ($option->{db_on_memory}) {
 	    $this->retrieve_syndb("$syndbdir/syndata.mldbm", "$syndbdir/synhead.cdb", "$syndbdir/synparent.cdb", "$syndbdir/synantonym.cdb");
 	}
@@ -132,7 +133,25 @@ sub new {
     return $this;
 }
 
+sub DESTROY {
+    my ($this) = @_;
 
+    unless ($this->{db_on_memory}) {
+	for my $key ('syndata', 'synhead', 'synparent', 'synantonym') {
+	    if (defined $this->{$key}) {
+		untie $this->{$key};
+	    }
+	}
+    }
+
+    if ($this->{cgi}) {
+	for my $key ('syndb', 'synnumber', 'synchild', 'log_isa', 'log_antonym') {
+	    if (defined $this->{$key}) {
+		untie $this->{$key};
+	    }
+	}
+    }
+}
 
 ################################################################################
 #                                                                              #
