@@ -610,7 +610,11 @@ sub _get_keywords {
 		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
 		}
 
-		push @{$alt{$mrph->id}}, &get_alt($mrph, $tag);
+		my @alt = &get_alt($mrph, $tag, $nodename_str);
+
+		if (scalar @alt > 0) {
+		    push @{$alt{$mrph->id}}, @alt;
+		}
 
 		# 準内容語にマーク(カウンタは除く)
 		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<準内容語>/ && $mrphs[$i]->fstring !~ /<カウンタ>/) {
@@ -694,15 +698,16 @@ sub _get_keywords {
 	# ALTの処理
 
 	# まずaltがあるかどうかをチェック
-	my $flag;
+	my $altnum;
 	for my $mrphid (sort keys %nodename_str) {
 	    if (defined $alt{$mrphid}) {
-		$flag = 1;
-		last;
+		$altnum++;
 	    }
 	}
 
-	if ($flag) {
+	# altが5個以上あれば入力文節がおそらくおかしい（標準フォーマットで正しく文区切りされてないとか）なので、
+	# その場合は、altの展開をしない
+	if ($altnum > 0 && $altnum < 5) {
 	    my @alt_string = &get_alt_string(\%nodename_str, \%alt);
 
 	    foreach my $alt (@alt_string) {
@@ -800,7 +805,7 @@ sub get_nodename_str {
 }
 
 sub get_alt {
-    my ($mrph, $tag) = @_;
+    my ($mrph, $tag, $nodename_str) = @_;
 
     my @alt;
 
@@ -828,10 +833,12 @@ sub get_alt {
     # 品詞変更<品詞変更:動き-うごき-動く-2-0-2-8-"代表表記:動く/うごく">
     # 「歩き方」＝「歩く方法」
     # ただし利用は文末以外
+    # ※ $nodename_str（≒代表表記）と同じものは登録しない
     if ($tag->{parent}) {
 	while ($mrph->{fstring} =~ /(<品詞変更.+?>)/g) {
 	    # 代表表記
 	    if ($1 =~ /代表表記:([^\s\">]+)/){
+#		push @alt, $1 if $1 ne $nodename_str;
 		push @alt, $1;
 	    }
 	}
