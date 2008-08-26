@@ -610,7 +610,7 @@ sub _get_keywords {
 		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
 		}
 
-		my @alt = &get_alt($mrph, $tag, $nodename_str);
+		my @alt = &get_alt($mrph, $tag, $nodename_str, $option);
 
 		if (scalar @alt > 0) {
 		    push @{$alt{$mrph->id}}, @alt;
@@ -805,7 +805,7 @@ sub get_nodename_str {
 }
 
 sub get_alt {
-    my ($mrph, $tag, $nodename_str) = @_;
+    my ($mrph, $tag, $nodename_str, $option) = @_;
 
     my @alt;
 
@@ -845,10 +845,12 @@ sub get_alt {
     }
 
     # 名詞的形容詞語幹
-    if ($mrph->fstring =~ /<代表表記:.+a>/) {
-	# 代表表記
-	if ($mrph->fstring =~ /<代表表記変更:([^\s\">]+)/){
-	    push @alt, $1;
+    unless ($option->{no_regist_adjective_stem}) {
+	if ($mrph->fstring =~ /<代表表記:.+a>/) {
+	    # 代表表記
+	    if ($mrph->fstring =~ /<代表表記変更:([^\s\">]+)/){
+		push @alt, $1;
+	    }
 	}
     }
 
