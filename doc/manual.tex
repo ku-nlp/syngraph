@@ -29,7 +29,7 @@
 
 \section{$B35MW(B}
 
-\cite{Oonishi06, Odani07, Shibata08}$B$r;2>H!#(B
+$BO@J8(B\cite{Oonishi06, Odani07, Shibata08}$B$r;2>H!#(B
 
 SYNGRAPH$B$N%Y!<%9$H$J$k$N$O!"$b$H$NJ8$N0MB89=B$LZ$G$"$j!"$=$N%N!<%I$O(B1$B$D(B
 $B$N<+N)8l$H(B0$B8D0J>e$NIUB08l$+$i$J$k$b$N$G!"0J2<4pK\%N!<%I$H$h$V!#$=$7$F!"(B
@@ -39,7 +39,7 @@ SYNGRAPH$B$N%Y!<%9$H$J$k$N$O!"$b$H$NJ8$N0MB89=B$LZ$G$"$j!"$=$N%N!<%I$O(B1$B$D
 $B%I$H6hJL$9$k$N$O!"40A4%^%C%A$rM%@h$9$k$?$a$G$"$k!#(B
 
 $B$5$i$K!"J#?t$N%N!<%I$KBP1~$9$kI=8=$KF15A%0%k!<%W$,$"$l$P!"$=$N(BSYNID$B$N(B
-$B%N!<%I$b2C$($k!#?^(B\ref{SYNGRAPH}$B$N!c:G4s$j!d$,$3$N$h$&$J(BSYN$B%N!<%I(B
+$B%N!<%I$b2C$($k!#?^(B\ref{fig:SYNGRAPH}$B$N!c:G4s$j!d$,$3$N$h$&$J(BSYN$B%N!<%I(B
 $B$G$"$k!#$=$7$F$5$i$K!"3F(BSYN$B%N!<%I$KBP$7$F!"N`5AI=8=%G!<%?%Y!<%9$K$*$$(B
 $B$F>e0L$NF15A%0%k!<%W$,$"$l$P!"$=$N(BSYN$B%N!<%I$r2C$($k!#(B
 
@@ -48,11 +48,98 @@ SYNGRAPH$B$N%Y!<%9$H$J$k$N$O!"$b$H$NJ8$N0MB89=B$LZ$G$"$j!"$=$N%N!<%I$O(B1$B$D
 
   \begin{figure}[t]
    \begin{center}
-    \includegraphics[width=8cm,keepaspectratio,clip]{eps/syngraphJ.eps}
+    \includegraphics[width=10cm,keepaspectratio,clip]{eps/syngraphJ.eps}
     \caption{SYNGRAPH$B$NNc(B}
     \label{fig:SYNGRAPH}
    \end{center}
   \end{figure}
+
+\section{$B%W%m%0%i%`!&%G!<%?(B}
+
+$B0J2<$N%3%^%s%I$K$h$j!"(Bcvs$B$G%W%m%0%i%`!&%G!<%?$r<hF@$9$k$3$H$,$G$-$k!#(B
+
+
+\begin{verbatim}
+% cvs -d reed.kuee.kyoto-u.ac.jp:/share/service/cvs co SynGraph
+\end{verbatim}
+
+$B<g$J%9%/%j%W%H!&%G!<%?$r?^(B\ref{fig:scripts}$B$K<($9!#(B
+
+\begin{figure}[t]
+\footnotesize
+\begin{center}
+\begin{minipage}{\hsize}
+\begin{verbatim}
+VERSION : $B%P!<%8%g%s(B ($BNc(B: 1.8-20080822)
+
+dic/ : $BF15AI=8=<-=q(B
+  rsk_iwanami/ : RSK$B!"(Biwanami$B$+$i$NCN<1Cj=P7k2L(B
+    synonym.txt         $BF15A%0%k!<%W%G!<%?(B
+    definition.txt      $BDj5AJ8%G!<%?(B
+    isa.txt             $B>e0L2<0L%G!<%?(B
+    antonym.txt         $BH?5A%G!<%?(B
+
+  web_news/ : WEB$B!"?7J95-;v$+$i$NCN<1Cj=P7k2L(B
+    nation.txt          wikipedia$B$N9qL>%Z!<%8$,$iCj=P(B
+    news.txt            $BKhF|?7J9!&FIGd?7J9!&D+F|?7J9Cf$N3g8LI=8=$+$iCj=P(B
+    www.txt             WWW$BCf$N3g8LI=8=$+$iCj=P(B
+    all.txt             $B>e5-$N%U%!%$%k$r%^!<%8$7$?$b$N(B
+
+  wikipedia/ : Wikipedia$B$+$i$NCN<1Cj=P7k2L(B
+    isa.txt             $B>e0L2<0L%G!<%?(B
+    redirect_synonym_share_character_frequent.txt             $B%j%@%$%l%/%H$+$iCj=P$7$?F15A8l(B
+
+dic_change/ : $B@07A8e$NF15AI=8=<-=q(B
+  synonym_dic.txt               $B<-=q$+$iCj=P$7$?F15A%0%k!<%W%G!<%?(B
+  definition.txt                $B<-=q$+$iCj=P$7$?Dj5AJ8%G!<%?(B
+  isa.txt                       $B<-=q$+$iCj=P$7$?>e0L2<0L%G!<%?(B
+  antonym.txt                   $B<-=q$+$iCj=P$7$?H?5A%G!<%?(B
+  synonym_web_news.txt          Web$B$H?7J9$+$iCj=P$7$?F15A%0%k!<%W%G!<%?(B
+
+perl/ : Perl$B%b%8%e!<%k(B
+  SynGraph.pm                   SYNGRAPH$B$r07$&%b%8%e!<%k(B
+  CalcSimWithSynGraph.pm        SYNGRAPH$B$rMQ$$$F%^%C%A%s%0$r9T$&%b%8%e!<%k(B
+
+scripts/ : $B%9%/%j%W%H(B
+  merge_dic.sh                  $B<-=q%G!<%?@07A$N%9%/%j%W%H(B
+  build.sh                      $B%3%s%Q%$%k(B(DB$B:n@.(B)$B$N%9%/%j%W%H(B
+  conv_syndb.pl                 $B%3%s%Q%$%k$NA0=hM}(B
+  compile.pl                    $B%3%s%Q%$%k(B($BN`5AI=8=(BDB$B$N(BSYNGRAPH$B2=(B)
+  sort_synhead.pl               $BN`5AI=8=(BDB$B$N%X%C%I%O%C%7%e$r%=!<%H(B
+$B!!(Bknp_syn.pl                    SYNGRAPH$B2=$N%F%9%H%W%m%0%i%`(B
+
+syndb/ : $BF15AI=8=%G!<%?%Y!<%9(B
+  i686/ : 
+    synhead.cdb                 $BN`5AI=8=(BDB(head$B$+$iF15A%0%k!<%W$r8F$V(B)
+    syndata.mldbm               $BN`5AI=8=(BDB($BF15A%0%k!<%W$KB0$9(BSYNGRAPH$B$r8F$V(B)
+    synparent.cdb               $B>e0L%G!<%?%Y!<%9(B($B>e0L%0%k!<%W$r8F$V(B)
+    synantonym.cdb              $BH?5A%G!<%?%Y!<%9(B($BH?5A%0%k!<%W$r8F$V(B)
+$B!!(B  syndb.cdb                   $BF15A%0%k!<%W$NCf?H$rJ]B8(B
+
+  x86_64/ : 
+    (i686/$B$HF1$8(B)
+  
+  cgi/ : CGI$B$G;HMQ$9$k(BDB
+    synhead.cdb                 $BN`5AI=8=(BDB(head$B$+$iF15A%0%k!<%W$r8F$V(B)
+    synparent.cdb               $B>e0L%G!<%?%Y!<%9(B($B>e0L%0%k!<%W$r8F$V(B)
+    synantonym.cdb              $BH?5A%G!<%?%Y!<%9(B($BH?5A%0%k!<%W$r8F$V(B)
+    syndata.mldbm               SYNGRAPH$B2=$N(BLOG$BIU(Bsyndata
+$B!!(B  syndb.cdb                   $BF15A%0%k!<%W$NCf?H$rJ]B8(B
+$B!!(B  synnumber.cdb               $BHV9f$+$iF15A%0%k!<%W$r8F$V(B
+$B!!(B  synchild.cdb                $B2<0L%G!<%?%Y!<%9(B($B2<0L%0%k!<%W$r8F$V(B)
+    log_dic.cdb                 $B<-=q$+$i$N>pJsCj=P$N(BLOG
+$B!!(B  log_isa.cdb                 DB$B$N>e0L2<0L4X78IUM?$N(BLOG
+$B!!(B  log_antonym.cdb             DB$B$NH?5A4X78IUM?$N(BLOG
+
+cgi : CGI$B%=!<%9(B
+$B!!(Bindex.cgi             SynGraph$B$N(BDEBUG$BMQ(BCGI$B$N%=!<%9(B
+
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{$B<g$J%9%/%j%W%H!&%G!<%?(B}
+\label{fig:scripts}
+\end{figure}
 
 \section{$B9q8l<-E5$N@07A!&%^!<%8(B}
 
@@ -225,7 +312,7 @@ KNP$B$N2r@O7k2L$K(BSYNGRAPH$B$N>pJs$r$&$a$3$`$3$H$,$G$-$k!#?^(B\ref{fig:hote
 $B!zJ#?t%N!<%I$K4X$9$k;EMM(B
 
 \begin{figure}[t]
-\scriptsize
+\footnotesize
 \begin{center}
 \begin{minipage}{\hsize}
 \begin{verbatim}
@@ -277,7 +364,7 @@ EOS
 \subsection{KNP::Result$B$GFI$_$3$`(B}
 
 \begin{figure}[t]
-\scriptsize
+\footnotesize
 \begin{center}
 \begin{minipage}{\hsize}
 \begin{verbatim}
@@ -369,6 +456,57 @@ KNP::SynGraph$B%*%V%8%'%/%H$GDs6!$5$l$F$$$k%a%=%C%I$r0J2<$K<($9!#(B
         $BJ8K!AG@-$rJV$9!#(B
 \end{description}
 
+\section{$B2]Bj(B}
+
+\begin{itemize}
+
+\item $B<-=q$r:n$k!&%$%s%?!<%U%'!<%9@_7W(B
+
+\item $BF15A%0%k!<%WFb$r$5$i$K%0%k!<%W$KJ,$1$k(B ($B;R6!(B = $BF8(B $BLdBj(B)
+
+\begin{itemize}
+
+\item $BJ,I[N`;wEY$,ogCM0J2<$N>l9g$KJL%0%k!<%W(B ?
+
+\end{itemize}
+
+\item $BF15A4X78(B(0.99), $B>e0L2<0L4X78(B(0.7)$B$N%9%3%"$rJ,I[N`;wEY$K(B
+
+\item $BITMW$JF15A6g$N:o=|(B
+
+\begin{itemize}
+ \item $BNc(B: $B7J5$!a@$$NCf$N6b2s$j$N6q9g(B
+
+ \item Web$BA4BN$G!V@$$NCf$N6b2s$j$N6q9g!W$,%^%C%A$9$kIQEY$rD4$Y$FogCM0J2<$J$i:o=|(B
+\end{itemize}
+
+\item $B0l8l$N%N!<%I$,$G$-$k$N$rKI$0(B
+
+\begin{itemize}
+ \item $B!V6vH/!W$N>e0L%N!<%I$H$7$F$N!"(B\verb!<!$BH/@8$9$k(B\verb!>!
+
+ \item $B!V7z@_!W$NH?5A%N!<%I$H$7$F$N!"(B\verb!<!<$BGK2u(B\verb!>!
+\end{itemize}
+
+\item $BIJ;l$NMxMQ(B
+
+\begin{itemize}
+ \item $B!V?);v!W$H!V?)$Y$k!W(B, $B!VGc$$J*!W$H!VGc$&!W$,%^%C%A$7$F$7$^$&(B
+\end{itemize}
+
+\item $BIUB08l$NF15A(B
+
+\begin{itemize}
+ \item $B!V;HMQ:Q$_!W$H!V;H$$=*$($k!W(B
+\end{itemize}
+
+\item $B9bB.2=(B
+
+\begin{itemize}
+ \item Syn$B%N!<%I$,IUM?$G$-$k$+$I$&$+$r%A%'%C%/$9$k;~$K9)IW(B
+\end{itemize}
+
+\end{itemize}
 \bibliographystyle{jplain}
 \bibliography{reference}
 
