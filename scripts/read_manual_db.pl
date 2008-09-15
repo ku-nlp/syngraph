@@ -82,6 +82,9 @@ for my $rep (keys %SYNDB) {
 		elsif ($word =~ s/:(\d+)$//) {
 		    $newword_komidashi_id = $1;
 		}
+		elsif ($word =~ s/:(\d+)\/(\d+)$//) {
+		    $newword_komidashi_id = $1;
+		}
 
 		# 多義語の扱い
 		next if $komidasi_num > 5 || ($komidasi_num == 5 && $newword_komidashi_id > 1) || ($komidasi_num == 4 && $newword_komidashi_id > 2);
