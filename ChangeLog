@@ -1,3 +1,29 @@
+2008-09-15  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/antonym.txt, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/isa.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_dic.txt, dic_middle/antonym.txt.merge, dic/rsk_iwanami/antonym.txt.manual, dic/rsk_iwanami/isa.txt.filtered.manual, dic/rsk_iwanami/synonym.txt.filtered.manual, scripts/read_manual_db.pl:
+	人手修正結果の読み込みを少し柔軟に
+
+2008-09-10  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	多義語のリストを返すオプションでもに全角に変換するように
+
+2008-09-09  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi:
+	SYNID、定義文のリンクをふんだ時も「入力文をテキストボックスに保持」のチェックの情報をひきつぐように
+
+2008-08-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl:
+	名詞的形容詞語幹からSynノードを作らないオプションを追加(-no_regist_adjective_stem)
+
+	* perl/SynGraph.pm:
+	名詞的形容詞語幹からSynノードを作らないオプションを追加(デフォルトオフ)
+
+	* perl/SynGraph.pm:
+	1文節中にaltがある形態素がたくさん存在する場合に対処(Out of memoryしないように展開をやめた)
+
 2008-08-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synhead.cdb, syndb/cgi/syndata.mldbm, syndb/x86_64/synhead.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synhead.cdb, syndb/i686/syndata.mldbm, perl/SynGraph.pm:
