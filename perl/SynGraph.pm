@@ -38,6 +38,7 @@ our $penalty = {fuzoku => 1.0,     # 付属語
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
 
+my $alt_num_max = 5;
 
 # 無視する単語のリスト(IREX用)
 # 代表表記が変更されたので、このままではマッチしない
@@ -705,9 +706,9 @@ sub _get_keywords {
 	    }
 	}
 
-	# altが5個以上あれば入力文節がおそらくおかしい（標準フォーマットで正しく文区切りされてないとか）なので、
+	# altが$alt_num_max(=5)個以上あれば入力文節がおそらくおかしい（標準フォーマットで正しく文区切りされてないとか）なので、
 	# その場合は、altの展開をしない
-	if ($altnum > 0 && $altnum < 5) {
+	if ($altnum > 0 && $altnum < $alt_num_max) {
 	    my @alt_string = &get_alt_string(\%nodename_str, \%alt);
 
 	    foreach my $alt (@alt_string) {
@@ -722,18 +723,19 @@ sub _get_keywords {
 
 	# 準内容語を除いたものを登録
 	if ($option->{regist_exclude_semi_contentword} && defined %semi_contentword) {
-	    my @alt_string = &get_alt_string(\%nodename_str, \%alt, \%semi_contentword);
+	    if ($altnum > 0 && $altnum < $alt_num_max) {
+		my @alt_string = &get_alt_string(\%nodename_str, \%alt, \%semi_contentword);
 
-	    foreach my $alt (@alt_string) {
-		# 表記が同じものは無視
-		next if (grep($alt eq $_->{name}, @{$keywords[$tag->{id}]}));
-		# 登録
-		my %tmp2 = %tmp;
-		$tmp2{name} = $alt;
-		$tmp2{score} = $penalty->{semicontentword};
-		push(@{$keywords[$tag->{id}]}, \%tmp2);
+		foreach my $alt (@alt_string) {
+		    # 表記が同じものは無視
+		    next if (grep($alt eq $_->{name}, @{$keywords[$tag->{id}]}));
+		    # 登録
+		    my %tmp2 = %tmp;
+		    $tmp2{name} = $alt;
+		    $tmp2{score} = $penalty->{semicontentword};
+		    push(@{$keywords[$tag->{id}]}, \%tmp2);
+		}
 	    }
-
 	}
 
 	# 数詞を汎化したidを登録
