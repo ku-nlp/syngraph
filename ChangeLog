@@ -1,3 +1,26 @@
+2008-09-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/change.log, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, perl/MergeTxt.pm:
+	perl/MergeTxt.pmにおいて、否定表現を含む場合に代表表記に変換するのをやめて、不適切なマッチングがおこらないように
+
+2008-09-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	準内容語を除いたものを登録する場合も、altが$alt_num_max以上個あれば登録しないように
+
+2008-09-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/wikipedia/aimai_synonym_isa.txt, ExtractSynfromDic/scripts/merge_aimai_synonym_isa.pl:
+	意味がひとつしかないもの、すべて同じものを除くように
+
+	* dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, ExtractSynfromDic/tools/def_sentence.rule:
+	「〜の略号」、「〜の略語」を追加
+
+2008-09-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, ExtractSynfromDic/scripts/x4syn.pl:
+	「Ａ − Ｂ」の処理を追加
+
 2008-09-15  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/antonym.txt, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/isa.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_dic.txt, dic_middle/antonym.txt.merge, dic/rsk_iwanami/antonym.txt.manual, dic/rsk_iwanami/isa.txt.filtered.manual, dic/rsk_iwanami/synonym.txt.filtered.manual, scripts/read_manual_db.pl:
