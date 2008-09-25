@@ -544,8 +544,17 @@ sub GetRepname {
 	my $result = $this->{sgh}{knp}->parse($word);
 	
 	if (scalar ($result->bnst) == 1) {
-	    $this->{rep_cache}{$word} = ($result->bnst)[0]->repname;
-	    return ($result->bnst)[0]->repname;
+	    my $repname = ($result->bnst)[0]->repname;
+
+	    # 否定表現の場合、代表表記に変換すると、否定を含まない表現とマッチしてしまうので、代表表記にしない
+	    # 例: 必要でない
+ 	    if (($result->bnst)[0]->fstring =~ /<否定表現>/) {
+ 		$this->{rep_cache}{$word} = $word;
+ 		return $word;
+ 	    }
+
+	    $this->{rep_cache}{$word} = $repname;
+	    return $repname;
 	}
 	else { # ２文節になっているのは解析誤りの可能性
 	    $this->{rep_cache}{$word} = $word;
