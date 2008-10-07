@@ -21,11 +21,12 @@ while (<>) {
 	print $knp_result->all_dynamic, "\n";
 
 	foreach my $tag ($knp_result->tag) {
-	    my $syngraph = $tag->syngraph;
-	    print $syngraph->tagid . ' ' . $syngraph->parent . $syngraph->dpndtype . ' ' . $syngraph->midasi . ' ' . $syngraph->feature . "\n";
+	    for my $synnodes ($tag->synnodes) {
+		print $synnodes->tagid . ' ' . $synnodes->parent . $synnodes->dpndtype . ' ' . $synnodes->midasi . ' ' . $synnodes->feature . "\n";
 
-	    for my $node ($syngraph->synnode) {
-		print ' ' . $node->tagid . ' ' . $node->synid . ' ' . $node->score . "\n";
+		for my $synnode ($synnodes->synnode) {
+		    print ' ' . $synnode->tagid . ' ' . $synnode->synid . ' ' . $synnode->score . "\n";
+		}
 	    }
 	}
 	$knp_buf = '';
