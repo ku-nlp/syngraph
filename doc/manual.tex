@@ -278,6 +278,10 @@ KNPの解析結果にSYNGRAPHの情報をうめこむことができる。図\ref{fig:hote
 
  \begin{itemize} 
   \item 否定
+
+  \begin{itemize}
+   \item KNPの基本句に付与されている素性 \verb!<!否定表現\verb!>! をみている
+  \end{itemize}
   \item 可能
   \item 尊敬
   \item 受身
@@ -370,8 +374,6 @@ EOS
 \begin{verbatim}
 #!/usr/bin/env perl
 
-# $Id$
-
 # KNP::Resultを使ってSynGrpah解析結果を読み込むサンプルプログラム
 
 # usage: perl knp_syn.pl -s ホテルに一番近い駅 -relation | perl read-knp-result.pl
@@ -391,14 +393,16 @@ while (<>) {
         print $knp_result->all_dynamic, "\n";
 
         foreach my $tag ($knp_result->tag) {
-            my $syngraph = $tag->syngraph;
-            print $syngraph->tagid . ' ' . $syngraph->parent . $syngraph->dpndtype . ' ' . $syngraph->midasi;
-            print  ' ' . $syngraph->feature . "\n";
+            for my $synnodes ($tag->synnodes) {
+                print $synnodes->tagid . ' ' . $synnodes->parent . $synnodes->dpndtype . ' ';
+                print $synnodes->midasi . ' ' . $synnodes->feature . "\n";
 
-            for my $node ($syngraph->synnode) {
-                print ' ' . $node->tagid . ' ' . $node->synid . ' ' . $node->score . "\n";
+                for my $synnode ($synnodes->synnode) {
+                    print ' ' . $synnode->tagid . ' ' . $synnode->synid . ' ' . $synnode->score . "\n";
+                }
             }
         }
+
         $knp_buf = '';
     }
 }
@@ -412,7 +416,7 @@ while (<>) {
 前節で説明したフォーマットを読み込んで処理するサンプルプログラム
 (SynGraph/scripts/read-knp-result.pl)を図\ref{fig:read_knp_result}に示す。
 
-KNP::SynGraphオブジェクトで提供されているメソッドを以下に示す。
+KNP::SynNodesオブジェクトで提供されているメソッドを以下に示す。
 
 \begin{description}
  \item [synnode]
@@ -426,6 +430,9 @@ KNP::SynGraphオブジェクトで提供されているメソッドを以下に示す。
 
  \item [parent]
         係り先の基本句IDを返す。
+
+ \item [parentids]
+        係り先の基本句ID(配列)を返す。
 
  \item [dpndtype]
         依存関係の種類(D,P,I,A)を返す。
