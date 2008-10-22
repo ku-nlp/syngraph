@@ -1878,6 +1878,37 @@ sub open_parsed_file {
     }
 }
 
+# SYNIDを入力とし、属する語の配列を返す
+# 例: 「s1303:ごたつく/ごたつく」が入力
+sub sid2word {
+    my ($this, $synid, $syndb) = @_;
+
+    my $group = $this->GetValue($syndb->{$synid});
+
+    my @ret;
+    # ごたつく/ごたつく:1/1:1/2[DIC]|ごたごたする[定義文]|取り込む/とりこむ:1/1:3/3[DIC]|混雑する[DIC]
+    foreach my $expression (split (/\|/, $group)) {
+	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//) {
+	    my $type = $1;
+
+	    my $orig = $expression;
+	    my ($repname, $word);
+
+	    $word = (split(/\//, $expression))[0];
+	    if ($expression =~ /\//) {
+		$repname = (split(/:/, $expression))[0];
+	    }
+
+	    # 'orig' => 'ごたつく/ごたつく:1/1:1/2'
+	    # 'repname' => 'ごたつく/ごたつく'
+	    # 'type' => 'DIC'
+	    # 'word' => 'ごたつく'
+	    push @ret, { type => $type, orig => $orig, repname => $repname, word => $word };
+	}
+    }
+
+    return @ret;
+}
 # for index.cgi, conv_syndb.pl
 
 sub read_synonym_pair {
