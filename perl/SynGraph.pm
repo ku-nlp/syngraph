@@ -723,7 +723,7 @@ sub _get_keywords {
 
 	# 準内容語を除いたものを登録
 	if ($option->{regist_exclude_semi_contentword} && defined %semi_contentword) {
-	    if ($altnum > 0 && $altnum < $alt_num_max) {
+	    if ($altnum < $alt_num_max) {
 		my @alt_string = &get_alt_string(\%nodename_str, \%alt, \%semi_contentword);
 
 		foreach my $alt (@alt_string) {
