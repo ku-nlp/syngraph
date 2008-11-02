@@ -27,6 +27,7 @@ our $KnpShareCommand = '/share/usr/bin/knp';
 
 # for CGI
 our $RSK4CGIdb = $SynGraphBaseDir . '/ExtractSynfromDic/db/rsk4cgi.db';
+our $Rep2Hinsidb = $SynGraphBaseDir . '/ExtractSynfromDic/db/rep2hinsi.db';
 our $Wikipediadb = $SynGraphBaseDir . '/ExtractSynfromDic/db/wikipedia.db';
 
 # 分布類似度計算用のデータベース
