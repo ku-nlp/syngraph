@@ -72,6 +72,15 @@ SYNGRAPH$B$N%Y!<%9$H$J$k$N$O!"$b$H$NJ8$N0MB89=B$LZ$G$"$j!"$=$N%N!<%I$O(B1$B$D
 \begin{verbatim}
 VERSION : $B%P!<%8%g%s(B ($BNc(B: 1.8-20080822)
 
+ExtractSynfromDic/ : $B<-=q$+$iF15AI=8=Cj=P%D!<%k(B
+  orig/ : $B85%G!<%?(B
+    wikipedia.txt       Wikipedia$B$+$iCj=P$7$?Dj5AJ8(B
+    aimai_list.txt      Wikipedia$B$N[#Kf$52sHr%Z!<%8$+$iCj=P$7$?B?5A8l%j%9%H(B
+
+  scripts/ : $B%9%/%j%W%H(B
+    x4syn.pl            $BF15A!&>e0L2<0L!&H?5A4X78Cj=P(B
+    extract_text_from_wikipedia.pl            Wikipedia$B$+$iDj5AJ8Cj=P(B
+
 dic/ : $BF15AI=8=<-=q(B
   rsk_iwanami/ : RSK$B!"(Biwanami$B$+$i$NCN<1Cj=P7k2L(B
     synonym.txt         $BF15A%0%k!<%W%G!<%?(B
@@ -88,6 +97,7 @@ dic/ : $BF15AI=8=<-=q(B
   wikipedia/ : Wikipedia$B$+$i$NCN<1Cj=P7k2L(B
     isa.txt             $B>e0L2<0L%G!<%?(B
     redirect_synonym_share_character_frequent.txt             $B%j%@%$%l%/%H$+$iCj=P$7$?F15A8l(B
+    aimai_synonym_isa.txt             $B[#Kf$52sHr%Z!<%8$+$iCj=P$7$?F15A8l!&>e0L8l(B
 
 dic_change/ : $B@07A8e$NF15AI=8=<-=q(B
   synonym_dic.txt               $B<-=q$+$iCj=P$7$?F15A%0%k!<%W%G!<%?(B
@@ -492,7 +502,7 @@ KNP::SynNodes$B%*%V%8%'%/%H$GDs6!$5$l$F$$$k%a%=%C%I$r0J2<$K<($9!#(B
 \begin{itemize}
  \item $B!V6vH/!W$N>e0L%N!<%I$H$7$F$N!"(B\verb!<!$BH/@8$9$k(B\verb!>!
 
- \item $B!V7z@_!W$NH?5A%N!<%I$H$7$F$N!"(B\verb!<!<$BGK2u(B\verb!>!
+ \item $B!V7z@_!W$NH?5A%N!<%I$H$7$F$N!"(B\verb!<!$BGK2u(B\verb!>!
 \end{itemize}
 
 \item $BIJ;l$NMxMQ(B
