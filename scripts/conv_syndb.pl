@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -77,7 +77,8 @@ foreach my $file_type (@file) {
 	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
 	while (<SYN>) {
 	    chomp;
-	    my @syn_list = split(/\s/, $_);
+	    my $delimiter = $file_type eq 'synonym_web_news' && $opt{wikipedia} ? "\t" : "\s";
+	    my @syn_list = split(/$delimiter/, $_);
 	    
 	    # 数が多いのは使わない
 	    next if (@syn_list > 40);
@@ -135,7 +136,9 @@ foreach my $file_type (@file) {
 
 	while (<ISA>) {
 	    chomp;
-	    my ($child, $parent, $number) = split(/ /, $_);
+
+	    my $delimiter = $file_type eq 'isa_wikipedia' ? "\t" : ' ';
+	    my ($child, $parent, $number) = split(/$delimiter/, $_);
 
 	    # 文字化け対策
 	    next if $child =~ /\?/ || $parent =~ /\?/;
@@ -156,9 +159,9 @@ foreach my $file_type (@file) {
 		    # 上位下位のログ
 		    if ($option{log}) {
 			my $key_p = (split(/:/, $parent))[0];
-			$key_p = (split(/\//, $parent))[0];
+			$key_p = (split(/\//, $key_p))[0];
 			my $key_c = (split(/:/, $child))[0];
-			$key_c = (split(/\//, $child))[0];
+			$key_c = (split(/\//, $key_c))[0];
 			$log_isa{"$child_synid-$parent_synid"} .= $log_isa{"$child_synid-$parent_synid"} ? "|$key_c→$key_p" : "$key_c→$key_p" unless $log_isa{"$child_synid-$parent_synid"} =~ /$key_c→$key_p/; # なければ保存
 		    }
 		}
@@ -285,7 +288,8 @@ if ($opt{convert_file}) {
 	    # $synid = 's517:趣/おもむき'
 	    my $key_num = (split(/:/, $synid))[0];
 	    $synnum{$key_num} = $synid;
-	    if ($tag eq 'DIC') {
+#	    if ($tag eq 'DIC' || $tag eq 'Wikipedia') {
+	    if ($word_id) {
 		$expression .= "$word_id" . "[$tag]";
 	    }
 	    else { # '定義文''Web'
