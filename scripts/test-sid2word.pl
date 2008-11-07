@@ -11,16 +11,36 @@ use Dumpvalue;
 use Getopt::Long;
 
 my %opt;
-GetOptions(\%opt, 'synid=s');
+GetOptions(\%opt, 'synid=s', 'constructor');
 
 $opt{synid} = 's1303:ごたつく/ごたつく' unless $opt{synid};
 
-my $syngraph = new SynGraph;
+my $syndb_cdb = '../syndb/cgi/syndb.cdb';
+
+my $syngraph;
+# constructorでsyndb_cdbを渡すオプション
+if ($opt{constructor}) {
+    $syngraph = new SynGraph(undef, undef, { syndbcdb => $syndb_cdb });
+}
+else {
+    $syngraph = new SynGraph;
+}
 
 my %syndb;
-SynGraph::tie_cdb('../syndb/cgi/syndb.cdb', \%syndb);
+unless ($opt{constructor}) {
+    SynGraph::tie_cdb($syndb_cdb, \%syndb);
+}
 
-my @words = $syngraph->sid2word($opt{synid}, \%syndb);
+my @words;
+if ($opt{constructor}) {
+    @words = $syngraph->sid2word($opt{synid});
+}
+else {
+    @words = $syngraph->sid2word($opt{synid}, \%syndb);
+}
+
 Dumpvalue->new->dumpValue(\@words);
 
-untie %syndb;
+unless ($opt{constructor}) {
+    untie %syndb;
+}
