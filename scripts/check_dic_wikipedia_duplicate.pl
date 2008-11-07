@@ -47,7 +47,7 @@ while (<W>) {
     chomp;
 
     # アンパサンド 記号/きごう
-    my ($hyponym, $hypernym, $num) = split;
+    my ($hyponym, $hypernym, $num) = split("\t", $_);
 
     # 長すぎる見出しはskip
     if (length $hyponym <= $LENGTH_MAX) { 
@@ -68,6 +68,6 @@ while (<W>) {
 	}
     }
 
-    print "$hyponym $hypernym $num\n";
+    print "$hyponym\t$hypernym\t$num\n";
 }
 close W;
