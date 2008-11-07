@@ -22,6 +22,9 @@ jumanrc=
 knpopts=()
 k=1
 
+# WWW2sf
+WWW2sfdir=$HOME/work/WWW2sf
+
 log=0
 noparse=0
 wikipedia=0
@@ -78,9 +81,9 @@ fi
 # 類義表現を変換
 if [ $wikipedia -eq 1 ]; then
     if [ $log -eq 1 ]; then
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log -wikipedia"
     else
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR -wikipedia"
     fi
 else
     if [ $log -eq 1 ]; then
@@ -99,12 +102,16 @@ if [ $noparse -eq 1 -a -e $SYNDBPARSE ]; then
 else
     if [ $jumanrc -eq 1 ]; then
 #	exe="$JUMAN -e2 -B -i '#' -r $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
-	exe="perl word_into_juman.pl -C $JUMAN -R $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
+	exe="perl word_into_juman.pl -C $JUMAN -R $JUMANRCFILE < $SYNDB_DIR/syndb.convert > $SYNDB_DIR/syndb.jmn"
     else
 #	exe="$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
-	exe="perl word_into_juman.pl -C $JUMAN < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
+	exe="perl word_into_juman.pl -C $JUMAN < $SYNDB_DIR/syndb.convert > $SYNDB_DIR/syndb.jmn"
     fi
 fi
+echo $exe
+eval $exe
+
+exe="$WWW2sfdir/tool/scripts/parse-comp.sh -k \"$knpopts[*]\" $SYNDB_DIR/syndb.jmn && mv $SYNDB_DIR/syndb.knp $SYNDB_DIR/syndb.parse"
 echo $exe
 eval $exe
 
