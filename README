@@ -44,7 +44,7 @@ perl/ : Perlモジュール
 
 scripts/ : スクリプト
 
-  EWADME			
+  README			
   merg_dic.sh			辞書データ整形のスクリプト
   build.sh        		コンパイル(DB作成)のスクリプト
   irex_build.sh  		IREX用のスクリプト
