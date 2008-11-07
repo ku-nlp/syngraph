@@ -130,7 +130,12 @@ sub new {
 				     "$syndbdir/log_isa.cdb", "$syndbdir/log_antonym.cdb");
 	}
     }
-    
+
+    # 関数sid2word用にここでtie
+    if (! defined $option->{cgi} && defined $option->{syndbcdb}) {
+	&tie_cdb($option->{syndbcdb}, $this->{syndb});
+    }
+
     return $this;
 }
 
@@ -151,6 +156,10 @@ sub DESTROY {
 		untie $this->{$key};
 	    }
 	}
+    }
+
+    if (defined $this->{syndb}) {
+	untie $this->{syndb};
     }
 }
 
@@ -1883,7 +1892,13 @@ sub open_parsed_file {
 sub sid2word {
     my ($this, $synid, $syndb) = @_;
 
-    my $group = $this->GetValue($syndb->{$synid});
+    my $group;
+    if (defined $syndb) {
+	$group = $this->GetValue($syndb->{$synid});
+    }
+    else {
+	$group = $this->GetValue($this->{syndb}{$synid});
+    }
 
     my @ret;
     # ごたつく/ごたつく:1/1:1/2[DIC]|ごたごたする[定義文]|取り込む/とりこむ:1/1:3/3[DIC]|混雑する[DIC]
