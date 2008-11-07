@@ -7,7 +7,6 @@ SRC_DIR='.'
 SIM_DIR_Dic=../dic/rsk_iwanami
 SIM_DIR_Web=../dic/web_news
 SIM_DIR_Wikipedia=../dic/wikipedia
-SIM_DIR_Wikipedia=../dic/wikipedia
 
 # 同義表現データマージ途中のディレクトリ
 SIM_M_DIR=../dic_middle
@@ -145,10 +144,26 @@ exe="perl check_dic_web_news_duplicate.pl --dic=$SIM_M_DIR/synonym_dic.txt.merge
 echo $exe
 eval $exe
 
-# 分布類似度を使ってマージ
-exe="perl -I$UTILS -I$PERL_DIR check_duplicate_entry.pl -distributional_similarity -read_multiple_entries -merge < $SIM_M_DIR/synonym_web_news.txt.dicremoved > $SIM_C_DIR/synonym_web_news.txt 2> $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge.log"
-echo $exe
-eval $exe
+
+if [ $wikipedia -eq 1 ]; then
+    # 分布類似度を使ってマージ
+    exe="perl -I$UTILS -I$PERL_DIR check_duplicate_entry.pl -distributional_similarity -read_multiple_entries -merge < $SIM_M_DIR/synonym_web_news.txt.dicremoved > $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge 2> $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge.log"
+    echo $exe
+    eval $exe
+    # 曖昧さ回避ページから抽出した多義語と、Webから獲得した同義語をマージ
+    exe="perl -I$PERL_DIR merge_web_news_wikipedia.pl -aimai $SIM_DIR_Wikipedia/aimai_synonym_isa.txt -synonym_web_news $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge > $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt"
+    echo $exe
+    eval $exe
+    # 上記ファイルを同義語と上位語に分解し、$SIM_DIR_Wikipedia/isa.txtとマージ
+    exe="perl -I$PERL_DIR split_synonym_aimai_synonym_isa_merge.pl -isa_wikipedia $SIM_DIR_Wikipedia/isa.txt -isa_out $SIM_M_DIR/isa_wikipedia_aimai_merge.txt -synonym_out $SIM_C_DIR/synonym_web_news_aimai.txt < $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt "
+    echo $exe
+    eval $exe
+else
+    # 分布類似度を使ってマージ
+    exe="perl -I$UTILS -I$PERL_DIR check_duplicate_entry.pl -distributional_similarity -read_multiple_entries -merge < $SIM_M_DIR/synonym_web_news.txt.dicremoved > $SIM_C_DIR/synonym_web_news.txt 2> $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge.log"
+    echo $exe
+    eval $exe
+fi
 
 # 辞書を整形(多義でない語に「:1/1:1/1」を付与、ひらがな２文字以下削除、半角を全角に)
 # 今は同義グループの連結をしない
@@ -167,7 +182,7 @@ eval $exe
 
 # Wikipediaから得られた類義表現のうち、国語辞典からも抽出されるものを削除
 if [ $wikipedia -eq 1 ]; then
-    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_DIR_Wikipedia/isa.txt > $SIM_C_DIR/isa_wikipedia.txt 2> $SIM_C_DIR/isa_wikipedia.log"
+    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_M_DIR/isa_wikipedia_aimai_merge.txt > $SIM_C_DIR/isa_wikipedia.txt 2> $SIM_C_DIR/isa_wikipedia.log"
     echo $exe
     eval $exe
 fi
