@@ -130,34 +130,33 @@ for my $word (keys %aimai_data) {
 		}
 	    }
 	}
+    }
 
-	# 出力
-	# Dumpvalue->new->dumpValue($aimai_data{$word});
-	my $n = $aimai_data{$word}{n} + $aimai_data{$word}{new_n_num};
-	for my $m (sort {$a <=> $b} keys %{$aimai_data{$word}{list}}) {
-	    if ($aimai_data{$word}{list}{$m}{type} eq 'synonym' || ! $aimai_data{$word}{list}{$m}{type}) {
-		print "$word:$m/$n\tsynonym";
+    # 出力
+    # Dumpvalue->new->dumpValue($aimai_data{$word});
+    my $n = $aimai_data{$word}{n} + $aimai_data{$word}{new_n_num};
+    for my $m (sort {$a <=> $b} keys %{$aimai_data{$word}{list}}) {
+	if ($aimai_data{$word}{list}{$m}{type} eq 'synonym' || ! $aimai_data{$word}{list}{$m}{type}) {
+	    print "$word:$m/$n\tsynonym";
 
-		if (defined $aimai_data{$word}{list}{$m}{string}) {
-		    print "\t", $aimai_data{$word}{list}{$m}{string};
-		}
-
-		if (defined $aimai_data{$word}{list}{$m}{synonyms}) {
-		    print "\t", join ("\t", keys %{$aimai_data{$word}{list}{$m}{synonyms}});
-		}
-		print "\n";
+	    if (defined $aimai_data{$word}{list}{$m}{string}) {
+		print "\t", $aimai_data{$word}{list}{$m}{string};
 	    }
-	    # 上位語
-	    if ($aimai_data{$word}{list}{$m}{type} eq 'isa') {
-		print "$word:$m/$n\tisa\t$aimai_data{$word}{list}{$m}{string}\n";
 
-		# 同義語
-		if (defined $aimai_data{$word}{list}{$m}{synonyms}) {
-		    print "$word:$m/$n\tsynonym", "\t", join ("\t", keys %{$aimai_data{$word}{list}{$m}{synonyms}}), "\n";
-		}
+	    if (defined $aimai_data{$word}{list}{$m}{synonyms}) {
+		print "\t", join ("\t", keys %{$aimai_data{$word}{list}{$m}{synonyms}});
+	    }
+	    print "\n";
+	}
+	# 上位語
+	if ($aimai_data{$word}{list}{$m}{type} eq 'isa') {
+	    print "$word:$m/$n\tisa\t$aimai_data{$word}{list}{$m}{string}\n";
+
+	    # 同義語
+	    if (defined $aimai_data{$word}{list}{$m}{synonyms}) {
+		print "$word:$m/$n\tsynonym", "\t", join ("\t", keys %{$aimai_data{$word}{list}{$m}{synonyms}}), "\n";
 	    }
 	}
-#	print STDERR "\n";
     }
 }
 
