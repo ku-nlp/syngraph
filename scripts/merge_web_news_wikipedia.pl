@@ -110,7 +110,9 @@ for my $word (keys %aimai_data) {
 #		print STDERR "max_m: $max_m, max_sim: $max_sim ($line)\n";
 		for my $w (@{$line_data[$l]{words}}) {
 		    my $string = $aimai_data{$word}{list}{$max_m}{string};
-		    next if $w eq $string || $w eq $word;
+		    # Webから獲得された同義語は代表表記化されていない(例:マウンテンバイク)ので、
+		    # 代表表記(マウンテンバイク/マウンテンバイク)とのマッチも含む
+		    next if $w eq $string || $w eq $word || $w eq (split('/', $string))[0];
 
 		    if (!defined $aimai_data{$word}{list}{$max_m}{synonyms}{$w}) {
 			$aimai_data{$word}{list}{$max_m}{synonyms}{$w} = 1;
