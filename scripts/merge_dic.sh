@@ -159,7 +159,7 @@ if [ $wikipedia -eq 1 ]; then
     echo $exe
     eval $exe
     # 曖昧さ回避ページから抽出した多義語と、Webから獲得した同義語をマージ
-    exe="perl -I$PERL_DIR merge_web_news_wikipedia.pl -aimai $SIM_DIR_Wikipedia/aimai_synonym_isa.txt -synonym_web_news $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge > $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt"
+    exe="perl -I$PERL_DIR merge_web_news_wikipedia.pl -aimai $SIM_DIR_Wikipedia/aimai_synonym_isa.txt -synonym_web_news $SIM_M_DIR/synonym_web_news.txt.distributional_similarity_merge -debug > $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt 2> $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt.log"
     echo $exe
     eval $exe
     # 上記ファイルを同義語と上位語に分解し、$SIM_DIR_Wikipedia/isa.txtとマージ

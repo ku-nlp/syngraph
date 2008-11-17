@@ -107,7 +107,7 @@ for my $word (keys %aimai_data) {
 
 	    # すでにある意味とマージ
 	    if ($max_m) {
-#		print STDERR "max_m: $max_m, max_sim: $max_sim ($line)\n";
+		print STDERR "max_m: $max_m, max_sim: $max_sim ($line)\n" if $opt{debug};
 		for my $w (@{$line_data[$l]{words}}) {
 		    my $string = $aimai_data{$word}{list}{$max_m}{string};
 		    # Webから獲得された同義語は代表表記化されていない(例:マウンテンバイク)ので、
@@ -122,7 +122,7 @@ for my $word (keys %aimai_data) {
 	    }
 	    # 新しい意味を作る
 	    else {
-#		print STDERR "new sense? ($line)\n";
+		print STDERR "new sense? ($line)\n" if $opt{debug};
 		my $new_n = $aimai_data{$word}{n} + $aimai_data{$word}{new_n_num} + 1;
 		$aimai_data{$word}{new_n_num}++;
 		for my $w (@{$line_data[$l]{words}}) {
