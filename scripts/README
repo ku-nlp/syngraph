@@ -1,16 +1,4 @@
 
-
-
-[コンパイル(DB作成)]
-
-* 手順
-  ./merg_dic.sh		辞書データベースの整形
-  ./build.sh		辞書データベースのコンパイル(DB作成)
-
-  (orchidで) nice -n 10 ./build.sh -o -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
-  (reedで) nice -n 10 ./build.sh -n -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
-  (reedで) nice -n 10 ./build.sh -n -l -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
-
 [SYNGRAPH化のテストプログラム knp_syn.pl]
 
 * 概要
@@ -58,23 +46,13 @@
 EOS
 
 
-[類似度計算のテストプログラム test.pl]
+[コンパイル(DB作成)]
 
-* 概要
-  入力した２文の類似度を計算する。
+* 手順
+  ./merg_dic.sh		辞書データベースの整形
+  ./build.sh		辞書データベースのコンパイル(DB作成)
 
-* option
-  -debug  		デバッグ
-  -match_print		文内のマッチしたペアとそのマッチの種類を表示
-  -no_case		KNPの確率的格解析を行わない
-  -postprocess		KNPのpostprocessを利用
-  -relation		上位下位データを使用する
-  -antonym		反義データを使用する
-  -pa_matching		述語項構造単位のマッチングを行う
-  -orchid		orchidでの使用時
-
-* Usage
-
-* 結果
-
+  (orchidで) nice -n 10 ./build.sh -o -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
+  (reedで) nice -n 10 ./build.sh -n -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
+  (reedで) nice -n 10 ./build.sh -n -l -j /home/harashima/usr/bin/juman -r /home/harashima/usr/etc/jumanrc
 
