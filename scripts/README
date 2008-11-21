@@ -17,6 +17,8 @@
 * Usage
 	perl knp_syn.pl -s 一番近い駅
 
+ - ../perl/Constant.pmでJuman, KNPなどのコマンドを指定する
+
 * 結果
 
 # S-ID:1 KNP:2007/05/10
