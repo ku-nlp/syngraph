@@ -63,7 +63,8 @@ SYNGRAPH$B$N%Y!<%9$H$J$k$N$O!"$b$H$NJ8$N0MB89=B$LZ$G$"$j!"$=$N%N!<%I$O(B1$B$D
 % cvs -d reed.kuee.kyoto-u.ac.jp:/share/service/cvs co SynGraph
 \end{verbatim}
 
-$B<g$J%9%/%j%W%H!&%G!<%?$r?^(B\ref{fig:scripts}$B$K<($9!#(B
+$B<g$J<-=q%G!<%?!&%9%/%j%W%H$J$I$r?^(B\ref{fig:dic_data},\ref{fig:syngraph}
+$B$K<($9!#(B
 
 \begin{figure}[t]
 \footnotesize
@@ -103,8 +104,23 @@ dic_change/ : $B@07A8e$NF15AI=8=<-=q(B
   synonym_dic.txt               $B<-=q$+$iCj=P$7$?F15A%0%k!<%W%G!<%?(B
   definition.txt                $B<-=q$+$iCj=P$7$?Dj5AJ8%G!<%?(B
   isa.txt                       $B<-=q$+$iCj=P$7$?>e0L2<0L%G!<%?(B
+  isa_wikipedia.txt             Wikipedia$B$+$iCj=P$7$?>e0L2<0L%G!<%?(B
   antonym.txt                   $B<-=q$+$iCj=P$7$?H?5A%G!<%?(B
   synonym_web_news.txt          Web$B$H?7J9$+$iCj=P$7$?F15A%0%k!<%W%G!<%?(B
+
+
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{$B<g$J<-=q%G!<%?(B}
+\label{fig:dic_data}
+\end{figure}
+
+\begin{figure}[t]
+\footnotesize
+\begin{center}
+\begin{minipage}{\hsize}
+\begin{verbatim}
 
 perl/ : Perl$B%b%8%e!<%k(B
   SynGraph.pm                   SYNGRAPH$B$r07$&%b%8%e!<%k(B
@@ -143,11 +159,10 @@ syndb/ : $BF15AI=8=%G!<%?%Y!<%9(B
 
 cgi : CGI$B%=!<%9(B
 $B!!(Bindex.cgi             SynGraph$B$N(BDEBUG$BMQ(BCGI$B$N%=!<%9(B
-
 \end{verbatim}
 \end{minipage}
 \end{center}
-\caption{$B<g$J%9%/%j%W%H!&%G!<%?(B}
+\caption{$B<g$J%9%/%j%W%H!&F15AI=8=%G!<%?%Y!<%9(B}
 \label{fig:scripts}
 \end{figure}
 
@@ -169,6 +184,13 @@ cgi : CGI$B%=!<%9(B
 
 \item $BF15A6g(B
 \end{itemize}
+
+$B4X78$NCj=P$O?M<j$G@0Hw$7$?%Q%?!<%s$G9T$J$&!#%Q%?!<%s$O?t==$"$j!"(BKNP$B$N%k!<(B
+$B%k%U%!%$%k$G5-=R$5$l$F$$$k!#0J2<$,%k!<%k%U%!%$%k$G$"$k!#(B
+
+\begin{verbatim}
+SynGraph/ExtractSynfromDic/tools/def_sentence.rule
+\end{verbatim}
 
 \subsection{$B>e0L2<0L4X78(B}
 
