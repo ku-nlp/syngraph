@@ -77,7 +77,7 @@ foreach my $file_type (@file) {
 	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
 	while (<SYN>) {
 	    chomp;
-	    my $delimiter = $file_type eq 'synonym_web_news' && $opt{wikipedia} ? "\t" : "\s";
+	    my $delimiter = ($file_type eq 'synonym_web_news' && $opt{wikipedia}) ? '\t' : '\s';
 	    my @syn_list = split(/$delimiter/, $_);
 	    
 	    # 数が多いのは使わない
@@ -137,7 +137,7 @@ foreach my $file_type (@file) {
 	while (<ISA>) {
 	    chomp;
 
-	    my $delimiter = $file_type eq 'isa_wikipedia' ? "\t" : ' ';
+	    my $delimiter = $file_type eq 'isa_wikipedia' ? '\t' : ' ';
 	    my ($child, $parent, $number) = split(/$delimiter/, $_);
 
 	    # 文字化け対策
