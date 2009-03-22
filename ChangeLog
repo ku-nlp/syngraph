@@ -1,3 +1,93 @@
+2009-03-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_dic.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_change/change.log, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic/wikipedia/redirect_synonym_share_character_frequent.jumanremoved.log, dic/wikipedia/redirect_synonym_share_character_frequent.txt.jumanremoved, dic/web_news/all.txt.jumanremoved.manual, dic/web_news/www.txt.jumanremoved, dic/web_news/www.txt.jumanremoved.log, dic/web_news/all.txt.jumanremoved:
+	JUMAN辞書の更新
+
+	* scripts/conv_syndb.pl: bug fixed.
+
+2009-03-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/rsk_iwanami/antonym.txt, dic/rsk_iwanami/definition.txt, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/same_definition.txt, dic/rsk_iwanami/synonym.txt:
+	JUMAN辞書の更新
+
+	* ExtractSynfromDic/scripts/x4syn.pl:
+	same_definitionオプションの時にsortしてから出力するように変更
+
+2009-02-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/result/case3.dic: JUMANの辞書更新
+
+2008-11-27  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	-usexmlオプションを撲滅して、デフォルトに
+
+2008-11-27  imanishi  <imanishi@reed.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	リンクの情報をprintする時に、そのタイトルも出力するように変更
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	リンク(縦棒を含まない)を抽出するオプションを追加(-linksingle)
+
+2008-11-17  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/isa_wikipedia.log, dic_change/synonym_web_news_aimai.txt, dic_change/isa_wikipedia.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/isa_wikipedia_aimai_merge.txt:
+	曖昧さ回避ページにおいて、
+	-　「その他」を除去
+	- 「==外部リンク==」、「==関連項目==」があったらそれ以降は抽出しないように
+
+	isa_wikipedia.txtにおいてゴミ除去
+
+	* dic/wikipedia/isa.txt, ExtractSynfromDic/scripts/x4syn.pl: ゴミを除去
+
+	* dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, ExtractSynfromDic/orig/aimai_list.txt, ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	「==関連項目==」があったらそれ以降は抽出しないように
+
+	* dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, ExtractSynfromDic/orig/aimai_list.txt:
+	「その他」を除去
+	「==外部リンク==」があったらそれ以降は抽出しないように
+
+2008-11-11  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	曖昧さ回避ページにおいて、
+	-　「その他」を除去
+	- 「==外部リンク==」があったらそれ以降は抽出しないように
+
+	* dic_change/synonym_web_news_aimai.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt, scripts/merge_web_news_wikipedia.pl:
+	代表表記化されているものとそうでないものをマッチさせるように変更
+
+2008-11-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	linkを抽出するオプションを追加(by imanishi)
+
+	* scripts/build.sh: parse-comp.shを使うように変更
+	merge_dic.shの変更に対応
+
+	* scripts/merge_dic.sh:
+	wikipediaオプションの場合に、曖昧さ回避ページから獲得した多義語リストと、Webから獲得した同義語をマージするように
+
+	* scripts/test-sid2word.pl:
+	コンストラクタでsyndb.cdbをtieするオプションを追加(-constructor)
+
+	* perl/SynGraph.pm: コンストラクタでsyndb.cdbをtieするオプションを追加
+
+2008-10-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: 準内容語をのぞいたノードを作る時のbug fixed
+
+2008-10-08  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/extract_text_from_wikipedia.pl:
+	XML::Simpleを使うオプションを廃止して、XML::LibXMLのみをサポート(XML::Simpleだと途中で止まってしまうため)
+
+2008-09-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/change.log, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, perl/MergeTxt.pm:
+	否定表現を含む場合に代表表記に変換するのをやめて、不適切なマッチングがおこらないように
+
 2008-09-25  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synchild.cdb, syndb/cgi/synantonym.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_isa.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/synonym_dic.txt.merge.add.log, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/change.log, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, perl/MergeTxt.pm:
