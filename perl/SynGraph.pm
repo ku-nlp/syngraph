@@ -316,6 +316,8 @@ sub make_bp {
 		    $log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $match_verbose);
 		}
 
+		print STDERR "!! $mid\n" if $option->{print_mid};
+
 		$this->_regnode({ref            => $ref,
 				 sid            => $sid,
 				 bp             => $bp,

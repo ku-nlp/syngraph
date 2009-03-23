@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid');
 
 my $option;
 my $knp_option;
@@ -29,6 +29,7 @@ $option->{cgi} = 1 if $opt{cgi};
 $option->{store_fstring} = 1 if $opt{fstring};
 $option->{use_make_ss} = 1 if $opt{use_make_ss};
 $option->{db_on_memory} = 1 if $opt{db_on_memory};
+$option->{print_mid} = 1 if $opt{print_mid};
 $knp_option->{postprocess} = 1 if $opt{postprocess};
 $knp_option->{no_case} = 1 if $opt{no_case};
 $regnode_option->{relation} = 1 if $opt{relation};
