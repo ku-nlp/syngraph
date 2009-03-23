@@ -1824,6 +1824,24 @@ sub expansion{
     return @result;
 }
 
+# Synノードの数を数える
+sub CountSynNodeNum {
+    my ($this, $result) = @_;
+
+    my $tagnum = 0;
+    my $synnode_num = 0;
+    for my $tag ($result->tag) {
+	for my $synnodes ($tag->synnodes) {
+	    for my $synnode ($synnodes->synnode) {
+		next if $synnode->synid !~ /^s/; # 基本IDは数えない
+		$synnode_num++;
+	    }
+	}
+	$tagnum++;
+    }
+
+    return ($tagnum, $synnode_num);
+}
 
 ################################################################################
 #                                                                              #
