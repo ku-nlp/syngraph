@@ -27,8 +27,7 @@ while (<>) {
 
 	if ($opt{count_synnode}) {
 	    my ($tagnum, $synnode_num) = $syngraph->CountSynNodeNum($knp_result);
-	    print "tagnum: $tagnum\n";
-	    print "synnodenum: $synnode_num\n";
+	    print "$tagnum $synnode_num\n";
 	}
 	else {
 	    print $knp_result->all_dynamic, "\n";
