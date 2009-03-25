@@ -5,9 +5,7 @@
 use strict;
 use Getopt::Long;
 use SynGraph;
-use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
+use encoding 'euc-jp';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
