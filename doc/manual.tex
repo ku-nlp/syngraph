@@ -501,6 +501,10 @@ KNP::SynNodesオブジェクトで提供されているメソッドを以下に示す。
 
 \item 辞書を作る・インターフェース設計
 
+ \begin{itemize}
+  \item 多義語で対応するIDがわからない場合に「1/1:?/2」のようなIDをふる (例: 仕事)
+ \end{itemize}
+
 \item 同義グループ内をさらにグループに分ける (子供 = 童 問題)
 
 \begin{itemize}
@@ -510,6 +514,12 @@ KNP::SynNodesオブジェクトで提供されているメソッドを以下に示す。
 \end{itemize}
 
 \item 同義関係(0.99), 上位下位関係(0.7)のスコアを分布類似度に
+
+ \begin{itemize}
+  \item {ホーム, ハウス, 家}というグループに対して、ホーム $\leftrightarrow$ ハウス, 
+	ホーム $\leftrightarrow$ 家, ハウス $\leftrightarrow$ 家 の類似度をあらかじめ計算しておき、
+	マッチした語間の類似度をかける
+ \end{itemize}
 
 \item 不要な同義句の削除
 
@@ -545,7 +555,14 @@ KNP::SynNodesオブジェクトで提供されているメソッドを以下に示す。
  \item Synノードが付与できるかどうかをチェックする時に工夫
 \end{itemize}
 
+ \item 「高くなる = 高まる」、「高くする = 高める」をマッチさせる
+
+\begin{itemize}
+ \item ContentW.dicの「形容詞派生」をみてノードを作る
 \end{itemize}
+ 
+\end{itemize}
+
 \bibliographystyle{jplain}
 \bibliography{reference}
 
