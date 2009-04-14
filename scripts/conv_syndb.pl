@@ -253,6 +253,71 @@ foreach my $midasi (keys %definition) {
     push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
 
+# 属する語が1語しかないグループのSynIDから、「s(数字):」を削除
+my %one_word_sid;
+foreach my $synid (keys %syn_group) {
+    my %definition_check;
+
+    if (scalar @{$syn_group{$synid}} == 1) {
+	# $synidが代表表記のもの（すなわち1語）
+	if ($synid =~ /\//) {
+	    # 「s(数字):」を除いたもの
+	    my $newid;
+	    ($newid = $synid) =~ s/^s\d+://;
+	    $one_word_sid{$synid} = $newid;
+
+	    @{$syn_group{$newid}} = @{$syn_group{$synid}};
+	    delete $syn_group{$synid};
+	}
+    }
+}
+
+# 上位語
+foreach my $synid (keys %relation_parent) {
+    my @parents;
+    for my $parent (split('\|', $relation_parent{$synid})) {
+	# s14914:考えを引き出す,1
+	my ($parent_synid, $num) = split(',', $parent);
+
+	# 更新する
+	if (defined $one_word_sid{$parent_synid}) {
+	    $parent_synid = $one_word_sid{$parent_synid};
+	}
+	push @parents, "$parent_synid,$num";
+    }
+    my $newstring = join('|', @parents);
+
+    if (defined $one_word_sid{$synid}) {
+	$relation_parent{$one_word_sid{$synid}} = $newstring;
+	delete $relation_parent{$synid};
+    }
+    else {
+	$relation_parent{$synid} = $newstring;
+    }
+}
+
+# 反義語
+foreach my $synid (keys %antonym) {
+    my @antonyms;
+    for my $antonym (split('\|', $antonym{$synid})) {
+
+	my $new_parent_synid;
+	# 更新する
+	if (defined $one_word_sid{$antonym}) {
+	    $antonym = $one_word_sid{$antonym};
+	}
+	push @antonyms, $antonym;
+    }
+    my $newstring = join('|', @antonyms);
+
+    if (defined $one_word_sid{$synid}) {
+	$antonym{$one_word_sid{$synid}} = $newstring;
+	delete $antonym{$synid};
+    }
+    else {
+	$antonym{$synid} = $newstring;
+    }
+}
 
 #
 # 同義グループをファイルに書き出す
