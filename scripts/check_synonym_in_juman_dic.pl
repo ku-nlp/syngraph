@@ -24,11 +24,11 @@ unless ( -e $opt{jumandicdir} ) {
     exit;
 }
 
-my $cscf = new CalcSimilarityByCF({ method => 'Simpson' });
+my $cscf = new CalcSimilarityByCF({ method => 'SimpsonJaccard' });
 
 $cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
 
-my $TH_DISTRIBUTIONAL_SIMILARITY = 0.4;
+my $TH_DISTRIBUTIONAL_SIMILARITY = 0.3;
 
 # Jumanの辞書の読み込み
 for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
@@ -63,7 +63,7 @@ while (<>) {
     }
     # 片方が登録されている -> 分布類似度が高ければ採用
     elsif (defined $MIDASI{$word1} || defined $MIDASI{$word2}) {
-	my $score = $cscf->CalcSimilarity($word1, $word2, { use_normalized_repname => 1, mifilter => 1 });
+	my $score = $cscf->CalcSimilarity($word1, $word2, { normalized_repname => 'compound', mifilter => 1 });
 	print STDERR "★$word1 $word2 $score";
 
 	if ($score < $TH_DISTRIBUTIONAL_SIMILARITY) {
