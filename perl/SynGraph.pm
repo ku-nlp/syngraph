@@ -914,6 +914,7 @@ sub _regnode {
     # ただし、上位語を再帰的にはりつけるオプション(relation_recursive)の時はスコアチェックをしない
     if (($regnode_option->{relation_recursive} || !$regnode_option->{relation_recursive} && $score >= $regnode_threshold) or ($this->{mode} =~ /irex/ and $weight == 0)) {
         # 既にそのIDが登録されていないかチェック
+	my $skip_flag = 0;
         if ($ref->{$sid}[$bp]) {
             foreach my $i (@{$ref->{$sid}[$bp]{nodes}}) {
                 if ($i->{id}        eq $id and
@@ -928,41 +929,44 @@ sub _regnode {
 			$relation ? $i->{relation} = 1 : delete $i->{relation};
 			$antonym ? $i->{antonym} = 1 : delete $i->{antonym};
                     }
-                    return;
+		    $skip_flag = 1;
                 }
 		# ???
                 return if ($id eq (split(/,/, $sid))[0]);
             }
         }
 
-        my $newid = {};
-        $newid->{id} = $id;
-        $newid->{log} = $log if ($log);
-        $newid->{fuzoku} = $fuzoku if ($fuzoku);
-        if ($childbp) {
-	    foreach my $c (keys %{$childbp}) {
-		$newid->{childbp}{$c} = 1;
+	my $newid = {};
+	# 既にそのIDが登録されている場合はパス
+	unless ($skip_flag) {
+	    $newid->{id} = $id;
+	    $newid->{log} = $log if ($log);
+	    $newid->{fuzoku} = $fuzoku if ($fuzoku);
+	    if ($childbp) {
+		foreach my $c (keys %{$childbp}) {
+		    $newid->{childbp}{$c} = 1;
+		}
 	    }
+	    $newid->{case} = $case if ($case);
+	    if ($matchbp) {
+		foreach my $m (keys %{$matchbp}) {
+		    $newid->{matchbp}{$m} = 1 if ($m != $bp);
+		}
+	    }
+	    $newid->{kanou}    = $kanou if ($kanou);
+	    $newid->{sonnkei}  = $sonnkei if ($sonnkei);
+	    $newid->{ukemi}    = $ukemi if ($ukemi);
+	    $newid->{shieki}   = $shieki if ($shieki);
+	    $newid->{negation} = $negation if ($negation);
+	    $newid->{score}    = $score;
+	    $newid->{weight}   = $weight;
+	    $newid->{relation} = $relation if ($relation);
+	    $newid->{hypo_num} = $hypo_num if ($hypo_num);
+	    $newid->{wnum}     = $wnum if($wnum);
+	    $newid->{antonym}  = $antonym if ($antonym);
+	    $newid->{not_synnode} = $not_synnode if ($not_synnode);
+	    push(@{$ref->{$sid}[$bp]{nodes}}, $newid);
 	}
-	$newid->{case} = $case if ($case);
-        if ($matchbp) {
-            foreach my $m (keys %{$matchbp}) {
-                $newid->{matchbp}{$m} = 1 if ($m != $bp);
-            }
-        }
-        $newid->{kanou}    = $kanou if ($kanou);
-        $newid->{sonnkei}  = $sonnkei if ($sonnkei);
-	$newid->{ukemi}    = $ukemi if ($ukemi);
-	$newid->{shieki}   = $shieki if ($shieki);
-	$newid->{negation} = $negation if ($negation);
-        $newid->{score}    = $score;
-        $newid->{weight}   = $weight;
-        $newid->{relation} = $relation if ($relation);
-        $newid->{hypo_num} = $hypo_num if ($hypo_num);
-        $newid->{wnum}     = $wnum if($wnum);
-        $newid->{antonym}  = $antonym if ($antonym);
-	$newid->{not_synnode} = $not_synnode if ($not_synnode);
-        push(@{$ref->{$sid}[$bp]{nodes}}, $newid);
 
 	# 上位IDがあれば登録(ただし上位語の上位語や、反義語の上位語は登録しない)
 	# 上位語を再帰的にはりつけるオプション(relation_recursive)
