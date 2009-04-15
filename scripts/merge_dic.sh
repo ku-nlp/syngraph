@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+# $Id$
+
 # ソースディレクトリ
 SRC_DIR='.'
 
@@ -119,6 +121,15 @@ fi
 echo $exe
 eval $exe
 
+# 低頻度の同義句を削除
+if [ $manual -eq 1 ]; then
+    exe="cat $SIM_DIR_Dic/definition.txt.manual | perl delete_infrequent_synonymous_phrase.pl $SIM_DIR_Dic/definition_count.txt > $SIM_DIR_Dic/definition.txt.manual.infrequent_deleted"
+else
+    exe="cat $SIM_DIR_Dic/definition.txt | perl delete_infrequent_synonymous_phrase.pl $SIM_DIR_Dic/definition_count.txt > $SIM_DIR_Dic/definition.txt.infrequent_deleted"
+fi
+echo $exe
+eval $exe
+
 # 辞書からの知識の整理１（マージ）
 exe="perl -I../perl check_synonym_merge.pl < $SIM_M_DIR/synonym_dic.txt > $SIM_M_DIR/synonym_dic.txt.merge 2>$SIM_C_DIR/synonym_dic.txt.merge.log"
 echo $exe
@@ -176,9 +187,9 @@ fi
 # 辞書を整形(多義でない語に「:1/1:1/1」を付与、ひらがな２文字以下削除、半角を全角に)
 # 今は同義グループの連結をしない
 if [ $manual -eq 1 ]; then
-    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt.manual --isa=$SIM_DIR_Dic/isa.txt.filtered.manual --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
+    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt.manual.infrequent_deleted --isa=$SIM_DIR_Dic/isa.txt.filtered.manual --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
 else
-    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
+    exe="perl -I$PERL_DIR change_dic.pl --synonym=$SIM_M_DIR/synonym_dic.txt.merge.add --definition=$SIM_DIR_Dic/definition.txt.infrequent_deleted --isa=$SIM_DIR_Dic/isa.txt.filtered --antonym=$SIM_M_DIR/antonym.txt.merge --synonym_change=$SIM_C_DIR/synonym_dic.txt.merge.add.postprocess --isa_change=$SIM_C_DIR/isa.txt --antonym_change=$SIM_C_DIR/antonym.txt --definition_change=$SIM_C_DIR/definition.txt --komidasi_num=$SIM_DIR_Dic/komidasi_num.txt --log=$SIM_C_DIR/change.log"
 fi
 echo $exe
 eval $exe
