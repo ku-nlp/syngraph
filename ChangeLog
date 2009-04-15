@@ -1,5 +1,10 @@
 2009-04-15  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/definition.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/change.log:
+	低頻度の同義句を削除
+
+	* scripts/merge_dic.sh: 低頻度の同義句を削除
+
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb:
 	属する語が1語しかないグループを作らないように
 
