@@ -101,17 +101,16 @@ if [ $noparse -eq 1 -a -e $SYNDBPARSE ]; then
     exe="cp $SYNDBPARSE $SYNDB_DIR/"
 else
     if [ $jumanrc -eq 1 ]; then
-#	exe="$JUMAN -e2 -B -i '#' -r $JUMANRCFILE < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
 	exe="perl word_into_juman.pl -C $JUMAN -R $JUMANRCFILE < $SYNDB_DIR/syndb.convert > $SYNDB_DIR/syndb.jmn"
     else
-#	exe="$JUMAN -e2 -B -i '#' < $SYNDB_DIR/syndb.convert | knp $knpopts[*] > $SYNDB_DIR/syndb.parse"
 	exe="perl word_into_juman.pl -C $JUMAN < $SYNDB_DIR/syndb.convert > $SYNDB_DIR/syndb.jmn"
     fi
-fi
-echo $exe
-eval $exe
+    echo $exe
+    eval $exe
 
-exe="$WWW2sfdir/tool/scripts/parse-comp.sh -k \"$knpopts[*]\" $SYNDB_DIR/syndb.jmn && mv $SYNDB_DIR/syndb.knp $SYNDB_DIR/syndb.parse"
+    exe="$WWW2sfdir/tool/scripts/parse-comp.sh -k \"$knpopts[*]\" $SYNDB_DIR/syndb.jmn && mv $SYNDB_DIR/syndb.knp $SYNDB_DIR/syndb.parse"
+fi
+
 echo $exe
 eval $exe
 
