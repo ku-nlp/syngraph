@@ -56,7 +56,7 @@ while (<SDEF>) {
 	my @output_synonyms;
 	foreach my $synonym (@synonyms) {
 	    if (defined $discarded{$synonym}{$repname}) {
-		print STDERR "★$synonym $repname\n";
+		print STDERR "★$synonym $repname $def\n";
 		next;
 	    }
 	    push @output_synonyms, $synonym;
