@@ -37,6 +37,10 @@ $sgh->{mode} = 'compile';
 while (my $knp_result = $sgh->read_parsed_data) {
     my $sid = $knp_result->id;
 
+    # s31516:晴れ上がる/はれあがる,晴れ上がる/はれあがる:1/1:1/1[DIC] JUMAN:6.0-20080519 KNP:3.0-20090617 DATE:2009/07/28 SCORE:-6.40612
+    # からスペース以下を除く
+    $sid = (split(' ', $sid))[0];
+
     # 文字化け対策
     next if $sid =~ /\?/;
 
