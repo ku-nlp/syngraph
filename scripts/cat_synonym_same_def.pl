@@ -5,7 +5,7 @@
 use strict;
 use Getopt::Long;
 use Dumpvalue;
-use Juman;
+use KNP;
 use Constant;
 use utf8;
 binmode STDIN, ':encoding(euc-jp)';
@@ -15,7 +15,9 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'synonym_dic=s', 'same_definition=s', 'synonym_filter_log=s');
 
-my $juman = new Juman( -Command => $Constant::JumanCommand );
+my $knp = new KNP( -Option => '-tab -dpnd',
+		   -JumanCommand => $Constant::JumanCommand,
+		   -JumanRcfile => $Constant::JumanRcfile);
 
 open(SYN, '<:encoding(euc-jp)', $opt{synonym_dic}) or die;
 while (<SYN>) {
@@ -50,7 +52,7 @@ while (<SDEF>) {
 
     # 分布類似度でフィルタリングされた同義語は同義グループに入れないようにする
     # まず、$defが一形態素であるかどうかチェック(一形態素の場合しかフィルタリングされない)
-    my $result = $juman->analysis($def);
+    my $result = $knp->parse($def);
     if (scalar ($result->mrph) == 1) {
 	my $repname = ($result->mrph)[0]->repname;
 	my @output_synonyms;
