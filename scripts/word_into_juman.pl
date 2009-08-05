@@ -27,6 +27,8 @@ my $juman = new Juman(%option);
 my $comment;
 my $skip_flag = 0;
 
+my $juman_version = &get_juman_version;
+
 # 「朝飯/あさはん」が入力
 while (<>) { # 代表表記
     chomp;
@@ -58,7 +60,7 @@ while (<>) { # 代表表記
 		    if ($r_str =~ /代表表記:(.+?\/.+?)\"/) {
 			if ($word eq $1) { # $wordにあたる解析行
 			    $r_str =~ s/^@ //g;
-			    print $comment, "\n";
+			    print "$comment JUMAN:$juman_version\n";
 			    print encode('euc-jp', "$r_str\n");
 			    $flag = 1;
 			}
@@ -86,9 +88,23 @@ sub print_result_all {
 	$all = eval{encode('euc-jp', $all, Encode::FB_CROAK)};
 
 	unless ($@) {
-	    print $comment, "\n";
+	    print "$comment JUMAN:$juman_version\n";
 	    print $all;
 	    print "EOS\n";
 	}
     }
+}
+
+sub get_juman_version {
+    open (F, "juman -v 2>&1 |") or die;
+    my $version;
+    while (<F>) {
+	chomp;
+	# juman 6.0-20090202
+	$version = (split(' ', $_))[1];
+	last;
+    }
+    close F;
+
+    return $version;
 }
