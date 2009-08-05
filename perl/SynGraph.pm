@@ -209,6 +209,10 @@ sub make_tree {
     my ($this, $knp_result, $tree_ref, $option) = @_;
     my $sid = $knp_result->id;
 
+    # s31516:晴れ上がる/はれあがる,晴れ上がる/はれあがる:1/1:1/1[DIC] JUMAN:6.0-20080519 KNP:3.0-20090617 DATE:2009/07/28 SCORE:-6.40612
+    # からスペース以下を除く
+    $sid = (split(' ', $sid))[0];
+
     # KNP.pmのmake_ssを使う
     if ($option->{use_make_ss}) {
 	my $ss = $knp_result->make_ss;
@@ -1954,6 +1958,7 @@ sub read_synonym_pair {
     my ($syngroup_words) = @_;
 
     my $dicdir = $Constant::SynGraphBaseDir . '/dic/rsk_iwanami';
+    my $dicmiddledir = $Constant::SynGraphBaseDir . '/dic_middle';
 
     my (%FREQ, %FREQ_REP);
     &SynGraph::tie_cdb($Constant::CN_DF_DB, \%FREQ);
@@ -1962,6 +1967,7 @@ sub read_synonym_pair {
     my %allword;
     my %alldata;
     my %link;
+    my %filtered;
 
     open S, "<:encoding(euc-jp)", "$dicdir/synonym.txt.filtered.manual" or die;
     while (<S>) {
@@ -1993,16 +1999,36 @@ sub read_synonym_pair {
 
     close S;
 
-    open SD, "<:encoding(euc-jp)", "$dicdir/same_definition.txt" or die;
+    my %discard_same_definition_entry;
+    open F, "<:encoding(euc-jp)", "$dicmiddledir/cat_synonym_same_def.log" or die;
+    while (<F>) {
+	chomp;
+
+	# ★真に/しんに:1/1:1/1 本当だ/ほんとうだ ほんとうに
+	if (/^★(.+?) (.+?) (.+?)$/) {
+	    my $midasi = $1;
+	    my $def = $3;
+	    $discard_same_definition_entry{$def}{$midasi} = 1;
+	}
+    }
+    close F;
+
+    my $definition;
+    open SD, "<:encoding(euc-jp)", "$dicdir/same_definition.txt.manual" or die;
     while (<SD>) {
 	chomp;
 
-	next if /^★/;
+	if (/^★(.+?)$/) {
+	    $definition = $1;
+	    $definition =~ s/。$//;
+	    next;
+	}
 
 	my @words = split;
 
 	my $flag = 0;
 	foreach my $word (@words) {
+	    next if defined $discard_same_definition_entry{$definition}{$word};
 	    if (defined $syngroup_words->{$word}) {
 		$flag = 1;
 		last;
@@ -2011,7 +2037,9 @@ sub read_synonym_pair {
 
 	if ($flag) {
 	    foreach my $word (@words) {
+		next if defined $discard_same_definition_entry{$definition}{$word};
 		foreach my $target_word (@words) {
+		    next if defined $discard_same_definition_entry{$definition}{$target_word};
 		    next if $word eq $target_word;
 
 		    next if $alldata{$target_word}{$word} eq 'samedefinition';
@@ -2044,7 +2072,7 @@ sub read_synonym_pair {
     }
     close SD;
 
-    open D, "<:encoding(euc-jp)", "$dicdir/definition.txt.manual" or die;
+    open D, "<:encoding(euc-jp)", "$dicdir/definition.txt.manual.infrequent_deleted" or die;
     while (<D>) {
 	chomp;
 
@@ -2063,6 +2091,7 @@ sub read_synonym_pair {
     # マージ
     my %change;
     for my $word (keys %allword) {
+
 	# midasi -> word
 	# 赤ちゃん -> 赤ちゃん:1/1:1/1
 	# えんかい -> 宴会:1/1:1/1
@@ -2095,10 +2124,32 @@ sub read_synonym_pair {
 	}
     }
 
+    open L, "<:encoding(euc-jp)", "$dicdir/synonym-filter.log" or die;
+    # ☆マスタード/ますたーど:1/1:1/1 洋がらし 0.000 discarded
+    while (<L>) {
+	chomp;
+
+	if (/^☆(.+?) (.+?) .+? discarded$/) {
+	    my $midasi = $1;
+	    my $synonym = $2;
+
+	    if (defined $change{$midasi}) {
+		$midasi = $change{$midasi};
+	    }
+
+	    if (defined $change{$synonym}) {
+		$synonym = $change{$synonym};
+	    }
+	    $filtered{$midasi}{$synonym} = 1;
+	}
+    }
+    close L;
+
     for my $word1 (keys %alldata) {
 	for my $word2 (keys %{$alldata{$word1}}) {
 	    if (defined $change{$word2}) {
 		$alldata{$word1}{$change{$word2}} = $alldata{$word1}{$word2};
+
 		delete $alldata{$word1}{$word2};
 	    }
 	}
@@ -2126,7 +2177,7 @@ sub read_synonym_pair {
 
 	$allword{$word}{rank} = (split(':', $WORD2FREQ{$midasi}))[0];
     }
-    return (\%allword, \%alldata, \%link);
+    return (\%allword, \%alldata, \%link, \%filtered);
 }
 
 sub get_freq {
