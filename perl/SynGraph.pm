@@ -1980,15 +1980,13 @@ sub read_synonym_pair {
 	    my $freq_target_word = &get_freq($target_word, \%FREQ, \%FREQ_REP);
 
 	    $allword{$target_word}{freq} = $freq_target_word;
-	    my $comma_freq = &process_num($freq_target_word);
-	    $allword{$target_word}{str} = qq("$target_word($comma_freq)");
+	    $allword{$target_word}{str} = &get_graph_node_string($target_word, $freq_target_word);
 
 	    for my $word (@words) {
 		my $freq_word = &get_freq($word, \%FREQ, \%FREQ_REP);
 
 		$allword{$word}{freq} = $freq_word;
-		my $comma_freq = &process_num($freq_word);
-		$allword{$word}{str} = qq("$word($comma_freq)");
+		$allword{$word}{str} = &get_graph_node_string($word, $freq_word);
 	
 		$alldata{$target_word}{$word} = 1;
 		$link{$target_word}{$word} = 1;
@@ -2053,8 +2051,7 @@ sub read_synonym_pair {
 			my $freq_target_word = $FREQ{$target_midasi};
 			$allword{$target_word}{freq} = $freq_target_word;
 
-			my $comma_freq = &process_num($freq_target_word);
-			$allword{$target_word}{str} = qq("$target_word($comma_freq)");
+			$allword{$target_word}{str} = &get_graph_node_string($target_word, $freq_target_word);
 		    }
 
 		    if (!defined $allword{$word}) {
@@ -2062,8 +2059,7 @@ sub read_synonym_pair {
 			my $freq_word = $FREQ{$midasi};
 			$allword{$word}{freq} = $freq_word;
 
-			my $comma_freq = &process_num($freq_word);
-			$allword{$word}{str} = qq("$word($comma_freq)");
+			$allword{$word}{str} = &get_graph_node_string($word, $freq_word);
 		    }
 
 		}
@@ -2941,6 +2937,14 @@ sub _read_xml {
 	    $key_num++;
 	}
     }
+}
+
+# index.cgiのgraph表示モードにおけるノードの文字列を得る
+sub get_graph_node_string {
+    my ($word, $freq) = @_;
+
+    my $comma_freq = &process_num($freq);
+    return defined $freq ? qq("$word($comma_freq)") : $word;
 }
 
 sub process_num {
