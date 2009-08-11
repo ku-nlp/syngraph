@@ -2078,6 +2078,11 @@ sub read_synonym_pair {
 
 	my ($midasi, $definition) = split;
 
+	$definition =~ s/。$//;
+        $definition =~ s/のこと$//;
+        $definition =~ s/こと$//;
+        $definition =~ s/い所$/い/;
+
 	if (defined $alldata{$midasi}) {
 	    $alldata{$midasi}{$definition} = 1;
 	    $link{$midasi}{$definition} = 1;
