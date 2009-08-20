@@ -2944,7 +2944,7 @@ sub get_graph_node_string {
     my ($word, $freq) = @_;
 
     my $comma_freq = &process_num($freq);
-    return defined $freq ? qq("$word($comma_freq)") : $word;
+    return defined $freq ? qq("$word($comma_freq)") : qq("$word");
 }
 
 sub process_num {
