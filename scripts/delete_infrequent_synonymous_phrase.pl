@@ -13,7 +13,7 @@ use Getopt::Long;
 my %opt;
 GetOptions(\%opt, 'th=i', 'print_count', 'debug');
 
-$opt{th} = 20 unless $opt{th};
+$opt{th} = 100 unless $opt{th};
 
 my %data;
 
