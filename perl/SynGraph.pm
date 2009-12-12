@@ -1394,7 +1394,7 @@ sub OutputSynFormat {
 	    }
 
 	    # SYNGRPH情報の付与
-	    $ret_string .= $syngraph_string->[$bp];
+	    $ret_string .= $syngraph_string->[$bp] if defined $syngraph_string->[$bp];
 	    $bp++;
 	}
     }
@@ -1686,8 +1686,15 @@ sub format_syngraph {
 
     my $syn_bp; # 同じ基本句に対応するノードの集まり
 
+    # 入力が空文字列の場合
+    if (ref $syngraph ne 'ARRAY') {
+	return undef;
+    }
+
+    my $node_num = scalar @{$syngraph};
+
     # !!の数
-    for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
+    for (my $bp_num = 0; $bp_num < $node_num; $bp_num++) { # 基本句(BP)単位
 	foreach my $node (@{$syngraph->[$bp_num]{nodes}}) { # ノード単位
 	    # ノードの対応する基本句番号
 	    my $matchbp;
@@ -1701,7 +1708,7 @@ sub format_syngraph {
     }
 
     # 出力生成
-    for (my $bp_num = 0; $bp_num < @{$syngraph}; $bp_num++) { # 基本句(BP)単位
+    for (my $bp_num = 0; $bp_num < $node_num; $bp_num++) { # 基本句(BP)単位
 	my $res;
 	foreach my $node (@{$syngraph->[$bp_num]{nodes}}) { # ノード単位
 
