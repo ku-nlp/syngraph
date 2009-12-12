@@ -1977,15 +1977,17 @@ sub read_synonym_pair {
 
 	if (defined $syngroup_words->{$target_word}) {
 	    
-	    my $freq_target_word = &get_freq($target_word, \%FREQ, \%FREQ_REP);
+	    my ($freq_target_word, $rank_target_word) = &get_freq($target_word, \%FREQ, \%FREQ_REP);
 
 	    $allword{$target_word}{freq} = $freq_target_word;
+#	    $allword{$target_word}{rank} = $rank_target_word if defined $rank_target_word;
 	    $allword{$target_word}{str} = &get_graph_node_string($target_word, $freq_target_word);
 
 	    for my $word (@words) {
-		my $freq_word = &get_freq($word, \%FREQ, \%FREQ_REP);
+		my ($freq_word, $rank_word) = &get_freq($word, \%FREQ, \%FREQ_REP);
 
 		$allword{$word}{freq} = $freq_word;
+#		$allword{$word}{rank} = $rank_word if defined $rank_word;
 		$allword{$word}{str} = &get_graph_node_string($word, $freq_word);
 	
 		$alldata{$target_word}{$word} = 1;
@@ -2187,7 +2189,8 @@ sub get_freq {
     my $rep = (split(':', $word))[0];
     my $midasi = (split('/', $word))[0];
 
-    return defined $FREQ->{"$midasi"} ? $FREQ->{"$midasi"} : defined $FREQ_REP->{$rep} ? (split(':', $FREQ_REP->{$rep}))[1] * 3 : undef;
+    my $rank = defined $FREQ_REP->{$rep} ? (split(':', $FREQ_REP->{$rep}))[0] : undef;
+    return (defined $FREQ->{"$midasi"} ? $FREQ->{"$midasi"} : defined $FREQ_REP->{$rep} ? (split(':', $FREQ_REP->{$rep}))[1] * 3 : undef, $rank);
 #    return $FREQ->{$midasi};
 }
 
