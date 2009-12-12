@@ -80,7 +80,7 @@ else {
 
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
-	    $result->set_id($sid) if ($sid);
+	    $result->set_id($sid) if (defined $sid);
 	    if ($opt{print_hypernym}) {
 		print $sgh->GetHypernym($result, $regnode_option, $option), "\n";
 	    }
@@ -89,7 +89,7 @@ else {
 	    }
 	    $knp_buf = "";
 	}
-	elsif (/\# S-ID:(.+) KNP:/) {
+	elsif (/\# S-ID:([^\s]+) /) {
 	    $sid = $1;
 	    $sid =~ s/\s+/ /;
 	    $sid =~ s/^\s//;
