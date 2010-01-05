@@ -32,7 +32,7 @@ our $Wikipediadb = $SynGraphBaseDir . '/ExtractSynfromDic/db/wikipedia.db';
 
 # 分布類似度計算用のデータベース
 our $CalcsimMidbfile = '/home/shibata/work/CalcSimilarityByCF/db/all-mi';
-our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2/all-mi';
+our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2_100M_1_de/all-mi';
 
 # for calc-similarity-synonym.pl
 our $Oneformatted = '/home/shibata/work/CalcSimilarityByCF/one.formatted/080214.one.formatted';
@@ -41,7 +41,7 @@ our $Oneformatteddb = $SynGraphBaseDir . '/db/080214.one.formatted.db';
 our $ContentWdic = '/home/shibata/download/juman/dic/ContentW.dic';
 
 our $CN_DF_DB = '/home/shibata/cns.100M.cls.df1000.cdb';
-our $DF_REP_DB = '/home/shibata/work/SynGraph/db/synonym_word2freq_all.db';
+our $DF_REP_DB = '/home/shibata/work/SynGraph/db/synonym_word2freq_all_50000.db';
 our $SYNONYM_WORD2FREQ_DB = '/home/shibata/work/SynGraph/db/synonym_word2freq_all.db';
 
 1;
