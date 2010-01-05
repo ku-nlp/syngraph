@@ -175,10 +175,12 @@ sub DESTROY {
 sub make_sg {
     my ($this, $input, $ref, $sid, $regnode_option, $option) = @_;
 
+    my $knp_result;
     # 入力がKNP結果の場合
     if (ref $input eq 'KNP::Result') {
         # 木を作る
         $this->make_tree($input, $ref, $option);
+	$knp_result = $input;
     }
     # 入力がXMLデータの場合(MT用)
     elsif (ref $input eq 'HASH' or $input =~ /^\s*<i_data/) {
@@ -187,10 +189,27 @@ sub make_sg {
     # それ以外はテキストデータとして処理する
     else {
         # パースする
-        my $knp_result = $this->{knp}->parse($input);
+        $knp_result = $this->{knp}->parse($input);
         $knp_result->set_id($sid);
         # 木を作る
         $this->make_tree($knp_result, $ref, $option);
+    }
+
+    if ($regnode_option->{no_attach_synnode_in_wikipedia_entry}) {
+	my %m2t;
+	for my $tag ($knp_result->tag) {
+	    for my $mrph ($tag->mrph) {
+		$m2t{$mrph->id} = $tag->id;
+	    }
+	}
+
+	for my $mrph ($knp_result->mrph) {
+	    if ($mrph->imis =~ /WP上位語:.+?:(\d+)\-(\d+)/) {
+		my $start = $1;
+		my $end = $2;
+		push @{$regnode_option->{wikipedia_entry}}, { start => $m2t{$start}, end => $m2t{$end} };
+	    }
+	}
     }
 
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
@@ -313,6 +332,36 @@ sub make_bp {
 		# マッチする場合は新たに付与するnodeを得る
 		my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose);
 		next if ($result == 0);
+
+		# Wikipediaエントリに包含される場合
+		if (defined $regnode_option->{wikipedia_entry}) {
+		    my $start_newnode = $bp;
+		    my $end_newnode = $bp;
+
+		    if (defined $newnode->{matchbp}) {
+			for (keys %{$newnode->{matchbp}}) {
+			    # 更新
+			    if ($_ < $start_newnode) {
+				$start_newnode = $_;
+			    }
+			}
+		    }
+
+		    # 包含をチェック
+		    my $skip_flag = 0;
+		    for my $entry (@{$regnode_option->{wikipedia_entry}}) {
+
+			# 完全一致はよい
+			if ($entry->{start} <= $start_newnode && $end_newnode <= $entry->{end} && 
+			    ($entry->{start} != $start_newnode || $entry->{end} != $end_newnode)) {
+			    $skip_flag = 1;
+			    last;
+			}
+		    }
+		    next if $skip_flag;
+
+		}
+
 
 		# NODEのLOG
 		my $log;
