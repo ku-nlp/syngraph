@@ -218,6 +218,7 @@ sub make_sg {
 	    $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
     }
+    delete $regnode_option->{wikipedia_entry};
 }
 
 
