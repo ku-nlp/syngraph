@@ -1411,6 +1411,21 @@ sub OutputSynFormat {
     my $syngraph = {};
     my $syngraph_string;
 
+    # Wikipediaの情報を付与
+    if ($option->{attach_wikipedia_info}) {
+	require Trie;
+	if (!defined $this->{trie}) {
+	    my %opt_trie;
+	    $opt_trie{usejuman} = 1;
+
+	    $this->{trie} = new Trie(\%opt_trie);
+	    $this->{trie}->RetrieveDB($option->{wikipedia_entry_db});
+	}
+
+	my @mrphs = $result->mrph;
+	$this->{trie}->DetectString(\@mrphs, undef, { output_juman => 1 });
+    }
+
     # 入力をSynGraph化
     $syngraph->{graph} = {};
     $this->make_sg($result, $syngraph->{graph}, $result->id, $regnode_option, $option);
