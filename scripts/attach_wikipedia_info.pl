@@ -36,7 +36,6 @@ while (<>) {
 	my $result = new Juman::Result($buf);
 	my @mrphs = $result->mrph;
 	print $trie->DetectString(\@mrphs, undef, { output_juman => 1 });
-	print "EOS\n";
 	undef $buf; 
     }
 }
