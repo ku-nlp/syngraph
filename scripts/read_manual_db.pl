@@ -6,6 +6,7 @@
 
 use strict;
 use encoding 'euc-jp';
+binmode STDERR, ':encoding(euc-jp)';
 use Encode;
 use FileHandle;
 use SynGraph;
@@ -13,9 +14,11 @@ use Getopt::Long;
 use Constant;
 
 my (%opt);
-GetOptions(\%opt, 'synonymout=s', 'isaout=s', 'antonymout=s', 'definitionout=s', 'isa=s');
+GetOptions(\%opt, 'synonymout=s', 'isaout=s', 'antonymout=s', 'definitionout=s', 'isa=s', 'debug');
 
 my $edit_db = $Constant::SynGraphBaseDir . '/db/synonym_db_for_edit_keyrep_new.db';
+
+my @types = ('synonym', 'isa', 'antonym', 'definition');
 
 my (%SYNDB, %SYNDB_NEW, %FREQ);
 
@@ -26,15 +29,17 @@ my %hypernym;
 &read_isa($opt{isa});
 
 my %FILE;
-for my $type ('synonym', 'isa', 'antonym', 'definition') {
-    my $filename = $opt{"${type}out"};
-    $FILE{$type} = new FileHandle("> $filename");
-    binmode $FILE{$type}, ':encoding(euc-jp)';
+unless ($opt{debug}) {
+    for my $type (@types) {
+	my $filename = $opt{"${type}out"};
+	$FILE{$type} = new FileHandle("> $filename");
+	binmode $FILE{$type}, ':encoding(euc-jp)';
+    }
 }
 
 my %data;
 for my $rep (keys %SYNDB) {
-    print "¡ú$rep\n";
+    print STDERR "¡ú$rep\n" if $opt{debug};
 
     my $id; 
     if (defined $SYNDB{$rep}{elements}) {
@@ -72,7 +77,7 @@ for my $rep (keys %SYNDB) {
 	    $string =~ s/\((?:kuro|kawahara|shinzato|shibata|nikaido|ishikawa)\)//g;
 
 	    for my $word (split(/\s/, $string)) {
-		print "Add:$type $word\n";
+		print STDERR "Add:$type $word\n" if $opt{debug};
 
 		my ($newword_komidashi_id, $newword_tyumidashi_id, $newword_id_all);
 		if ($word =~ s/:(\d+):(\d+)$//) {
@@ -107,18 +112,18 @@ for my $rep (keys %SYNDB) {
 		}
 
 		if ($newword_id_all) {
-		    print "¡ùAdd $word to $rep:$newword_id_all\n";
+		    print STDERR "¡ùAdd $word to $rep:$newword_id_all\n" if $opt{debug};
 		    push @{$data{$type}{"$rep:$newword_id_all"}}, $word;
 		}
 		else {
-		    print "!! Can't Add\n";
+		    print STDERR "!! Can't Add\n" if $opt{debug};
 		}
 	    }
 	}
     }
 }
 
-for my $type ('synonym', 'isa', 'antonym', 'definition') {
+for my $type (@types) {
     my $filename = $opt{"${type}out"};
     for my $midasi (sort keys %{$data{$type}}) {
 	my $out_string;
@@ -129,9 +134,14 @@ for my $type ('synonym', 'isa', 'antonym', 'definition') {
 	else {
 	    $out_string = "$midasi " . join(' ' , @{$data{$type}{$midasi}}) . "\n";
 	}
-	$FILE{$type}->print($out_string); 
+	if ($opt{debug}) {
+	    print "$type: $out_string";
+	}
+	else {
+	    $FILE{$type}->print($out_string); 
+	}
     }
-    $FILE{$type}->close;
+    $FILE{$type}->close unless $opt{debug};
 }
 
 sub read_isa {
