@@ -3,6 +3,7 @@
 # $Id$
 
 # usage: perl -I../perl read_manual_db.pl
+# perl -I../perl read_manual_db.pl -isa ../dic/rsk_iwanami/isa.txt.filtered -debug -synonym ../dic/rsk_iwanami/synonym.txt.filtered -isa ../dic/rsk_iwanami/isa.txt.filtered -antonym ../dic/rsk_iwanami/antonym.txt -definition ../dic/rsk_iwanami/definition.txt
 
 use strict;
 use encoding 'euc-jp';
@@ -14,7 +15,7 @@ use Getopt::Long;
 use Constant;
 
 my (%opt);
-GetOptions(\%opt, 'synonymout=s', 'isaout=s', 'antonymout=s', 'definitionout=s', 'isa=s', 'debug');
+GetOptions(\%opt, 'synonymout=s', 'isaout=s', 'antonymout=s', 'definitionout=s', 'isa=s', 'synonym=s', 'antonym=s', 'definition=s', 'debug');
 
 my $edit_db = $Constant::SynGraphBaseDir . '/db/synonym_db_for_edit_keyrep_new.db';
 
@@ -24,9 +25,11 @@ my (%SYNDB, %SYNDB_NEW, %FREQ);
 
 &SynGraph::tie_mldbm($edit_db, \%SYNDB);
 
-my %hypernym;
-# 下位語数取得
+my (%data_before, %hypernym);
+&read_synonym($opt{synonym});
 &read_isa($opt{isa});
+&read_antonym($opt{antonym});
+&read_definition($opt{definition});
 
 my %FILE;
 unless ($opt{debug}) {
@@ -38,7 +41,11 @@ unless ($opt{debug}) {
 }
 
 my %data;
+my %manual_editted;
 for my $rep (keys %SYNDB) {
+    # 編集されていないものはパス
+    next if !defined $SYNDB{$rep}{username};
+
     print STDERR "★$rep\n" if $opt{debug};
 
     my $id; 
@@ -56,7 +63,7 @@ for my $rep (keys %SYNDB) {
 
     # $idが空でambiguityがundefなら1:1/1:1とみなす
     if (!defined $id && !defined $SYNDB{$rep}{ambiguity}) {
-	print "☆id -> 1/1:1/1\n";
+	print STDERR "☆id -> 1/1:1/1\n" if $opt{debug};
 	$id = '1/1:1/1';
     }
 
@@ -121,15 +128,25 @@ for my $rep (keys %SYNDB) {
 	    }
 	}
     }
+
+    $manual_editted{$rep} = 1;
 }
 
 for my $type (@types) {
     my $filename = $opt{"${type}out"};
+
+    my %out;
     for my $midasi (sort keys %{$data{$type}}) {
 	my $out_string;
+	# 上位語の場合は下位語数を付与
 	if ($type eq 'isa') {
 	    my $num = defined $hypernym{$data{$type}{$midasi}[0]} ? $hypernym{$data{$type}{$midasi}[0]} : 1;
 	    $out_string = "$midasi $data{$type}{$midasi}[0] $num\n";
+	}
+	elsif ($type eq 'antonym') {
+	    for my $string (@{$data{$type}{$midasi}}) {
+		push @{$out_string}, "$midasi $string\n";
+	    }
 	}
 	else {
 	    $out_string = "$midasi " . join(' ' , @{$data{$type}{$midasi}}) . "\n";
@@ -138,10 +155,74 @@ for my $type (@types) {
 	    print "$type: $out_string";
 	}
 	else {
-	    $FILE{$type}->print($out_string); 
+	    $out{$midasi} = $out_string;
 	}
     }
-    $FILE{$type}->close unless $opt{debug};
+
+    # 人手で修正されていないもの
+    for my $entry (keys %{$data_before{$type}}) {
+	# コップ/こっぷ:1/1:1/1
+	my ($rep, $id) = split(':', $entry, 2);
+
+	if (!defined $manual_editted{$rep}) {
+	    my $out_string;
+	    if ($type eq 'synonym') {
+		$out_string = $entry . ' ' . join (' ', @{$data_before{$type}{$entry}}) . "\n";
+	    }
+	    elsif ($type eq 'isa') {
+		if (!defined $hypernym{$data_before{$type}{$entry}}) {
+		    print STDERR "Can't find the hypernym $data_before{$type}{$entry}\n";
+		}
+		$out_string = "$entry $data_before{$type}{$entry} $hypernym{$data_before{$type}{$entry}}\n";
+	    }
+	    elsif ($type eq 'antonym') {
+		for my $string (@{$data_before{$type}{$entry}}) {
+		    push @{$out_string}, "$entry $string\n";
+		}
+	    }
+	    else {
+		$out_string = "$entry $data_before{$type}{$entry}\n";
+	    }
+
+	    if ($opt{debug}) {
+		print "$type: $out_string";
+	    }
+	    else {
+		$out{$entry} = $out_string;
+	    }
+	}
+    }
+
+    # sortして出力
+    unless ($opt{debug}) {
+	for my $midasi (sort keys %out) {
+	    # 反義語だけ特別処理
+	    if ($type eq 'antonym') {
+		for my $string (@{$out{$midasi}}) {
+		    $FILE{$type}->print($string);
+		}
+	    }
+	    else {
+		$FILE{$type}->print($out{$midasi});
+	    }
+	}
+	$FILE{$type}->close;
+    }
+}
+
+sub read_synonym {
+    my ($file) = @_;
+
+    open F, "<:encoding(euc-jp)", $file or die;
+    while (<F>) {
+	chomp;
+
+	# 愛する/あいする:1/1:2/3 好きだ/すきだ 好む/このむ
+	my ($entry, @synonyms) = split;
+
+	$data_before{synonym}{$entry} = \@synonyms;
+    }
+    close F;
 }
 
 sub read_isa {
@@ -152,7 +233,35 @@ sub read_isa {
 	chomp;
 
 	my ($hyponym, $hypernym, $num) = split;
+	$data_before{isa}{$hyponym} = $hypernym;
 	$hypernym{$hypernym} = $num;
     }
     close F;
 }
+
+sub read_antonym {
+    my ($file) = @_;
+
+    open F, "<:encoding(euc-jp)", $file or die;
+    while (<F>) {
+	chomp;
+
+	my ($entry, $antonym) = split;
+	push @{$data_before{antonym}{$entry}}, $antonym;
+    }
+    close F;
+}
+
+sub read_definition {
+    my ($file) = @_;
+
+    open F, "<:encoding(euc-jp)", $file or die;
+    while (<F>) {
+	chomp;
+
+	my ($entry, $def) = split;
+	$data_before{definition}{$entry} = $def;
+    }
+    close F;
+}
+
