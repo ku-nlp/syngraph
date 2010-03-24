@@ -102,7 +102,7 @@ eval $exe
 
 if [ $manual -eq 1 ]; then
     # 人手による整理(辞書)
-    exe="perl -I$PERL_DIR read_manual_db.pl --synonymout=$SIM_DIR_Dic/synonym.txt.filtered.manual --definitionout=$SIM_DIR_Dic/definition.txt.manual --isaout=$SIM_DIR_Dic/isa.txt.filtered.manual --antonymout=$SIM_DIR_Dic/antonym.txt.manual -isa $SIM_DIR_Dic/isa.txt.filtered"
+    exe="perl -I$PERL_DIR read_manual_db.pl --synonymout=$SIM_DIR_Dic/synonym.txt.filtered.manual --definitionout=$SIM_DIR_Dic/definition.txt.manual --isaout=$SIM_DIR_Dic/isa.txt.filtered.manual --antonymout=$SIM_DIR_Dic/antonym.txt.manual -isa $SIM_DIR_Dic/isa.txt.filtered -synonym $SIM_DIR_Dic/synonym.txt.filtered -antonym $SIM_DIR_Dic/antonym.txt -definition $SIM_DIR_Dic/definition.txt"
     echo $exe
     eval $exe
 
