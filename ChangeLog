@@ -1,3 +1,57 @@
+2010-03-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/antonym.txt, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic_middle/antonym.txt.merge, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic/rsk_iwanami/antonym.txt.manual, dic/rsk_iwanami/definition.txt.manual, dic/rsk_iwanami/definition.txt.manual.infrequent_deleted, dic/rsk_iwanami/isa.txt.filtered.manual, dic/rsk_iwanami/synonym.txt.filtered.manual:
+	人手による修正の読み込みを変更
+
+	* scripts/merge_dic.sh: read_manual_db.plのオプションを変更
+
+	* scripts/read_manual_db.pl:
+	人手で修正されていないものは前のものを利用するように
+
+2010-03-01  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/arrange_redirect_synonym.pl:
+	rnsameオプションを追加
+
+	* ExtractSynfromDic/scripts/arrange_redirect_synonym.pl:
+	calcsim, allオプションを追加
+
+2010-02-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl: Wikipediaに関するオプションを追加
+
+	* perl/SynGraph.pm: Wikipediaの情報を付与するオプションを追加
+
+	* syndb/x86_64/wikipedia_entry_trie.db, syndb/i686/wikipedia_entry_trie.db:
+	added.
+
+2010-01-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/rsk_iwanami/isa-filter.log, dic/rsk_iwanami/isa.txt.filtered, dic/rsk_iwanami/synonym-filter.log, dic/rsk_iwanami/synonym.txt.filtered, dic/rsk_iwanami/antonym.txt, dic/rsk_iwanami/definition.txt, dic/rsk_iwanami/isa.txt, dic/rsk_iwanami/same_definition.txt, dic/rsk_iwanami/synonym.txt:
+	JUMANの更新
+
+	* ExtractSynfromDic/scripts/x4syn.pl: 「サ変名詞 + する」 -> 「サ変」
+
+	* ExtractSynfromDic/scripts/make_rep_db.pl: small change.
+
+	* ExtractSynfromDic/scripts/Makefile: updated.
+
+2010-01-18  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/db/rsk.db, MakeDic/db/iwa.db: JUMAN辞書の更新
+
+	* MakeDic/result/case4.dic, MakeDic/result/case3.dic, MakeDic/result/case2.dic, MakeDic/result/case1.dic:
+	JUMANの更新
+
+2010-01-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: wikipedia_entryを初期化するように
+
+2010-01-05  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl, perl/SynGraph.pm:
+	Wikipediaのエントリに包含される語にSynノードを付与しないオプションを追加
+
 2009-12-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/syndata.mldbm, syndb/x86_64/synantonym.cdb, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm, dic_change/definition.txt, dic/rsk_iwanami/definition.txt.manual.infrequent_deleted:
