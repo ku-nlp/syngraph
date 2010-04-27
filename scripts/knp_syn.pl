@@ -50,15 +50,14 @@ my $syndbdir;
 if ($opt{dbdir}) {
     $syndbdir = $opt{dbdir};
 }
-# 以下デフォルト値
-elsif ($option->{orchid}) {
-    $syndbdir = '../syndb/x86_64';
-}
 elsif ($option->{cgi}) {
     $syndbdir = '../syndb/cgi';
 }
 else {
-    $syndbdir = '../syndb/i686';
+    # i686 or x86_64
+    my $uname = `uname -m`;
+    chomp $uname;
+    $syndbdir = "../syndb/$uname";
 }
 
 my $sgh = new SynGraph($syndbdir, $knp_option, $option);
