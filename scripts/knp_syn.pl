@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'orchid', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive');
 
 my $option;
 my $knp_option;
@@ -37,6 +37,7 @@ $regnode_option->{antonym} = 1 if $opt{antonym};
 $regnode_option->{cgi} = 1 if $opt{cgi};
 $regnode_option->{log} = 1 if $opt{log};
 $regnode_option->{no_attach_synnode_in_wikipedia_entry} = 1 if $opt{no_attach_synnode_in_wikipedia_entry};
+$regnode_option->{relation_recursive} = 1 if $opt{relation_recursive};
 
 $option->{regist_exclude_semi_contentword} = 1 if $opt{regist_exclude_semi_contentword};
 $option->{no_regist_adjective_stem} = 1 if $opt{no_regist_adjective_stem};
