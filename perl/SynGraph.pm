@@ -1036,6 +1036,19 @@ sub _regnode {
 		    # 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけない
 		    next if ($regnode_option->{hypocut_attachnode} and $regnode_option->{hypocut_attachnode} < $number);
 		    
+		    if ($regnode_option->{relation_recursive}) {
+			my $already_registed = 0;
+
+			# ループに入らないようにすでに登録されているかどうかをチェック
+			foreach my $i (@{$ref->{$sid}[$bp]{nodes}}) {
+			    if ($i->{id} eq $pid) {
+				$already_registed = 1;
+				last;
+			    }
+			}
+			next if $already_registed;
+		    }
+
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
