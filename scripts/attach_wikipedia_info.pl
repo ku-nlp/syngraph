@@ -2,9 +2,7 @@
 
 # $Id$
 
-# echo 'パガニーニの主題による狂詩曲' | juman | perl -I/home/shibata/work/JICFS/perl attach_wikipedia_info.pl -dbname ../syndb/i686/wikipedia_entry_trie.db 
-
-# # JICFS/perlが必要
+# echo 'パガニーニの主題による狂詩曲' | juman | perl -I../perl attach_wikipedia_info.pl -dbname /somewhere/wikipedia_entry_trie.i686.db 
 
 use strict;
 use encoding 'euc-jp';
