@@ -14,24 +14,13 @@ binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 use Dumpvalue;
 
-my %opt; GetOptions(\%opt, 'isa_wikipedia=s', 'isa_out=s', 'synonym_out=s', 'debug');
+my %opt; GetOptions(\%opt, 'isa_wikipedia=s', 'isa_location=s', 'isa_out=s', 'synonym_out=s', 'debug');
 
 my @synonym;
 my (%isa_wikipedia, %isa_wikipedia_hypernym_num);
 
-open (F, "<:encoding(euc-jp)", $opt{isa_wikipedia}) or die;
-while (<F>) {
-    chomp;
-
-    my ($hyponym, $hypernym, $num) = split;
-
-    if (!defined $isa_wikipedia_hypernym_num{$hypernym}) {
-	$isa_wikipedia_hypernym_num{$hypernym} = $num;
-    }
-
-    $isa_wikipedia{$hyponym} = $hypernym;
-}
-close F;
+&read_isa_file($opt{isa_wikipedia}) if $opt{isa_wikipedia};
+&read_isa_file($opt{isa_location}) if $opt{isa_location};
 
 # オラクル:1/5	isa	託宣
 # オラクル:5/5	synonym	オラクル	Ｏｒａｃｌｅ
@@ -57,7 +46,7 @@ while (<>) {
 
 open (F, ">:encoding(euc-jp)", $opt{isa_out}) or die;
 # 下位語数でソート
-for my $word (sort { $isa_wikipedia_hypernym_num{$isa_wikipedia{$b}} <=> $isa_wikipedia_hypernym_num{$isa_wikipedia{$a}}} keys %isa_wikipedia) {
+for my $word (sort { $isa_wikipedia_hypernym_num{$isa_wikipedia{$b}} <=> $isa_wikipedia_hypernym_num{$isa_wikipedia{$a}} || $isa_wikipedia{$a} cmp $isa_wikipedia{$b}} keys %isa_wikipedia) {
     print F "$word\t$isa_wikipedia{$word}\t$isa_wikipedia_hypernym_num{$isa_wikipedia{$word}}\n";
 }
 close F;
@@ -67,3 +56,21 @@ for my $line (@synonym) {
     print F $line, "\n";
 }
 close F;
+
+sub read_isa_file {
+    my ($file) = @_;
+
+    open (F, "<:encoding(euc-jp)", $file) or die;
+    while (<F>) {
+	chomp;
+
+	my ($hyponym, $hypernym, $num) = split;
+
+	if (!defined $isa_wikipedia_hypernym_num{$hypernym}) {
+	    $isa_wikipedia_hypernym_num{$hypernym} = $num;
+	}
+
+	$isa_wikipedia{$hyponym} = $hypernym;
+    }
+    close F;
+}
