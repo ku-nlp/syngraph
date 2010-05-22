@@ -174,7 +174,7 @@ if [ $wikipedia -eq 1 ]; then
     echo $exe
     eval $exe
     # 上記ファイルを同義語と上位語に分解し、$SIM_DIR_Wikipedia/isa.txtとマージ
-    exe="perl -I$PERL_DIR split_synonym_aimai_synonym_isa_merge.pl -isa_wikipedia $SIM_DIR_Wikipedia/isa.txt -isa_out $SIM_M_DIR/isa_wikipedia_aimai_merge.txt -synonym_out $SIM_C_DIR/synonym_web_news_aimai.txt < $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt "
+    exe="perl -I$PERL_DIR split_synonym_aimai_synonym_isa_merge.pl -isa_wikipedia $SIM_DIR_Wikipedia/isa.txt -isa_location $SIM_DIR_Wikipedia/location_juman.txt -isa_out $SIM_M_DIR/isa_wikipedia_aimai_merge.txt -synonym_out $SIM_C_DIR/synonym_web_news_aimai.txt < $SIM_M_DIR/synonym_aimai_synonym_isa_merge.txt "
     echo $exe
     eval $exe
 else
