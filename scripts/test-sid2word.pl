@@ -4,16 +4,19 @@
 
 # usage: perl -I../perl test-sid2word.pl 
 
-use encoding 'utf8';
+use utf8;
+binmode STDIN, ':encoding(euc-jp)';
+binmode STDOUT, ':encoding(euc-jp)';
 use strict;
 use SynGraph;
 use Dumpvalue;
 use Getopt::Long;
+use Encode;
 
 my %opt;
-GetOptions(\%opt, 'synid=s', 'constructor');
+GetOptions(\%opt, 'synid=s', 'constructor', 'orig', 'debug');
 
-$opt{synid} = 's1303:ごたつく/ごたつく' unless $opt{synid};
+$opt{synid} = decode('euc-jp', $opt{synid});
 
 my $syndb_cdb = '../syndb/cgi/syndb.cdb';
 
@@ -39,7 +42,22 @@ else {
     @words = $syngraph->sid2word($opt{synid}, \%syndb);
 }
 
-Dumpvalue->new->dumpValue(\@words);
+if ($opt{debug}) {
+    Dumpvalue->new->dumpValue(\@words);
+}
+
+my @out;
+for my $word (@words) {
+    # 代表表記
+    if ($opt{orig}) {
+	push @out, $word->{orig};
+    }
+    else {
+	push @out, $word->{word};
+    }
+}
+
+print join(',', @out), "\n";
 
 unless ($opt{constructor}) {
     untie %syndb;
