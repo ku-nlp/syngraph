@@ -432,6 +432,10 @@ sub get_synid {
     if (defined $syn_hash{$word}) {
         return $syn_hash{$word};
     }
+    # 「名称」はないが「名称:1/1:1/1」がある場合
+    elsif (defined $syn_hash{"$word:1/1:1/1"}) {
+	return $syn_hash{"$word:1/1:1/1"};
+    }
     else {
         # SYNIDを振る
 	my $synid = 's' . $syn_number . ":" . (split(/:/, $word))[0];
