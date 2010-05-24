@@ -4,7 +4,7 @@
 
 # Wikipediaから得られた類義表現のうち、国語辞典からも抽出されるものを削除
 
-# usage: perl check_dic_wikipedia_duplicate.pl -dic ../dic_change/isa.txt -wikipedia ../dic/wikipedia/isa.txt > ../dic_change/isa-wikipedia.txt 2> ../dic_change/isa-wikipedia.log
+# usage: perl check_dic_wikipedia_duplicate.pl -dic ../dic_change/isa.txt -wikipedia ../dic_middle/isa_wikipedia_aimai_merge.txt > ../dic_change/isa-wikipedia.txt 2> ../dic_change/isa-wikipedia.log
 
 use strict;
 use Getopt::Long;
@@ -20,6 +20,8 @@ my %opt;
 GetOptions(\%opt, 'dic=s', 'wikipedia=s');
 
 my $LENGTH_MAX = 10;
+
+my $HYPO_NUM_MAX = 1;
 
 my $knp = new KNP( -Option => '-tab -dpnd',
 		   -JumanCommand => $Constant::JumanCommand,
@@ -42,12 +44,39 @@ while (<DIC>) {
 close DIC;
 
 # Wikipediaデータの読み込み
+# まず上位語のみ
+my %hypernym_data;
 open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
 while (<W>) {
     chomp;
 
     # アンパサンド 記号/きごう
     my ($hyponym, $hypernym, $num) = split("\t", $_);
+
+    next if $num <= $HYPO_NUM_MAX;
+
+    # 金谷:3/11       金谷駅  1
+    next if $hyponym =~ /:\d+\/\d+/;
+    $hypernym_data{$hypernym} = 1;
+}
+close W;
+
+# Wikipediaデータの読み込み
+open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
+while (<W>) {
+    chomp;
+
+    # アンパサンド 記号/きごう
+    my ($hyponym, $hypernym, $num) = split("\t", $_);
+
+    next if $num <= $HYPO_NUM_MAX;
+
+    # 下位語を持つものはそれ以上の上位語を獲得しない
+    # 温泉 -> 用語
+    if (defined $hypernym_data{$hyponym}) {
+	print STDERR "!$hyponym has some hyponyms (上位語: $hypernym)\n";
+	next;
+    }
 
     # 長すぎる見出しはskip
     if (length $hyponym <= $LENGTH_MAX) { 
