@@ -36,7 +36,7 @@ our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2_10
 
 # for calc-similarity-synonym.pl
 our $Oneformatted = '/home/shibata/work/CalcSimilarityByCF/one.formatted/080214.one.formatted';
-our $Oneformatteddb = $SynGraphBaseDir . '/db/080214.one.formatted.db';
+our $Oneformatteddb = '/home/shibata/work/SynGraph/db/080214.one.formatted.db';
 
 our $ContentWdic = '/home/shibata/download/juman/dic/ContentW.dic';
 
