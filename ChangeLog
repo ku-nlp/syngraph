@@ -1,3 +1,97 @@
+2010-05-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_dic_wikipedia_duplicate.pl:
+	Wikipediaで下位語を持つものは、その上位語を獲得しないように(例: 温泉)
+	下位語数の最小値を指定できるように
+
+	* dic/wikipedia/isa.txt, ExtractSynfromDic/scripts/postprocess_wikipedia_isa_and_aimai.pl:
+	JUMANにある語の上位語を抽出しないように
+
+2010-05-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/conv_syndb.pl: 意味が一つしかない場合にマージ
+
+	* dic/wikipedia/aimai_synonym_isa.txt: JUMAN基本単語を除くように
+
+	* ExtractSynfromDic/scripts/Makefile: JUMAN基本単語を除くように
+
+	* ExtractSynfromDic/scripts/postprocess_wikipedia_isa_and_aimai.pl:
+	JUMAN基本単語を除くオプションを追加
+
+2010-05-22  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh: 地名の上位下位関係を読み込むように
+
+	* scripts/split_synonym_aimai_synonym_isa_merge.pl:
+	地名の上位下位関係を読み込むオプションを追加
+
+	* ExtractSynfromDic/scripts/extract_location_from_jumandic.pl:
+	下位語数を付与
+
+	* dic_change/isa_wikipedia.log, dic_change/synonym_web_news_aimai.txt, dic_change/isa_wikipedia.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt.log, dic_middle/isa_wikipedia_aimai_merge.txt:
+	多義語を得るオプションに-hierarchyを追加
+
+2010-05-13  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/postprocess_wikipedia_isa_and_aimai.pl:
+	多義語リストを読み込むように
+	多義語・上位語を別々に出力するように
+
+	* dic/wikipedia/isa.txt, dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/aimai_synonym.txt:
+	多義語を得るオプションに-hierarchyを追加
+
+2010-05-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/Makefile:
+	多義語の同義語・上位語抽出オプションを追加
+
+2010-05-09  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* cgi/index.cgi: 再帰的に上位語を付与するオプションを追加
+
+2010-05-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* ExtractSynfromDic/scripts/Makefile: Wikipediaの上位語抽出部分を追加
+
+	* dic/wikipedia/aimai_synonym_isa.txt: 語義確率0.1以下を捨てた
+
+	* ExtractSynfromDic/scripts/merge_aimai_synonym_isa.pl:
+	マイナーな意味を捨てるオプションを追加
+
+2010-05-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm:
+	relation_recursiveオプションの場合に、すでに登録されたidをチェックするように
+
+2010-05-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/knp_syn.pl:
+	上位語を再帰的にはりつけるオプション(relation_recursive)を追加
+
+2010-04-27  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/perl/Iwa2Rsk.pm: 整形を追加
+
+2010-04-26  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* MakeDic/scripts/mkdic.pl: 使用する辞書を指定できるように
+
+	* doc/manual.pdf, doc/manual.tex: <反義語>に関する説明を追加
+
+2010-03-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* VERSION: version up.
+
+	* ChangeLog: updated.
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/antonym.txt, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic_middle/antonym.txt.merge, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic/rsk_iwanami/antonym.txt.manual, dic/rsk_iwanami/definition.txt.manual, dic/rsk_iwanami/definition.txt.manual.infrequent_deleted, dic/rsk_iwanami/isa.txt.filtered.manual, dic/rsk_iwanami/synonym.txt.filtered.manual:
+	人手による修正の読み込みを変更
+
+	* scripts/merge_dic.sh: read_manual_db.plのオプションを変更
+
+	* scripts/read_manual_db.pl:
+	人手で修正されていないものは前のものを利用するように
+
 2010-03-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/cgi/log_dic.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/syndata.mldbm, syndb/i686/synantonym.cdb, dic_change/synonym_dic.txt.merge.add.postprocess, dic_change/synonym_dic.txt.merge.log, dic_change/synonym_web_news.txt, dic_change/synonym_web_news.txt.log, dic_change/web_news.txt.log, dic_change/antonym.txt.merge.log, dic_change/change.log, dic_change/definition.txt, dic_change/isa.txt, dic_change/synonym_dic.hiragana_disambiguation.log, dic_change/synonym_dic.txt, dic_change/synonym_dic.txt.merge.add.log, dic_change/antonym.txt, dic_middle/synonym_web_news.txt, dic_middle/synonym_web_news.txt.dicremoved, dic_middle/synonym_web_news.txt.distributional_similarity_merge.log, dic_middle/antonym.txt.merge, dic_middle/cat_synonym_same_def.log, dic_middle/synonym_dic.txt, dic_middle/synonym_dic.txt.merge, dic_middle/synonym_dic.txt.merge.add, dic/rsk_iwanami/antonym.txt.manual, dic/rsk_iwanami/definition.txt.manual, dic/rsk_iwanami/definition.txt.manual.infrequent_deleted, dic/rsk_iwanami/isa.txt.filtered.manual, dic/rsk_iwanami/synonym.txt.filtered.manual:
