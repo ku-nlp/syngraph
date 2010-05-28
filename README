@@ -3,6 +3,7 @@ see doc/manual.pdf
 
 [必要なプログラム]
 - Juman/KNP
+- Juman.pm, KNP.pm
 - CalcSimilarityByCF.pm (分布類似度計算モジュール) = 辞書コンパイルに必要, ユーザは不要
 
 [SynGraph化]
@@ -52,10 +53,8 @@ perl/ : Perlモジュール
 scripts/ : スクリプト
 
   README			
-  merg_dic.sh			辞書データ整形のスクリプト
+  merge_dic.sh			辞書データ整形のスクリプト
   build.sh        		コンパイル(DB作成)のスクリプト
-  irex_build.sh  		IREX用のスクリプト
-  irex_build2.sh        	IREX用のスクリプト(インデックスファイルを2つに分けるタイプ)
   make_logdic.pl		辞書抽出のログ作成
   change_dic.pl			RSK辞書の曖昧性の対応
 　check_duplicate_eentry.pl 	Web辞書の整形
@@ -63,8 +62,6 @@ scripts/ : スクリプト
   compile.pl     		コンパイル(類義表現DBのSYNGRAPH化) 
   sort_synhead.pl		類義表現DBのヘッドハッシュをソート
   make_sg.pl     		検索対象のSYNGRAPH化
-  cal_df.pl      		df，文書長を数える
-  indexing.pl    		インデックスファイルを作成
   merge_db.pl    		インデックスファイルをマージ
   irex_search.pl 		IREXの検索
   print_hash.pl  		各種データベース内容の表示
@@ -103,9 +100,4 @@ syndb/ : 同義表現データベース
 
 cgi : CGIソース
 　index.cgi		SynGraphのDEBUG用CGIのソース
-
-
-sql : SQL文
-  syngraph.sql         	mysqlの定義SQL
-  merge.sql            	マージデータベースの作成のためのSQL
 
