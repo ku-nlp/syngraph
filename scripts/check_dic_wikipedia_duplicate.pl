@@ -17,7 +17,7 @@ use KNP;
 use Constant;
 
 my %opt;
-GetOptions(\%opt, 'dic=s', 'wikipedia=s');
+GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa');
 
 my $LENGTH_MAX = 10;
 
@@ -61,6 +61,14 @@ while (<W>) {
 }
 close W;
 
+# 複合名詞の主辞を上位語とする
+# 例: 女性声優 -> 声優
+# 例: 元プロ野球選手 -> プロ野球選手 -> 野球選手 -> 選手
+my %compound_isa;
+if ($opt{compound_noun_isa}) {
+    &generate_compound_isa;
+}
+
 # Wikipediaデータの読み込み
 open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
 while (<W>) {
@@ -100,3 +108,74 @@ while (<W>) {
     print "$hyponym\t$hypernym\t$num\n";
 }
 close W;
+
+if ($opt{compound_noun_isa}) {
+    for my $hyper_cn (sort {scalar keys %{$compound_isa{$b}} <=> scalar keys %{$compound_isa{$a}}} keys %compound_isa) {
+	my $num = scalar keys %{$compound_isa{$hyper_cn}};
+
+	for my $hypo_cn (sort keys %{$compound_isa{$hyper_cn}}) {
+	    print "$hypo_cn\t$hyper_cn\t$num\n";
+	}
+    }
+}
+
+sub generate_compound_isa {
+    for my $hypernym (keys %hypernym_data) {
+
+	next if $hypernym =~ /\//; # 体操/たいそう
+
+	my $result = $knp->parse($hypernym);
+
+	my $mrph_num = scalar ($result->mrph);
+	if ($mrph_num > 1) {
+	    for (my $i = 0; $i < $mrph_num - 1; $i++) {
+
+		next unless &is_start_mrph(($result->mrph)[$i]);
+
+		my $j = 1; # hyper_cnを$iからいくつ後ろを見るか(デフォルト1)
+		while ($i + $j < $mrph_num) {
+		    if (&is_start_mrph(($result->mrph)[$i + $j])) {
+			last;
+		    }
+		    $j++;
+		}
+		next if $i + $j == $mrph_num; 
+
+		my $hypo_cn = &get_midasi($result, $i, $mrph_num - 1);
+		my $hyper_cn = &get_midasi($result, $i + $j, $mrph_num - 1);
+
+		next if length $hyper_cn == 1;
+
+		print "$hypo_cn -> $hyper_cn\n" if $opt{debug};
+		$compound_isa{$hyper_cn}{$hypo_cn} = 1;
+	    }
+	}
+    }
+}
+
+# 複合名詞の開始となるか
+sub is_start_mrph {
+    my ($mrph) = @_;
+
+    # 接尾辞
+    # 中黒(例: 国学者・神道家)
+    # ４０ｔｈシングル
+    if ($mrph->hinsi eq '接尾辞' || $mrph->midasi =~ /^(?:・|ｔｈ|ｎｄ|ｒｄ|ｓｔ)$/) {
+	return 0;
+    }
+    else {
+	return 1;
+    }
+}
+
+sub get_midasi {
+    my ($result, $start, $end) = @_;
+
+    my $midasi;
+
+    for my $i ($start .. $end) {
+	$midasi .= ($result->mrph)[$i]->midasi;
+    }
+
+    return $midasi;
+}
