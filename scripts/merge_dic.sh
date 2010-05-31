@@ -201,7 +201,7 @@ eval $exe
 
 # Wikipediaから得られた類義表現のうち、国語辞典からも抽出されるものを削除
 if [ $wikipedia -eq 1 ]; then
-    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_M_DIR/isa_wikipedia_aimai_merge.txt > $SIM_C_DIR/isa_wikipedia.txt 2> $SIM_C_DIR/isa_wikipedia.log"
+    exe="perl -I$PERL_DIR check_dic_wikipedia_duplicate.pl -dic $SIM_C_DIR/isa.txt -wikipedia $SIM_M_DIR/isa_wikipedia_aimai_merge.txt -compound_noun_isa > $SIM_C_DIR/isa_wikipedia.txt 2> $SIM_C_DIR/isa_wikipedia.log"
     echo $exe
     eval $exe
 fi
