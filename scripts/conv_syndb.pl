@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -139,6 +139,8 @@ foreach my $file_type (@file) {
 
 	    my $delimiter = $file_type eq 'isa_wikipedia' ? '\t' : ' ';
 	    my ($child, $parent, $number) = split(/$delimiter/, $_);
+
+	    next if $opt{isa_max_num} && $file_type eq 'isa' && $number > $opt{isa_max_num};
 
 	    # 文字化け対策
 	    next if $child =~ /\?/ || $parent =~ /\?/;
