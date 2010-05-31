@@ -22,6 +22,8 @@ jumanrc=
 knpopts=()
 k=1
 
+conv_syndb_args=
+
 # WWW2sf
 WWW2sfdir=$HOME/work/WWW2sf
 
@@ -29,7 +31,7 @@ log=0
 noparse=0
 wikipedia=0
 
-while getopts ohlj:r:ndw OPT
+while getopts ohlj:r:ndwi: OPT
 do
   case $OPT in
       o)  SYNDB_DIR=../syndb/x86_64
@@ -48,6 +50,8 @@ do
 	  k=`expr $k + 1`
 	  ;;
       w)  wikipedia=1
+          ;;
+      i)  conv_syndb_args="$conv_syndb_args -isa_max_num $OPTARG"
           ;;
       h)  usage
           ;;
@@ -81,15 +85,15 @@ fi
 # 類義表現を変換
 if [ $wikipedia -eq 1 ]; then
     if [ $log -eq 1 ]; then
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log -wikipedia"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log -wikipedia ${=conv_syndb_args}"
     else
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR -wikipedia"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR -wikipedia ${=conv_syndb_args}"
     fi
 else
     if [ $log -eq 1 ]; then
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log ${=conv_syndb_args}"
     else
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR ${=conv_syndb_args}"
     fi
 fi
 echo $exe
