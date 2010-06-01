@@ -17,7 +17,7 @@ use KNP;
 use Constant;
 
 my %opt;
-GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa');
+GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa', 'exclude_head_same');
 
 my $LENGTH_MAX = 10;
 
@@ -86,22 +86,34 @@ while (<W>) {
 	next;
     }
 
+    my $midasi_hyponym = $hyponym;
+    $midasi_hyponym =~ s/:\d+\/\d+//;
+
     # 長すぎる見出しはskip
-    if (length $hyponym <= $LENGTH_MAX) { 
-	my $result = $knp->parse($hyponym);
+#    next if (length $midasi_hyponym > $LENGTH_MAX);
 
-	if ($result && scalar ($result->mrph) == 1) {
-	    my $repname = ($result->tag)[0]->repname;
+    my $result = $knp->parse($midasi_hyponym);
 
-	    if (defined $DIC{$repname}) {
-		my @dic;
-		foreach my $id (keys %{$DIC{$repname}}) {
-		    push @dic, "$id-$DIC{$repname}{$id}";
-		}
+    # 主辞が同じものを捨てる
+    # 例: 川角駅	駅/えき
+    if ($opt{exclude_head_same}) {
+	if ($result) {
+	    my $last_mrph = ($result->mrph)[-1];
+	    next if $last_mrph->repname eq $hypernym;
+	}
+    }
 
-		print STDERR "$repname DIC: ", join(' ', @dic), " Wikipedia: $hypernym ($hyponym)\n";
-		next;
+    if ($result && scalar ($result->mrph) == 1) {
+	my $repname = ($result->tag)[0]->repname;
+
+	if (defined $DIC{$repname}) {
+	    my @dic;
+	    foreach my $id (keys %{$DIC{$repname}}) {
+		push @dic, "$id-$DIC{$repname}{$id}";
 	    }
+
+	    print STDERR "$repname DIC: ", join(' ', @dic), " Wikipedia: $hypernym ($hyponym)\n";
+	    next;
 	}
     }
 
