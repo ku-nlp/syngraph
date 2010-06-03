@@ -17,7 +17,7 @@ use KNP;
 use Constant;
 
 my %opt;
-GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa', 'exclude_head_same');
+GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa', 'exclude_head_same', 'debug');
 
 my $LENGTH_MAX = 10;
 
@@ -155,6 +155,14 @@ sub generate_compound_isa {
 
 		my $hypo_cn = &get_midasi($result, $i, $mrph_num - 1);
 		my $hyper_cn = &get_midasi($result, $i + $j, $mrph_num - 1);
+
+		# ５文字以下のカタカナは分割しない
+		# プラグイン -> イン, カントン -> トン
+		# 切ってもいいもの (ヒゲクジラ -> クジラ)
+		# ６文字以上のもの (ファッションモデル -> モデル, ロックバンド -> バンド)
+		next if ($hypo_cn =~ /^\p{Katakana}{2,5}$/) {
+		    print "$hypo_cn -> $hyper_cn\n";
+		}
 
 		next if length $hyper_cn == 1;
 
