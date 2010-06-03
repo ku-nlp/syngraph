@@ -21,7 +21,7 @@ GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa', 'exclude_head_sam
 
 my $LENGTH_MAX = 10;
 
-my $HYPO_NUM_MAX = 1;
+my $HYPO_NUM_MAX = 5;
 
 my $knp = new KNP( -Option => '-tab -dpnd',
 		   -JumanCommand => $Constant::JumanCommand,
@@ -58,6 +58,12 @@ while (<W>) {
     # 金谷:3/11       金谷駅  1
     next if $hyponym =~ /:\d+\/\d+/;
     $hypernym_data{$hypernym} = 1;
+
+    # 代表表記の場合、見出しも入れる
+    if ($hypernym =~ /\//) {
+	my ($midasi) = split(/\//, $hypernym);
+	$hypernym_data{$midasi} = 1;
+    }
 }
 close W;
 
@@ -65,10 +71,12 @@ close W;
 # 例: 女性声優 -> 声優
 # 例: 元プロ野球選手 -> プロ野球選手 -> 野球選手 -> 選手
 my %compound_isa;
+my %split_nakaguro;
 if ($opt{compound_noun_isa}) {
     &generate_compound_isa;
 }
 
+my %outdata;
 # Wikipediaデータの読み込み
 open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
 while (<W>) {
@@ -103,6 +111,7 @@ while (<W>) {
 	}
     }
 
+    # 辞書にもあるものを捨てる
     if ($result && scalar ($result->mrph) == 1) {
 	my $repname = ($result->tag)[0]->repname;
 
@@ -117,9 +126,26 @@ while (<W>) {
 	}
     }
 
-    print "$hyponym\t$hypernym\t$num\n";
+    if (defined $split_nakaguro{$hypernym}) {
+	for my $string (keys %{$split_nakaguro{$hypernym}}) {
+	    $outdata{$string}{list}{$hyponym} = 1;
+	    $outdata{$string}{num}++;
+	}
+    }
+    else {
+	$outdata{$hypernym}{list}{$hyponym} = 1;
+	$outdata{$hypernym}{num}++;
+#	print "$hyponym\t$hypernym\t$num\n";
+    }
 }
 close W;
+
+for my $hypernym (sort {$outdata{$b}{num} <=> $outdata{$a}{num} || $a <=> $b} keys %outdata) {
+    my $num = $outdata{$hypernym}{num};
+    for my $hyponym (sort keys %{$outdata{$hypernym}{list}}) {
+	print "$hyponym\t$hypernym\t$num\n";
+    }
+}
 
 if ($opt{compound_noun_isa}) {
     for my $hyper_cn (sort {scalar keys %{$compound_isa{$b}} <=> scalar keys %{$compound_isa{$a}}} keys %compound_isa) {
@@ -135,6 +161,14 @@ sub generate_compound_isa {
     for my $hypernym (keys %hypernym_data) {
 
 	next if $hypernym =~ /\//; # 体操/たいそう
+
+	# 中黒でsplitできるかどうか (政治家・軍人)
+	if (&check_split_nakaguro($hypernym)) {
+	    for my $s (split('・', $hypernym)) {
+		$split_nakaguro{$hypernym}{$s} = 1;
+	    }
+	    next;
+	}
 
 	my $result = $knp->parse($hypernym);
 
@@ -160,9 +194,7 @@ sub generate_compound_isa {
 		# プラグイン -> イン, カントン -> トン
 		# 切ってもいいもの (ヒゲクジラ -> クジラ)
 		# ６文字以上のもの (ファッションモデル -> モデル, ロックバンド -> バンド)
-		next if ($hypo_cn =~ /^\p{Katakana}{2,5}$/) {
-		    print "$hypo_cn -> $hyper_cn\n";
-		}
+		next if $hypo_cn =~ /^\p{Katakana}{2,5}$/;
 
 		next if length $hyper_cn == 1;
 
@@ -171,6 +203,59 @@ sub generate_compound_isa {
 	    }
 	}
     }
+}
+
+# 政治学者・歴史学者 -> 政治学者, 歴史学者
+# ロック・ギタリスト -> きらない
+
+sub check_split_nakaguro {
+    my ($string) = @_;
+
+    return 0 if $string !~ /・/;
+
+    my $flag = 1;
+    for my $s (split('・', $string)) {
+	# 下位語を持つ上位語があるかどうか
+	if (!defined $hypernym_data{$s}) {
+	    $flag = 0;
+	}
+    }
+
+    if ($flag) {
+	print STDERR "split $string (下位語を持つ)\n";
+	return 1;
+    }
+
+    # 主辞の形態素が同じかどうか
+    if (&check_same_last_mrph([split('・', $string)])) {
+	print STDERR "same last mrph: $string\n";
+	return 1;
+    }
+
+    print STDERR "No split: $string\n";
+    return 0;
+}
+
+sub check_same_last_mrph {
+    my ($strings) = @_;
+
+    my $flag = 1;
+    my $last_mrph_rep;
+
+    for my $string (@$strings) {
+	my $result = $knp->parse($string);
+
+	if ($last_mrph_rep) {
+	    if ($last_mrph_rep ne ($result->mrph)[-1]->repname) {
+		$flag = 0;
+		return 0;
+	    }
+	}
+	else {
+	    $last_mrph_rep = ($result->mrph)[-1]->repname;
+	}
+    }
+    return 1;
 }
 
 # 複合名詞の開始となるか
