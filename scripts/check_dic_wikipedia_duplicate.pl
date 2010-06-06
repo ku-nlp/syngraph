@@ -107,10 +107,27 @@ while (<W>) {
     if ($opt{exclude_head_same}) {
 	if ($result) {
 	    my $last_mrph = ($result->mrph)[-1];
-	    next if $last_mrph->repname eq $hypernym;
+	    next if $last_mrph->repname eq $hypernym || $last_mrph->midasi eq $hypernym;
 	}
     }
 
+    # 下位語がJUMAN内容語一語を捨てる
+    # みお
+    # 負けないで
+    if (scalar ($result->tag) == 1) {
+	# 未定義語 or 地名
+	# アルデーノ
+	if (scalar ($result->mrph) == 1 && ($result->mrph)[0]->fstring =~ /(?:<疑似代表表記>|地名)/) {
+	    ;
+	}
+	# 全部英数字
+	elsif ($hyponym =~ /^(?:\p{Latin}|\p{Common})+$/) {
+	    ;
+	}
+	else {
+	    next;
+	}
+    }
     # 辞書にもあるものを捨てる
     if ($result && scalar ($result->mrph) == 1) {
 	my $repname = ($result->tag)[0]->repname;
@@ -278,8 +295,15 @@ sub get_midasi {
 
     my $midasi;
 
-    for my $i ($start .. $end) {
-	$midasi .= ($result->mrph)[$i]->midasi;
+    # 1形態素
+    if ($start == $end) {
+	my $repname = ($result->mrph)[$start]->repname;
+	$midasi = $repname =~ /\?/ ? ($result->mrph)[$start]->midasi : $repname;
+    }
+    else {
+	for my $i ($start .. $end) {
+	    $midasi .= ($result->mrph)[$i]->midasi;
+	}
     }
 
     return $midasi;
