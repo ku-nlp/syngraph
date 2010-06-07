@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -255,6 +255,23 @@ foreach my $midasi (keys %definition) {
     push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
 
+if ($opt{similar_phrase}) {
+    open(P, '<:encoding(euc-jp)', $opt{similar_phrase}) or die;
+    while (<P>) {
+	chomp;
+
+	my ($phrase1, $phrase2) = split;
+	my $synid = 's' . $syn_number . ':' . $phrase1;
+	$syn_number++;
+
+	my $tmp_phrase1 = $phrase1 . '[同義句]';
+	my $tmp_phrase2 = $phrase2 . '[同義句]';
+	push (@{$syn_group{$synid}}, $tmp_phrase1);
+	push (@{$syn_group{$synid}}, $tmp_phrase2);
+    }
+    close P;
+}
+
 # 属する語が1語しかないグループのSynIDから、「s(数字):」を削除
 my %one_word_sid;
 foreach my $synid (keys %syn_group) {
@@ -333,7 +350,7 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//g;
+	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句)\]$//g;
 
 	    # 定義文の重複を除く
 	    if ($tag eq '定義文') {
