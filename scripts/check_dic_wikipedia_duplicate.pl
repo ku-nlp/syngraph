@@ -59,6 +59,10 @@ while (<W>) {
     next if $hyponym =~ /:\d+\/\d+/;
     $hypernym_data{$hypernym} = 1;
 
+    # 教皇 -> ローマ教皇
+    # 主辞が共通で下位語の方が短い
+    next if $hypernym =~ /$hyponym$/;
+
     # 代表表記の場合、見出しも入れる
     if ($hypernym =~ /\//) {
 	my ($midasi) = split(/\//, $hypernym);
