@@ -5,7 +5,7 @@ see doc/manual.pdf
 
 - Juman/KNP (http://nlp.kuee.kyoto-u.ac.jp/nl-resource/)
 - TinyCDB (http://www.corpit.ru/mjt/tinycdb.html)
-- BerkeleyCDB (http://www.oracle.com/technology/software/products/berkeley-db/index.html)
+- BerkeleyDB (http://www.oracle.com/technology/software/products/berkeley-db/index.html)
 - Perl5.8以上
 - Perlモジュール
  - CPANからダウンロード可能
