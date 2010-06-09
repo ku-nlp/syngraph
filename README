@@ -2,9 +2,21 @@
 see doc/manual.pdf
 
 [必要なプログラム]
-- Juman/KNP
-- Juman.pm, KNP.pm
-- CalcSimilarityByCF.pm (分布類似度計算モジュール) = 辞書コンパイルに必要, ユーザは不要
+
+- Juman/KNP (http://nlp.kuee.kyoto-u.ac.jp/nl-resource/)
+- TinyCDB (http://www.corpit.ru/mjt/tinycdb.html)
+- BerkeleyCDB (http://www.oracle.com/technology/software/products/berkeley-db/index.html)
+- Perl5.8以上
+- Perlモジュール
+ - CPANからダウンロード可能
+  - CDB_File
+  - BerkeleyDB
+  - MLDBM
+
+ - 黒橋研究室で開発されているもの
+  - Juman.pm (juman-6.0/perl)
+  - KNP.pm   (knp-3.01/perl)
+  - CalcSimilarityByCF.pm (分布類似度計算モジュール) = 辞書コンパイルに必要, ユーザは不要
 
 [SynGraph化]
 
