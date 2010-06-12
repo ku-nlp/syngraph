@@ -5,9 +5,10 @@
 use strict;
 use encoding 'euc-jp';
 use Getopt::Long;
+use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'max_child_num=i');
+GetOptions(\%opt, 'max_child_num=i', 'category_sort');
 
 my $isa_wikipedia_file = '../dic_change/isa_wikipedia.txt';
 
@@ -27,16 +28,51 @@ sub read_wikipedia_isa {
     }
 }
 
+if ($opt{category_sort}) {
+    my $juman = new Juman;
+    for my $string (keys %data) {
+	next if defined $data{$string}{parent};
+
+	my $midasi = (split('/', $string))[0];
+	my $result = $juman->analysis($midasi);
+
+	my %category;
+	my $last_mrph = ($result->mrph)[-1];
+
+	&regist_category($last_mrph, \%category);
+
+	# 同形
+	for my $doukei ($last_mrph->doukei) {
+	    &regist_category($doukei, \%category);
+	}
+
+	my $cat;
+	if (scalar keys %category > 0) {
+	    $cat = join(';', sort keys %category);
+	} else {
+	    $cat = '無';
+	}
+
+	$data{$string}{category} = $cat;
+    }
+}
+
 # 子供の数を記録
 for my $string (keys %data) {
     $data{$string}{child_num} = defined $data{$string}{children} ? scalar @{$data{$string}{children}} : 0;
 }
-for my $string (sort {$data{$b}{child_num} <=> $data{$a}{child_num}} keys %data) {
+
+my $pre_category;
+for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
+		       : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
     next if defined $data{$string}{parent};
 
+    print "★ $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
     &display($string, '');
     print "\n";
+    $pre_category = $data{$string}{category};
 }
+
 
 sub display {
     my ($string, $mark) = @_;
@@ -89,6 +125,18 @@ sub print_mark {
 	    print "└─";
 	} else {
 	    print "├─";
+	}
+    }
+}
+
+# カテゴリ情報を登録
+sub regist_category {
+    my ($mrph, $category) = @_;
+
+    if ($mrph->imis =~ /カテゴリ:([^\"\s]+)/) {
+	my $string = $1;
+	for my $cat (split(/;/, $string)) {
+	    $category->{$cat} = 1;
 	}
     }
 }
