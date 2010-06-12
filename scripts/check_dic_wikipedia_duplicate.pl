@@ -43,6 +43,8 @@ while (<DIC>) {
 }
 close DIC;
 
+my %midasi2rep;
+
 # Wikipediaデータの読み込み
 # まず上位語のみ
 my %hypernym_data;
@@ -67,6 +69,7 @@ while (<W>) {
     if ($hypernym =~ /\//) {
 	my ($midasi) = split(/\//, $hypernym);
 	$hypernym_data{$midasi} = 1;
+	$midasi2rep{$midasi} = $hypernym;
     }
 }
 close W;
@@ -88,6 +91,10 @@ while (<W>) {
 
     # アンパサンド 記号/きごう
     my ($hyponym, $hypernym, $num) = split("\t", $_);
+
+    # 教皇 -> ローマ教皇
+    # 主辞が共通で下位語の方が短い
+    next if $hypernym =~ /$hyponym$/;
 
     next if $num <= $HYPO_NUM_MAX;
 
@@ -154,6 +161,11 @@ while (<W>) {
 	}
     }
     else {
+
+	# 代表表記があれば変更
+	if (defined $midasi2rep{$hypernym}) {
+	    $hypernym = $midasi2rep{$hypernym};
+	}
 	$outdata{$hypernym}{list}{$hyponym} = 1;
 	$outdata{$hypernym}{num}++;
 #	print "$hyponym\t$hypernym\t$num\n";
@@ -186,7 +198,15 @@ sub generate_compound_isa {
 	# 中黒でsplitできるかどうか (政治家・軍人)
 	if (&check_split_nakaguro($hypernym)) {
 	    for my $s (split('・', $hypernym)) {
-		$split_nakaguro{$hypernym}{$s} = 1;
+		my $hypernym_string;
+		# 代表表記に変更
+		if (defined $midasi2rep{$s}) {
+		    $hypernym_string = $midasi2rep{$s};
+		}
+		else {
+		    $hypernym_string = $s;
+		}
+		$split_nakaguro{$hypernym}{$hypernym_string} = 1;
 	    }
 	    next;
 	}
@@ -217,7 +237,8 @@ sub generate_compound_isa {
 		# ６文字以上のもの (ファッションモデル -> モデル, ロックバンド -> バンド)
 		next if $hypo_cn =~ /^\p{Katakana}{2,5}$/;
 
-		next if length $hyper_cn == 1;
+		my $hyper_cn_midasi = (split('/', $hyper_cn))[0];
+		next if length $hyper_cn_midasi == 1;
 
 		print "$hypo_cn -> $hyper_cn\n" if $opt{debug};
 		$compound_isa{$hyper_cn}{$hypo_cn} = 1;
@@ -301,7 +322,7 @@ sub get_midasi {
 
     # 1形態素
     if ($start == $end) {
-	my $repname = ($result->mrph)[$start]->repname;
+	my $repname = ($result->mrph)[$start]->repnames;
 	$midasi = $repname =~ /\?/ ? ($result->mrph)[$start]->midasi : $repname;
     }
     else {
