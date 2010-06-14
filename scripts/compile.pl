@@ -51,7 +51,11 @@ while (my $knp_result = $sgh->read_parsed_data) {
     if ($sgh->{syndata}->{$sid}) {
         foreach my $node (@{$sgh->{syndata}->{$sid}->[(@{$sgh->{syndata}->{$sid}}-1)]{nodes}}) {
             if ($node->{id}) {
-		$sgh->{synhead}{$node->{id}} .= $sgh->{synhead}{$node->{id}} ? "|$sid" : $sid unless ($sgh->{synhead}{$node->{id}} =~ /$sid/);
+		unless ($sgh->{synhead}{$node->{id}} =~ /$sid/) {
+		    # 文末の基本句の子供数の最小値を得る
+		    my $child_num_min = &SynGraph::get_child_num_min($sgh->{syndata}->{$sid});
+		    $sgh->{synhead}{$node->{id}} .= $sgh->{synhead}{$node->{id}} ? "|$sid%$child_num_min" : "$sid%$child_num_min";
+		}
             }
         }
     }
@@ -84,3 +88,4 @@ COMPILE_END:
     &SynGraph::store_cdb("$dir/synhead.cdb", $sgh->{synhead});
     &SynGraph::store_mldbm("$dir/syndata.mldbm", $sgh->{syndata});
 }
+

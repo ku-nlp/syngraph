@@ -22,7 +22,7 @@ my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 # 小さい順にソート
 foreach my $node_id (keys %{$sgh->{synhead}}) {
-    my @sort = sort {@{$sgh->{syndata}->{$a}} <=> @{$sgh->{syndata}->{$b}}} (split(/\|/, $sgh->{synhead}->{$node_id}));
+    my @sort = sort {@{$sgh->{syndata}->{(split('%', $a))[0]}} <=> @{$sgh->{syndata}->{(split('%', $b))[0]}}} (split(/\|/, $sgh->{synhead}->{$node_id}));
     $sgh->{synheadsort}->{$node_id} = join ("|", @sort);
 }
 

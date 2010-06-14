@@ -310,8 +310,14 @@ sub make_bp {
 	    }
 	}
 
+	my $child_num = defined $node->{childbp} ? scalar keys %{$node->{childbp}} : 0;
+
         if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
-            foreach my $mid (split(/\|/, $this->{synheadcache}{$node->{id}})) {
+            foreach my $mid_childnum (split(/\|/, $this->{synheadcache}{$node->{id}})) {
+		my ($mid, $childnum) = split('%', $mid_childnum);
+
+		next if $child_num < $childnum;
+
                 # SYNIDが同じものは調べない
                 my $synid1 = (split(/,/, $sid))[0];
                 my $synid2 = (split(/,/, $mid))[0];
@@ -1125,14 +1131,38 @@ sub _regnode {
         if ($this->{mode} eq 'repeat' and
             $newid->{id} and
             $bp == @{$ref->{$sid}} - 1) {
-	    $this->{synhead}{$newid->{id}} .= $this->{synhead}{$newid->{id}} ? "|$sid" : $sid unless ($this->{synhead}{$newid->{id}} =~ /$sid/);
-            $this->{regnode} = $sid;
+	    
+	    unless ($this->{synhead}{$newid->{id}} =~ /$sid/) {
+		my $child_num_min = &SynGraph::get_child_num_min($this->{syndata}->{$sid});
+		$this->{synhead}{$newid->{id}} .= $this->{synhead}{$newid->{id}} ? "|$sid%$child_num_min" : "$sid%$child_num_min";
+	    }
+	    $this->{regnode} = $sid;
         }
 
         return $newid;
     }
 }
 
+sub get_child_num_min {
+    my ($syndata) = @_;
+
+    my $child_num_min = 10; # 初期値
+    for my $last_node (@{$syndata->[-1]{nodes}}) {
+	if (defined $last_node->{childbp}) {
+	    my $child_num = scalar keys %{$last_node->{childbp}};
+
+	    if ($child_num < $child_num_min) {
+		$child_num_min = $child_num;
+	    }
+	}
+	else {
+	    $child_num_min = 0;
+	    last;
+	}
+    }
+
+    return $child_num_min;
+}
 
 
 #
