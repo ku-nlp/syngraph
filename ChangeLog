@@ -1,3 +1,135 @@
+2010-07-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* syndb/cgi/synparent.cdb, syndb/cgi/synnumber.cdb, syndb/cgi/synhead.cdb, syndb/cgi/syndb.cdb, syndb/cgi/syndata.mldbm, syndb/cgi/synantonym.cdb, syndb/cgi/synchild.cdb, syndb/cgi/log_isa.cdb, syndb/cgi/log_antonym.cdb, syndb/x86_64/synparent.cdb, syndb/x86_64/synhead.cdb, syndb/x86_64/syndb.cdb, syndb/x86_64/synantonym.cdb, syndb/x86_64/syndata.mldbm, syndb/i686/synparent.cdb, syndb/i686/synhead.cdb, syndb/i686/syndb.cdb, syndb/i686/synantonym.cdb, syndb/i686/syndata.mldbm:
+	子供の数を記憶して高速化
+
+2010-06-23  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym_isa.txt.orig, dic/wikipedia/isa.txt, dic/wikipedia/aimai_isa.txt, dic/wikipedia/aimai_synonym_isa.txt:
+	曖昧さ回避ページから定義文を獲得しないように
+
+	* dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/isa.txt:
+	定義文の抽出部分を修正
+
+2010-06-21  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/synonym_web_news_aimai.txt, dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt.log, dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/isa_wikipedia_aimai_merge.txt:
+	eucにない文字を〓に変換
+	整形を追加
+
+	* dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym_isa.txt.orig, dic/wikipedia/isa.txt, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/aimai_isa.txt:
+	eucにない文字を〓に
+	URLなどの整形を追加
+
+	* ExtractSynfromDic/scripts/x4syn.pl: 整形のパターンを追加
+	ここでの半角全角変換を廃止
+
+2010-06-19  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/synonym_web_news_aimai.txt, dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt, dic_middle/isa_wikipedia_aimai_merge.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt.log, dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/aimai_synonym_isa.txt.orig, dic/wikipedia/isa.txt, dic/wikipedia/aimai_isa.txt:
+	Wikipediaを最新のものに更新
+
+2010-06-14  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/compile.pl, scripts/sort_synhead.pl, perl/SynGraph.pm:
+	子供の数を記憶して高速化
+
+2010-06-12  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/isa_wikipedia.txt: 代表表記に関する処理を修正
+
+	* scripts/build.sh: 自動獲得した同義句を追加
+
+	* scripts/print_isa_tree.pl: JUMANカテゴリでソートするオプションを追加
+
+	* scripts/check_dic_wikipedia_duplicate.pl: 代表表記の処理を修正
+
+2010-06-07  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/synonym_web_news_aimai.txt, dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt:
+	ストップワードを追加
+
+	* scripts/conv_syndb.pl: 同義句を読み込むオプションを追加
+
+	* scripts/check_dic_wikipedia_duplicate.pl:
+	主辞が共通で下位語の方が短いものを捨てるように
+
+	* dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt.log, dic_middle/isa_wikipedia_aimai_merge.txt, dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym.txt, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/aimai_synonym_isa.txt.orig, dic/wikipedia/isa.txt, dic/wikipedia/aimai_isa.txt, ExtractSynfromDic/scripts/x4syn.pl:
+	ストップワードを追加
+
+	* ExtractSynfromDic/tools/def_sentence.rule: ルールを追加
+
+2010-06-06  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_dic_wikipedia_duplicate.pl, dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt:
+	下位語がJUMAN内容語１語ものを捨てる
+	複合名詞の主辞から上位語を得る部分を修正
+
+2010-06-04  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* dic_change/isa_wikipedia.txt, dic_change/isa_wikipedia.log:
+	上位語に中黒がある場合にsplitするかどうかを判断するように
+
+	* dic_change/synonym_web_news_aimai.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt, dic_middle/synonym_aimai_synonym_isa_merge.txt.log, dic_middle/isa_wikipedia_aimai_merge.txt:
+	ストップワードを追加
+
+2010-06-03  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/check_dic_wikipedia_duplicate.pl:
+	上位語に中黒がある場合にsplitするかどうかを判断するように
+	例: 政治学者・歴史学者 -> きる
+	    ロック・ギタリスト -> きらない
+
+	* scripts/check_dic_wikipedia_duplicate.pl:
+	5文字以下のカタカナは複合名詞の主辞をとらないように
+	(例: カントン -> トン)
+
+	* dic/wikipedia/isa.txt.parenthesis, dic/wikipedia/aimai_synonym_isa.txt, dic/wikipedia/aimai_synonym_isa.txt.orig, dic/wikipedia/isa.txt, dic/wikipedia/aimai_isa.txt:
+	ストップワードを追加
+
+	* ExtractSynfromDic/scripts/x4syn.pl: ストップワードを追加
+
+2010-06-02  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/print_isa_tree.pl: 子供の数の最大値を指定できるように
+
+	* dic_change/isa_wikipedia.log, dic_change/isa_wikipedia.txt:
+	主辞が同じものを捨てた
+
+	* dic/wikipedia/isa.txt: 括弧を含むものは削除するように
+
+	* ExtractSynfromDic/scripts/Makefile: small change.
+
+	* ExtractSynfromDic/scripts/postprocess_wikipedia_isa_and_aimai.pl:
+	括弧を含むものは削除するように
+
+2010-06-01  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/merge_dic.sh: 主辞が同じものを捨てるように
+
+	* scripts/check_dic_wikipedia_duplicate.pl: 主辞が同じものを捨てた
+
+2010-05-31  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* scripts/make_wikipedia_trie.pl: redirectを読むオプションを追加
+
+	* perl/SynGraph.pm: WPRedirectにもSynノードを付与しないように
+
+	* dic_change/isa_wikipedia.txt: 複合名詞の主辞による上位語を追加
+
+	* scripts/conv_syndb.pl: 利用する上位語数の上限を指定できるように
+
+	* scripts/build.sh: conv_syndb_argsを追加
+
+	* scripts/merge_dic.sh: -compound_noun_isaオプションを追加
+
+	* scripts/check_dic_wikipedia_duplicate.pl:
+	複合名詞の主辞をとることにより上位語を得るオプションを追加
+
+2010-05-29  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
+
+	* perl/SynGraph.pm: JUMANの意味情報の「同義:」からの抽出方法を修正
+
 2010-05-24  Tomohide Shibata  <shibata@nlp.kuee.kyoto-u.ac.jp>
 
 	* scripts/check_dic_wikipedia_duplicate.pl:
