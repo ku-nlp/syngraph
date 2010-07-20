@@ -112,11 +112,15 @@ sub read_input {
 	    $alldata{$word2}{$word1} = 1;
 
 	    # 代表表記が同じ
-	    if ($opt{rnsame} && &GetRepname($word1) && &GetRepname($word1) eq &GetRepname($word2)) {
-		my $repname = &GetRepname($word1);
-		print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2 ($repname)\n";
-		$rnsame_counter++;
-		next;
+	    if ($opt{rnsame}) {
+		my $repname1 = &GetRepname($word1);
+		my $repname2 = &GetRepname($word2);
+
+		if ($repname1 && $repname1 eq $repname2) {
+		    print STDERR "☆REPNAME SAME synonym_web_news: $word1, $word2 ($repname1)\n";
+		    $rnsame_counter++;
+		    next;
+		}
 	    }
 
 	    print "$word1 $word2\n" unless $opt{merge};
