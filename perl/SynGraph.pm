@@ -874,6 +874,10 @@ sub get_nodename_str {
     else {
 	$nodename_str = $mrph->genkei;
     }
+
+    # 大文字に正規化
+    $nodename_str = &toupper($nodename_str);
+
     return $nodename_str;
 }
 
@@ -936,6 +940,10 @@ sub get_alt {
 	    $rep_synonym =~ s/(?:動詞|形容詞)://; # とりあえず動詞、形容詞
 	    push @alt, $rep_synonym;
 	}
+    }
+
+    for my $alt (@alt) {
+	$alt = &toupper($alt);
     }
 
     return @alt;
@@ -2878,6 +2886,21 @@ sub h2z {
     return $string;
 }
 
+sub toupper {
+    my ($string) = @_;
+
+    $string =~ tr/ａ-ｚ/Ａ-Ｚ/;
+
+    return $string;
+}
+
+sub tolower {
+    my ($string) = @_;
+
+    $string =~ tr/Ａ-Ｚ/ａ-ｚ/;
+
+    return $string;
+}
 
 #
 # XMLからキーワードを取り出す
