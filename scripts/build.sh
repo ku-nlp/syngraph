@@ -71,9 +71,9 @@ export PATH=$SRC_DIR:$PATH
 export PERL5LIB=$SRC_DIR:$PERL5LIB
 
 # 全部削除する
-for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm; do
+for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm syndb.jmn; do
     if [ -e $SYNDB_DIR/$f ] ; then
-	rm -v $SYNDB_DIR/$f
+	rm -vf $SYNDB_DIR/$f
     fi
 done
 
@@ -131,6 +131,8 @@ eval $exe
 exe="perl -I$PERL_DIR sort_synhead.pl --syndbdir=$SYNDB_DIR"
 echo $exe
 eval $exe
+
+rm -f $SYNDB_DIR/synhead.cdb
 
 exe="mv $SYNDB_DIR/synhead_sort.cdb $SYNDB_DIR/synhead.cdb"
 echo $exe

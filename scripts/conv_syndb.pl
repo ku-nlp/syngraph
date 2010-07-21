@@ -292,6 +292,9 @@ if ($opt{similar_phrase}) {
 	chomp;
 
 	my ($phrase1, $phrase2) = split;
+	$phrase1 = &SynGraph::toupper($phrase1);
+	$phrase2 = &SynGraph::toupper($phrase2);
+
 	my $synid = 's' . $syn_number . ':' . $phrase1;
 	$syn_number++;
 
