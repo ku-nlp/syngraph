@@ -79,7 +79,7 @@ done
 
 # 全部削除する
 if [ $log -eq 1 ]; then
-    rm -v $SIM_C_DIR/log_merge2.txt
+    rm -vf $SIM_C_DIR/log_merge2.txt
 fi
 
 # 類義表現を変換
