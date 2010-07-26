@@ -8,6 +8,7 @@ use strict;
 use Getopt::Long;
 use KNP;
 use utf8;
+use SynGraph;
 use Constant;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
@@ -16,6 +17,8 @@ binmode DB::OUT, ':encoding(euc-jp)';
 
 # merge: A=B, B=C, C=A のマージ
 my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'read_multiple_entries', 'distributional_similarity', 'dicfile=s', 'debug');
+
+my %upper2orig;
 
 my $edit_distance;
 
@@ -88,6 +91,14 @@ sub read_input {
 	chomp;
 
 	my ($word1, $word2) = split;
+
+	my $word1_upper = &SynGraph::toupper($word1);
+	$upper2orig{$word1_upper} = $word1;
+	$word1 = $word1_upper;
+
+	my $word2_upper = &SynGraph::toupper($word2);
+	$upper2orig{$word2_upper} = $word2;
+	$word2 = $word2_upper;
 
 	if ($word1 eq $word2) {
 	    print STDERR "★same entry synonym_web_news: $word1, $word2\n";
@@ -256,7 +267,7 @@ sub calculate_distributional_similarity {
 	    foreach my $word2 (keys %{$alldata{$target_word}}) {
 		next if $word1 ge $word2;
 
-		my $score = $cscf->CalcSimilarity($word1, $word2, { use_normalized_repname => 1, mifilter => 1 });
+		my $score = $cscf->CalcSimilarity($upper2orig{$word1}, $upper2orig{$word2}, { use_normalized_repname => 1, mifilter => 1 });
 
 		if ($score >= $MERGE_TH_DISTRIBUTIONAL_SIMILARITY) {
 		    print STDERR "☆DistributionalSimilarity $target_word: $word1 <-> $word2 $score\n";
