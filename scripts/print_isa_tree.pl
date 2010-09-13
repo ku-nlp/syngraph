@@ -8,13 +8,31 @@ use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'max_child_num=i', 'category_sort');
+GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic');
 
+my $isa_file = '../dic_change/isa.txt';
 my $isa_wikipedia_file = '../dic_change/isa_wikipedia.txt';
 
+&read_isa if $opt{dic};
 &read_wikipedia_isa;
 
 my %data;
+sub read_isa {
+    open F, "<:encoding(euc-jp)", $isa_file or die;
+
+    while (<F>) {
+	chomp;
+
+	# あくどい/あくどい:1/1:1/2 感じがする 11
+	my ($hyponym, $hypernym, $num) = split(" ", $_);
+	$hyponym = (split(':', $hyponym))[0];
+	$hypernym = (split(':', $hypernym))[0];
+	next if $hypernym eq $hyponym;
+	push @{$data{$hypernym}{children}}, $hyponym if ! grep $_ eq $hyponym, @{$data{$hypernym}{children}}; 
+	$data{$hyponym}{parent}{$hypernym} = 1;
+    }
+}
+
 sub read_wikipedia_isa {
     open F, "<:encoding(euc-jp)", $isa_wikipedia_file or die;
 
@@ -63,13 +81,26 @@ for my $string (keys %data) {
 }
 
 my $pre_category;
+my %print_category_num;
 for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
 		       : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
     next if defined $data{$string}{parent};
 
     print "★ $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
+
+    # 最上位
+    if (!defined $data{$string}{parent} && $opt{min_hypo_num} && $data{$string}{child_num} < $opt{min_hypo_num}) {
+	next;
+    }
+
+    if ($opt{category_child_max_num} && $print_category_num{$data{$string}{category}} == $opt{category_child_max_num}) {
+	next;
+    }
+
     &display($string, '');
     print "\n";
+    $print_category_num{$data{$string}{category}}++;
+
     $pre_category = $data{$string}{category};
 }
 
