@@ -1960,6 +1960,56 @@ sub expansion{
     return @result;
 }
 
+sub MatchingTwoWords {
+    my ($this, $result0, $result1) = @_;
+
+    my %index;
+    &make_index($result0, '0', \%index);
+    &make_index($result1, '1', \%index);
+
+    # まず同義語マッチ
+    for my $synid (keys %index) {
+	if (defined $index{$synid}{'0'} && defined $index{$synid}{'1'}) {
+	    if ($index{$synid}{'0'} eq 'syn' && $index{$synid}{'1'} eq 'syn') {
+		return ('syn');
+	    }
+	}
+    }
+
+    # 上位下位マッチ
+    for my $synid (keys %index) {
+	if (defined $index{$synid}{'0'} && defined $index{$synid}{'1'}) {
+	    if ($index{$synid}{'0'} eq 'syn' || $index{$synid}{'1'} eq 'isa') {
+		return ('isa', '0');
+	    }
+	    elsif ($index{$synid}{'0'} eq 'isa' || $index{$synid}{'1'} eq 'syn') {
+		return ('isa', '1');
+	    }
+	}
+    }
+}
+
+sub make_index {
+    my ($result, $id, $index) = @_;
+
+    for my $tag ($result->tag) {
+	for my $synnodes ($tag->synnodes) {
+	    for my $synnode ($synnodes->synnode) {
+		my $synid = $synnode->synid;
+		my $score = $synnode->score;
+		my $type;
+		if ($score >= 0.99) {
+		    $type = 'syn';
+		}
+		else {
+		    $type = 'isa';
+		}
+		$index->{$synid}{$id} = $type;
+	    }
+	}
+    }
+}
+
 # Synノードの数を数える
 sub CountSynNodeNum {
     my ($this, $result) = @_;
