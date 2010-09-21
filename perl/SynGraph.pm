@@ -1960,6 +1960,23 @@ sub expansion{
     return @result;
 }
 
+sub RetrieveSids {
+    my ($this, $result) = @_;
+
+    my %index;
+    &make_index($result, '0', \%index);
+
+    my %ret;
+    for my $synid (keys %index) {
+	my $type = $index{$synid}{'0'};
+
+	push @{$ret{$type}}, $synid;
+    }
+
+    return \%ret;
+}
+
+# 二つの表現がマッチするかどうか
 sub MatchingTwoWords {
     my ($this, $result0, $result1) = @_;
 
