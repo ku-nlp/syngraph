@@ -8,13 +8,22 @@ use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic');
+GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency');
 
 my $isa_file = '../dic_change/isa.txt';
 my $isa_wikipedia_file = '../dic_change/isa_wikipedia.txt';
 
+$opt{dfth} = 1000000 unless $opt{dfth};
+
 &read_isa if $opt{dic};
 &read_wikipedia_isa;
+
+# 複合名詞データベース
+my %cn2df;
+if ($opt{cndbfile}) {
+    require CDB_File;
+    tie %cn2df, 'CDB_File', $opt{cndbfile} or die;
+}
 
 my %data;
 sub read_isa {
@@ -24,7 +33,7 @@ sub read_isa {
 	chomp;
 
 	# あくどい/あくどい:1/1:1/2 感じがする 11
-	my ($hyponym, $hypernym, $num) = split(" ", $_);
+	my ($hyponym, $hypernym, $num) = split(' ', $_);
 	$hyponym = (split(':', $hyponym))[0];
 	$hypernym = (split(':', $hypernym))[0];
 	next if $hypernym eq $hyponym;
@@ -43,6 +52,22 @@ sub read_wikipedia_isa {
 	my ($hyponym, $hypernym, $num) = split("\t", $_);
 	push @{$data{$hypernym}{children}}, $hyponym;
 	$data{$hyponym}{parent}{$hypernym} = 1;
+    }
+}
+
+if ($opt{cndbfile}) {
+    for my $string (keys %data) {
+	next if defined $data{$string}{parent};
+
+	my $midasi = $string =~ /\// ? (split('/', $string))[0] : $string;
+	my $df = $cn2df{"$midasi@"};
+
+	if ($df > $opt{dfth}) {
+	    for my $child ($data{$string}{children}) {
+		delete $data{$child}{parent}{$string};
+	    }
+	    delete $data{$string}{children};
+	}
     }
 }
 
@@ -104,6 +129,9 @@ for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{c
     $pre_category = $data{$string}{category};
 }
 
+if ($opt{cndbfile}) {
+    untie %cn2df;
+}
 
 sub display {
     my ($string, $mark) = @_;
@@ -118,6 +146,16 @@ sub display {
 
     if (!defined $data{$string}{parent}) {
 	print " [$data{$string}{child_num}]";
+    }
+    if ($opt{cndbfile}) {
+	my $midasi = $string =~ /\// ? (split('/', $string))[0] : $string;
+	my $df = $cn2df{"$midasi@"};
+
+	if ($opt{print_frequency}) {
+	    print ' (';
+	    print defined $df ? $df : 0;
+	    print ')';
+	}
     }
     print "\n";
     if (defined $data{$string}{children}) {
