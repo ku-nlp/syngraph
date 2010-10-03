@@ -2,13 +2,16 @@
 
 # $Id$
 
+# usage: perl print_isa_tree.pl -max_child_num 5 -dic -category_sort -min_hypo_num 4 -category_child_max_num 5 -cndbfile ~shibata/cns.100M.cls.df1000.cdb
+# usage: perl print_isa_tree.pl -dic -category_sort -cndbfile ~shibata/cns.100M.cls.df1000.cdb -print_coordinate
+
 use strict;
 use encoding 'euc-jp';
 use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency');
+GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
 
 my $isa_file = '../dic_change/isa.txt';
 my $isa_wikipedia_file = '../dic_change/isa_wikipedia.txt';
@@ -105,28 +108,59 @@ for my $string (keys %data) {
     $data{$string}{child_num} = defined $data{$string}{children} ? scalar @{$data{$string}{children}} : 0;
 }
 
-my $pre_category;
-my %print_category_num;
-for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
-		       : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
-    next if defined $data{$string}{parent};
+if ($opt{print_coordinate}) {
+    for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
+			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
+	next if defined $data{$string}{parent};
 
-    print "★ $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
+	my @words = &get_words($string);
+	for my $word (@words) {
+	    next if $word eq $string; # 最上位の語
 
-    # 最上位
-    if (!defined $data{$string}{parent} && $opt{min_hypo_num} && $data{$string}{child_num} < $opt{min_hypo_num}) {
-	next;
+	    # 親を順に得る
+	    my @parents = &get_parents($word);
+	    # 子をすべて得る
+	    my @children = &get_children($word);
+
+	    my %ng_coordinate;
+	    for my $w (@parents, @children) {
+		$ng_coordinate{$w} = 1;
+	    }
+	    my @coordinate;
+	    for my $w (@words) {
+		next if $w eq $word;
+		next if defined $ng_coordinate{$w};
+
+		push @coordinate, $w;
+	    }
+	    print "$word ", join(',', @coordinate), "\n" if scalar @coordinate > 0;
+	}
     }
+}
+else {
+    my $pre_category;
+    my %print_category_num;
+    for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
+			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
+	next if defined $data{$string}{parent};
 
-    if ($opt{category_child_max_num} && $print_category_num{$data{$string}{category}} == $opt{category_child_max_num}) {
-	next;
+	print "★ $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
+
+	# 最上位
+	if (!defined $data{$string}{parent} && $opt{min_hypo_num} && $data{$string}{child_num} < $opt{min_hypo_num}) {
+	    next;
+	}
+
+	if ($opt{category_child_max_num} && $print_category_num{$data{$string}{category}} == $opt{category_child_max_num}) {
+	    next;
+	}
+
+	&display($string, '');
+	print "\n";
+	$print_category_num{$data{$string}{category}}++;
+
+	$pre_category = $data{$string}{category};
     }
-
-    &display($string, '');
-    print "\n";
-    $print_category_num{$data{$string}{category}}++;
-
-    $pre_category = $data{$string}{category};
 }
 
 if ($opt{cndbfile}) {
@@ -177,6 +211,69 @@ sub display {
 	}
 	&display($last_child, $mark . '1') if (defined($last_child));
     }
+}
+
+sub get_words {
+    my ($string, $mark) = @_;
+
+    my @marks = split(//,$mark);
+
+    my $lastm = pop(@marks);
+
+    my @words;
+    push @words, $string;
+
+    if (defined $data{$string}{children}) {
+	my @children = sort { $data{$b}{child_num} <=> $data{$a}{child_num} } @{$data{$string}{children}};
+	my $last_child = $children[-1];
+
+	my $print_child_num = 0;
+	foreach my $child (@children) {
+	    if ($child ne $last_child) {
+		push @words, &get_words($child, $mark . '0');
+		$print_child_num++;
+	    }
+
+	    if ($opt{max_child_num} && $print_child_num == $opt{max_child_num}) {
+		return;
+	    }
+	}
+	push @words, &get_words($last_child, $mark . '1') if (defined($last_child));
+    }
+
+    return @words;
+}
+
+sub get_parents {
+    my ($string) = @_;
+
+    my @parents;
+
+    if (defined $data{$string}{parent}) {
+	for my $parent (sort keys %{$data{$string}{parent}}) {
+	    push @parents, $parent;
+	    my @parent_parents = &get_parents($parent);
+	    push @parents, @parent_parents if scalar @parent_parents > 0;
+	}
+    }
+    
+    return @parents;
+}
+
+sub get_children {
+    my ($string) = @_;
+
+    my @children;
+
+    if (defined $data{$string}{children}) {
+	for my $child (sort @{$data{$string}{children}}) {
+	    push @children, $child;
+	    my @child_children = &get_children($child);
+	    push @children, @child_children if scalar @child_children > 0;
+	}
+    }
+
+    return @children
 }
 
 sub print_mark {
