@@ -7,18 +7,19 @@
 
 use strict;
 use encoding 'euc-jp';
+binmode STDERR, ':encoding(euc-jp)';
 use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
+GetOptions(\%opt, 'isa_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
 
-my $isa_file = '../dic_change/isa.txt';
-my $isa_wikipedia_file = '../dic_change/isa_wikipedia.txt';
+$opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
+$opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
 
 $opt{dfth} = 1000000 unless $opt{dfth};
 
-&read_isa if $opt{dic};
+&read_dic_isa if $opt{dic};
 &read_wikipedia_isa;
 
 # 複合名詞データベース
@@ -29,8 +30,8 @@ if ($opt{cndbfile}) {
 }
 
 my %data;
-sub read_isa {
-    open F, "<:encoding(euc-jp)", $isa_file or die;
+sub read_dic_isa {
+    open F, "<:encoding(euc-jp)", $opt{isa_dic_file} or die;
 
     while (<F>) {
 	chomp;
@@ -40,36 +41,42 @@ sub read_isa {
 	$hyponym = (split(':', $hyponym))[0];
 	$hypernym = (split(':', $hypernym))[0];
 	next if $hypernym eq $hyponym;
-	push @{$data{$hypernym}{children}}, $hyponym if ! grep $_ eq $hyponym, @{$data{$hypernym}{children}}; 
+	$data{$hypernym}{children}{$hyponym} = 1;
 	$data{$hyponym}{parent}{$hypernym} = 1;
     }
+
+    close F;
 }
 
 sub read_wikipedia_isa {
-    open F, "<:encoding(euc-jp)", $isa_wikipedia_file or die;
+    open F, "<:encoding(euc-jp)", $opt{isa_wikipedia_file} or die;
 
     # 京成津田沼駅 駅/えき 10921
     while (<F>) {
 	chomp;
 
 	my ($hyponym, $hypernym, $num) = split("\t", $_);
-	push @{$data{$hypernym}{children}}, $hyponym;
+	$data{$hypernym}{children}{$hyponym} = 1;
 	$data{$hyponym}{parent}{$hypernym} = 1;
     }
+
+    close F;
 }
 
 if ($opt{cndbfile}) {
     for my $string (keys %data) {
-	next if defined $data{$string}{parent};
-
 	my $midasi = $string =~ /\// ? (split('/', $string))[0] : $string;
 	my $df = $cn2df{"$midasi@"};
 
 	if ($df > $opt{dfth}) {
-	    for my $child ($data{$string}{children}) {
+	    for my $child (keys %{$data{$string}{children}}) {
 		delete $data{$child}{parent}{$string};
 	    }
-	    delete $data{$string}{children};
+
+	    for my $parent (keys %{$data{$string}{parent}}) {
+		delete $data{$parent}{children}{$string};
+	    }
+	    delete $data{$string};
 	}
     }
 }
@@ -105,7 +112,7 @@ if ($opt{category_sort}) {
 
 # 子供の数を記録
 for my $string (keys %data) {
-    $data{$string}{child_num} = defined $data{$string}{children} ? scalar @{$data{$string}{children}} : 0;
+    $data{$string}{child_num} = defined $data{$string}{children} ? scalar keys %{$data{$string}{children}} : 0;
 }
 
 if ($opt{print_coordinate}) {
@@ -113,6 +120,7 @@ if ($opt{print_coordinate}) {
 			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
 	next if defined $data{$string}{parent};
 
+	print STDERR $string, "\n";
 	my @words = &get_words($string);
 	for my $word (@words) {
 	    next if $word eq $string; # 最上位の語
@@ -193,7 +201,7 @@ sub display {
     }
     print "\n";
     if (defined $data{$string}{children}) {
-	my @children = sort { $data{$b}{child_num} <=> $data{$a}{child_num} } @{$data{$string}{children}};
+	my @children = sort { $data{$b}{child_num} <=> $data{$a}{child_num} } keys %{$data{$string}{children}};
 	my $last_child = $children[-1];
 
 	my $print_child_num = 0;
@@ -224,7 +232,7 @@ sub get_words {
     push @words, $string;
 
     if (defined $data{$string}{children}) {
-	my @children = sort { $data{$b}{child_num} <=> $data{$a}{child_num} } @{$data{$string}{children}};
+	my @children = sort { $data{$b}{child_num} <=> $data{$a}{child_num} } keys %{$data{$string}{children}};
 	my $last_child = $children[-1];
 
 	my $print_child_num = 0;
@@ -266,7 +274,7 @@ sub get_children {
     my @children;
 
     if (defined $data{$string}{children}) {
-	for my $child (sort @{$data{$string}{children}}) {
+	for my $child (sort keys %{$data{$string}{children}}) {
 	    push @children, $child;
 	    my @child_children = &get_children($child);
 	    push @children, @child_children if scalar @child_children > 0;
