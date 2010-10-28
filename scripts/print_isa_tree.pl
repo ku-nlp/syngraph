@@ -12,7 +12,7 @@ use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'isa_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
+GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
 
 $opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
 $opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
@@ -79,6 +79,18 @@ if ($opt{cndbfile}) {
 	    delete $data{$string};
 	}
     }
+
+    for my $string (keys %data) {
+	# parentがいなくなったものはキーparentを削除
+	if (defined $data{$string}{parent} && scalar keys %{$data{$string}{parent}} == 0) {
+	    delete $data{$string}{parent};
+	}
+
+	# childrenも同様
+	if (defined $data{$string}{children} && scalar keys %{$data{$string}{children}} == 0) {
+	    delete $data{$string}{children};
+	}
+    }
 }
 
 if ($opt{category_sort}) {
@@ -118,17 +130,20 @@ for my $string (keys %data) {
 if ($opt{print_coordinate}) {
     for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
 			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
-	next if defined $data{$string}{parent};
+	next if defined $data{$string}{parent} || $data{$string}{child_num} == 0;
 
-	print STDERR $string, "\n";
 	my @words = &get_words($string);
+	my %words;
 	for my $word (@words) {
+	    $words{$word} = 1
+	}
+	for my $word (sort keys %words) {
 	    next if $word eq $string; # 最上位の語
 
 	    # 親を順に得る
-	    my @parents = &get_parents($word);
+	    my @parents = &get_parents($word, \%words);
 	    # 子をすべて得る
-	    my @children = &get_children($word);
+	    my @children = &get_children($word, \%words);
 
 	    my %ng_coordinate;
 	    for my $w (@parents, @children) {
@@ -150,7 +165,7 @@ else {
     my %print_category_num;
     for my $string (sort { $opt{category_sort} ? $data{$a}{category} cmp $data{$b}{category} || $data{$b}{child_num} <=> $data{$a}{child_num}
 			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
-	next if defined $data{$string}{parent};
+	next if defined $data{$string}{parent} || $data{$string}{child_num} == 0;
 
 	print "★ $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
 
@@ -252,15 +267,19 @@ sub get_words {
     return @words;
 }
 
+# 自分の親を得る
 sub get_parents {
-    my ($string) = @_;
+    my ($string, $all_words) = @_;
 
     my @parents;
 
     if (defined $data{$string}{parent}) {
 	for my $parent (sort keys %{$data{$string}{parent}}) {
+
+	    next if !defined $all_words->{$parent}; # 対象のツリー中の語でなければnext
 	    push @parents, $parent;
-	    my @parent_parents = &get_parents($parent);
+
+	    my @parent_parents = &get_parents($parent, $all_words);
 	    push @parents, @parent_parents if scalar @parent_parents > 0;
 	}
     }
@@ -268,15 +287,17 @@ sub get_parents {
     return @parents;
 }
 
+# 自分の子供を得る
 sub get_children {
-    my ($string) = @_;
+    my ($string, $all_words) = @_;
 
     my @children;
 
     if (defined $data{$string}{children}) {
 	for my $child (sort keys %{$data{$string}{children}}) {
+	    next if !defined $all_words->{$child}; # 対象のツリー中の語でなければnext
 	    push @children, $child;
-	    my @child_children = &get_children($child);
+	    my @child_children = &get_children($child, $all_words);
 	    push @children, @child_children if scalar @child_children > 0;
 	}
     }
