@@ -35,6 +35,8 @@ our $penalty = {fuzoku => 1.0,     # 付属語
 		semicontentword => 0.8 # 準内容語
 	    };  
 
+my $init_matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
+
 # ノード登録のしきい値
 my $regnode_threshold = 0.5;
 
@@ -296,6 +298,8 @@ sub make_bp {
     my ($this, $ref, $sid, $bp, $regnode_option, $option) = @_;
     my %synnode_check;
 
+    my $synid1 = (split(/,/, $sid))[0];
+
     # 各SYNノードをチェック
     foreach my $node (@{$ref->{$sid}[$bp]{nodes}}) {
         next if ($node->{weight} == 0);
@@ -319,7 +323,6 @@ sub make_bp {
 		next if $child_num < $childnum;
 
                 # SYNIDが同じものは調べない
-                my $synid1 = (split(/,/, $sid))[0];
                 my $synid2 = (split(/,/, $mid))[0];
                 next if ($synid1 eq $synid2);
 
@@ -1186,7 +1189,7 @@ sub syngraph_matching_rough {
     my $matchnode_index1;
     my $matchnode_index2;
     my %matchnode_unmatch_feature;
-    my $matchnode_unmatch_num = scalar (keys %{$penalty}); # 初期値
+    my $matchnode_unmatch_num = $init_matchnode_unmatch_num; # 初期値
 
     my $result = 0;
     my %match_verbose;
