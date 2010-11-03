@@ -1195,16 +1195,19 @@ sub syngraph_matching_rough {
     my %match_verbose;
 
     # BP内でマッチするノードを探す
-    my $node_index1 = -1;
-    foreach my $node_1 (@{$graph_1->[$nodebp_1]{nodes}}) {
-	$node_index1++;
+    my $node_index1;
+    my $node1_num = scalar @{$graph_1->[$nodebp_1]{nodes}};
+    for ($node_index1 = 0; $node_index1 < $node1_num; $node_index1++) {
+	my $node_1 = $graph_1->[$nodebp_1]{nodes}[$node_index1];
 
 	# スコアが低いものは調べない。
         next if ($node_1->{score} < $matchnode_score);
 
-	my $node_index2 = -1;
-        foreach my $node_2 (@{$graph_2->[$nodebp_2]{nodes}}) {
-	    $node_index2++;
+	my $node_index2;
+	my $node2_num = scalar @{$graph_2->[$nodebp_2]{nodes}};
+	for ($node_index2 = 0; $node_index2 < $node2_num; $node_index2++) {
+	    my $node_2 = $graph_2->[$nodebp_2]{nodes}[$node_index2];
+
 	    # ノード間のマッチを調べる。ただし、上位グループ、反義グループを介したマッチは行わない。
             if ((!defined $body_hash or &st_check($node_2, $body_hash))
 		and $node_1->{id} eq $node_2->{id} 
