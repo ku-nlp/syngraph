@@ -304,20 +304,22 @@ sub make_bp {
     foreach my $node (@{$ref->{$sid}[$bp]{nodes}}) {
         next if ($node->{weight} == 0);
 
+	my $node_id = $node->{id};
+
 	# キャッシュしておく
- 	if (!defined $this->{synheadcache}{$node->{id}}) {
+ 	if (!defined $this->{synheadcache}{$node_id}) {
 	    if ($this->{mode} eq 'repeat') { # コンパイル時
-		$this->{synheadcache}{$node->{id}} = $this->{synhead}{$node->{id}};
+		$this->{synheadcache}{$node_id} = $this->{synhead}{$node_id};
 	    }
 	    else {
-		$this->{synheadcache}{$node->{id}} = $this->GetValue($this->{synhead}{$node->{id}});
+		$this->{synheadcache}{$node_id} = $this->GetValue($this->{synhead}{$node_id});
 	    }
 	}
 
 	my $child_num = defined $node->{childbp} ? scalar keys %{$node->{childbp}} : 0;
 
-        if ($node->{id} and $this->{synheadcache}{$node->{id}}) {
-            foreach my $mid_childnum (split(/\|/, $this->{synheadcache}{$node->{id}})) {
+        if ($node_id and $this->{synheadcache}{$node_id}) {
+            foreach my $mid_childnum (split(/\|/, $this->{synheadcache}{$node_id})) {
 		my ($mid, $childnum) = split('%', $mid_childnum);
 
 		next if $child_num < $childnum;
