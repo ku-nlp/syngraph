@@ -312,97 +312,103 @@ sub make_bp {
 		$this->{synheadcache}{$node_id} = $this->{synhead}{$node_id};
 	    }
 	    else {
-		$this->{synheadcache}{$node_id} = $this->GetValue($this->{synhead}{$node_id});
+		foreach my $mid_childnum (split(/\|/, $this->GetValue($this->{synhead}{$node_id}))) {
+		    my ($mid, $childnum) = split('%', $mid_childnum);
+
+		    push @{$this->{synheadcache}{$node_id}{$childnum}}, $mid;
+		}
 	    }
 	}
 
 	my $child_num = defined $node->{childbp} ? scalar keys %{$node->{childbp}} : 0;
 
         if ($node_id and $this->{synheadcache}{$node_id}) {
-            foreach my $mid_childnum (split(/\|/, $this->{synheadcache}{$node_id})) {
-		my ($mid, $childnum) = split('%', $mid_childnum);
+            foreach my $childnum (sort {$a <=> $b} keys %{$this->{synheadcache}{$node_id}}) {
 
-		next if $child_num < $childnum;
+		last if $child_num < $childnum;
 
-                # SYNIDが同じものは調べない
-                my $synid2 = (split(/,/, $mid))[0];
-                next if ($synid1 eq $synid2);
+		for my $mid (@{$this->{synheadcache}{$node_id}{$childnum}}) { 
 
-		# キャッシュしておく
- 		if (!defined $this->{syndatacache}{$mid}) {
-		    $this->{syndatacache}{$mid} = $this->{syndata}{$mid};
- 		}
-		defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
+		    # SYNIDが同じものは調べない
+		    my $synid2 = (split(/,/, $mid))[0];
+		    next if ($synid1 eq $synid2);
 
-		my $headbp = @{$this->{syndatacache}{$mid}} - 1;
+		    # キャッシュしておく
+		    if (!defined $this->{syndatacache}{$mid}) {
+			$this->{syndatacache}{$mid} = $this->{syndata}{$mid};
+		    }
+		    defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
 
- 		# synidがマッチするか調べる(付属語・素性などは考慮しない)
-		my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
-		next if $result_rough == 0;
+		    my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
-		# 付属語・素性などを考慮してSynGraphマッチング
-		# マッチする場合は新たに付与するnodeを得る
-		my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose, $option);
-		next if ($result == 0);
+		    # synidがマッチするか調べる(付属語・素性などは考慮しない)
+		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		    next if $result_rough == 0;
 
-		# Wikipediaエントリに包含される場合
-		if (defined $regnode_option->{wikipedia_entry}) {
-		    my $start_newnode = $bp;
-		    my $end_newnode = $bp;
+		    # 付属語・素性などを考慮してSynGraphマッチング
+		    # マッチする場合は新たに付与するnodeを得る
+		    my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose, $option);
+		    next if ($result == 0);
 
-		    if (defined $newnode->{matchbp}) {
-			for (keys %{$newnode->{matchbp}}) {
-			    # 更新
-			    if ($_ < $start_newnode) {
-				$start_newnode = $_;
+		    # Wikipediaエントリに包含される場合
+		    if (defined $regnode_option->{wikipedia_entry}) {
+			my $start_newnode = $bp;
+			my $end_newnode = $bp;
+
+			if (defined $newnode->{matchbp}) {
+			    for (keys %{$newnode->{matchbp}}) {
+				# 更新
+				if ($_ < $start_newnode) {
+				    $start_newnode = $_;
+				}
 			    }
 			}
-		    }
 
-		    # 包含をチェック
-		    my $skip_flag = 0;
-		    for my $entry (@{$regnode_option->{wikipedia_entry}}) {
+			# 包含をチェック
+			my $skip_flag = 0;
+			for my $entry (@{$regnode_option->{wikipedia_entry}}) {
 
-			# 完全一致はよい
-			if ($entry->{start} <= $start_newnode && $end_newnode <= $entry->{end} && 
-			    ($entry->{start} != $start_newnode || $entry->{end} != $end_newnode)) {
-			    $skip_flag = 1;
-			    last;
+			    # 完全一致はよい
+			    if ($entry->{start} <= $start_newnode && $end_newnode <= $entry->{end} && 
+				($entry->{start} != $start_newnode || $entry->{end} != $end_newnode)) {
+				$skip_flag = 1;
+				last;
+			    }
 			}
+			next if $skip_flag;
+
 		    }
-		    next if $skip_flag;
 
+
+		    # NODEのLOG
+		    my $log;
+		    if ($option->{log}) {
+			$log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $match_verbose);
+		    }
+
+		    print STDERR "!! $mid\n" if $option->{print_mid};
+
+		    $this->_regnode({ref            => $ref,
+				     sid            => $sid,
+				     bp             => $bp,
+				     id             => $synid2,
+				     log            => $log,
+				     fuzoku         => $newnode->{fuzoku},
+				     matchbp        => $newnode->{matchbp},
+				     childbp        => $newnode->{childbp},
+				     case           => $newnode->{case},
+				     kanou          => $newnode->{kanou},
+				     sonnkei        => $newnode->{sonnkei},
+				     ukemi          => $newnode->{ukemi},
+				     shieki         => $newnode->{shieki},
+				     negation       => $newnode->{negation},
+				     score          => $newnode->{score} * $synonym_penalty,
+				     weight         => $newnode->{weight},
+				     relation       => $newnode->{relation},
+				     antonym        => $newnode->{antonym},
+				     regnode_option => $regnode_option});
 		}
-
-
-		# NODEのLOG
-		my $log;
-		if ($option->{log}) {
-		    $log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $match_verbose);
-		}
-
-		print STDERR "!! $mid\n" if $option->{print_mid};
-
-		$this->_regnode({ref            => $ref,
-				 sid            => $sid,
-				 bp             => $bp,
-				 id             => $synid2,
-				 log            => $log,
-				 fuzoku         => $newnode->{fuzoku},
-				 matchbp        => $newnode->{matchbp},
-				 childbp        => $newnode->{childbp},
-				 case           => $newnode->{case},
-				 kanou          => $newnode->{kanou},
-				 sonnkei        => $newnode->{sonnkei},
-				 ukemi          => $newnode->{ukemi},
-				 shieki         => $newnode->{shieki},
-				 negation       => $newnode->{negation},
-				 score          => $newnode->{score} * $synonym_penalty,
-				 weight         => $newnode->{weight},
-				 relation       => $newnode->{relation},
-				 antonym        => $newnode->{antonym},
-				 regnode_option => $regnode_option});
-            }
+	    }
         }
     }
     
@@ -1144,12 +1150,13 @@ sub _regnode {
         if ($this->{mode} eq 'repeat' and
             $newid->{id} and
             $bp == @{$ref->{$sid}} - 1) {
-	    
-	    unless ($this->{synhead}{$newid->{id}} =~ /$sid/) {
-		my $child_num_min = &SynGraph::get_child_num_min($this->{syndata}->{$sid});
-		$this->{synhead}{$newid->{id}} .= $this->{synhead}{$newid->{id}} ? "|$sid%$child_num_min" : "$sid%$child_num_min";
+
+	    my $child_num_min = &SynGraph::get_child_num_min($this->{syndata}->{$sid});	    
+	    unless (grep($sid eq $_, @{$this->{synhead}{$newid->{id}}{$child_num_min}})) {
+		push @{$this->{synhead}{$newid->{id}}{$child_num_min}}, $sid;
+
+		$this->{regnode} = $sid;
 	    }
-	    $this->{regnode} = $sid;
         }
 
         return $newid;
@@ -2831,12 +2838,25 @@ sub tie_db {
 # CDBに保存
 #
 sub store_cdb {
-    my ($filename, $hash_ref) = @_;
+    my ($filename, $hash_ref, $type) = @_;
     my %hash;
     
     my $db =  new CDB_File($filename, "$filename.$$") or die $!;
     while (my ($key, $value) = each %$hash_ref) {
-	$db->insert($key, $value);
+	if ($type eq 'synhead') {
+	    my @values;
+	    for my $child_num (keys %{$value}) {
+		for my $sid (@{$value->{$child_num}}) {
+		    my $str = $sid . '%' . $child_num;
+		    push @values, $str;
+		}
+	    }
+	    my $value_string = join('|', @values);
+	    $db->insert($key, $value_string);
+	}
+	else {
+	    $db->insert($key, $value);
+	}
     }
     $db->finish;
 }
