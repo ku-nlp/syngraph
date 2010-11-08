@@ -2095,9 +2095,6 @@ sub read_parsed_data {
             }
             elsif (/\# S-ID:(.+) KNP:/) {
                 $sid = $1;
-                $sid =~ s/\s+/ /;
-                $sid =~ s/^\s//;
-                $sid =~ s/\s$//;
             }
         }
 
