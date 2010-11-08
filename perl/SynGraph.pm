@@ -374,6 +374,22 @@ sub make_bp {
 			next if $match_rough_flat_flag == 0;
 		    }
 
+		    # 付属表現（=格）が一致するかだけ調べる
+		    if ($mid =~ /\[同義句\]$/) {
+			my $graph2_fuzoku = $this->{syndatacache}{$mid}[0]{nodes}[0]{fuzoku};
+
+			my $match_flag = 0;
+			for my $child_bp (keys %{$ref->{$sid}[$bp]{nodes}[0]{childbp}}) {
+			    my $graph1_fuzoku = $ref->{$sid}[$child_bp]{nodes}[0]{fuzoku};
+			    # 「は」はマッチするとする
+			    if (defined $graph1_fuzoku && 
+				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq $graph2_fuzoku)) {
+				$match_flag = 1;
+			    }
+			}
+			next unless $match_flag;
+		    }
+
 		    # synidがマッチするか調べる(付属語・素性などは考慮しない)
 		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		    next if $result_rough == 0;
