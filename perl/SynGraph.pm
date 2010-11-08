@@ -368,6 +368,12 @@ sub make_bp {
 
 		    my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
+		    # Wikipediaエントリに対してはtreeマッチングではなく、まずflatマッチングをする(マッチしなければあきらめる)
+		    if ($mid =~ /\[Wikipedia\]$/) {
+			my $match_rough_flat_flag = $this->syngraph_matching_rough_flat($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+			next if $match_rough_flat_flag == 0;
+		    }
+
 		    # synidがマッチするか調べる(付属語・素性などは考慮しない)
 		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 		    next if $result_rough == 0;
@@ -1387,6 +1393,31 @@ sub syngraph_matching_rough {
 	$result = 1;
 	return (1, \%match_verbose);
     }
+}
+
+sub syngraph_matching_rough_flat {
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option) = @_;
+
+    # graph1 -> j
+    # graph2 -> i
+    return 1 if $nodebp_2 == 0; # nodebp_2が1個(添え字が0)ならマッチ
+
+    return 0 if $nodebp_1 == 0; # nodebp_1が1個(添え字が0)ならマッチしない
+
+    my $j = $nodebp_1 - 1;
+
+    # nodebp_2が0までマッチするかどうか調べる
+    for (my $i = $nodebp_2 - 1; $i >= 0; $i--) {
+	return 0 if $j < 0;
+	if ($graph_1->[$j]{nodes}[0]{id} && $graph_1->[$j]{nodes}[0]{id} eq $graph_2->[$i]{nodes}[0]{id}) {
+	    $j--;
+	}
+	else {
+	    return 0;
+	}
+    }
+
+    return 1;
 }
 
 
