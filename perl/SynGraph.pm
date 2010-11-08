@@ -247,9 +247,11 @@ sub make_tree {
 
     my @keywords = $this->_get_keywords($knp_result, $option);
 
-    return if (@keywords == 0);
+    my $keywords_num = scalar @keywords;
 
-    for (my $bp_num = 0; $bp_num < @keywords; $bp_num++) {
+    return if ($keywords_num == 0);
+
+    for (my $bp_num = 0; $bp_num < $keywords_num; $bp_num++) {
         # 語の重み
         my $weight = 1;
         # IREX用ストップワード
@@ -703,7 +705,8 @@ sub _get_keywords {
 	my %nodename_str;
 
 	my @mrphs = $tag->mrph;
-	for (my $i = 0; $i < @mrphs; $i++) {
+	my $mrph_num = scalar @mrphs;
+	for (my $i = 0; $i < $mrph_num; $i++) {
 	    my $mrph = $mrphs[$i];
 
             next if ($mrph->{hinsi} eq '特殊' and $mrph->{bunrui} ne '記号');
