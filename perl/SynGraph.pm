@@ -163,6 +163,9 @@ sub DESTROY {
     if (defined $this->{syndb}) {
 	untie $this->{syndb};
     }
+    if (defined $this->{imi_list_db}) {
+	untie $this->{imi_list_db};
+    }
 }
 
 ################################################################################
@@ -262,7 +265,7 @@ sub make_tree {
 		$log = $this->make_basicnode_log($node);
 	    }
 
-	    foreach my $type ('kakari_type', 'level', 'midasi') {
+	    foreach my $type ('kakari_type', 'level', 'midasi', 'wsd_result') {
 		$tree_ref->{$sid}[$bp_num]{$type} = $node->{$type} if $node->{$type};
 	    }
 
@@ -322,6 +325,23 @@ sub make_bp {
 
 	my $child_num = defined $node->{childbp} ? scalar keys %{$node->{childbp}} : 0;
 
+	# 多義性解消結果がある
+	# 解消された語義以外を保存しておく
+	my ($wsd_result_flag, %not_registered_synid);
+	if (defined $ref->{$sid}[$bp]{wsd_result}) {
+	    $wsd_result_flag = 1;
+
+	    # あいのうた 2%s45800:あいのうた|5%s113946:あいのうた
+	    my $value = decode('utf8', $this->{imi_list_db}{$ref->{$sid}[$bp]{wsd_result}{word}});
+	    for my $key (split('\|', $value)) {
+		my ($sense_id, $synid) = split('%', $key);
+
+		if ($ref->{$sid}[$bp]{wsd_result}{m} ne $sense_id) {
+		    $not_registered_synid{$synid} = 1;
+		}
+	    }
+	}
+
         if ($node_id and $this->{synheadcache}{$node_id}) {
             foreach my $childnum (sort {$a <=> $b} keys %{$this->{synheadcache}{$node_id}}) {
 
@@ -332,6 +352,11 @@ sub make_bp {
 		    # SYNIDが同じものは調べない
 		    my $synid2 = (split(/,/, $mid))[0];
 		    next if ($synid1 eq $synid2);
+
+		    # 多義性解消結果
+		    if ($wsd_result_flag && defined $not_registered_synid{$synid2}) {
+			next;
+		    }
 
 		    # キャッシュしておく
 		    if (!defined $this->{syndatacache}{$mid}) {
@@ -665,6 +690,14 @@ sub _get_keywords {
 	    $level .= $1;
 	}
 
+	my ($ambiguity_word, $sense_m, $sense_n);
+	# <多義性解消結果:トラック:1/6>
+	if ($this->{imi_list_db} && $tag->{fstring} =~ /<多義性解消結果:(.+?):(\d+)\/(\d+)>/) {
+	    $ambiguity_word = $1;
+	    $sense_m = $2;
+	    $sense_n = $3;
+	}
+
 	# for regist_exclude_semi_contentword
 	my %semi_contentword;
 	my %nodename_str;
@@ -759,6 +792,11 @@ sub _get_keywords {
 	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	$tmp{kakari_type} = $kakari_type if ($kakari_type);
 	$tmp{score} = 1;
+	if ($ambiguity_word) {
+	    $tmp{wsd_result}{word} = $ambiguity_word;
+	    $tmp{wsd_result}{m} = $sense_m;
+	    $tmp{wsd_result}{n} = $sense_n;
+	}
 
 	# 格情報登録
 	if ($child->{$tag->{id}}) {
@@ -1493,6 +1531,10 @@ sub OutputSynFormat {
 
 	my @mrphs = $result->mrph;
 	$this->{trie}->DetectString(\@mrphs, undef, { output_juman => 1 });
+    }
+
+    if ($option->{imi_list_db}) {
+	&tie_cdb($option->{imi_list_db}, \%{$this->{imi_list_db}});
     }
 
     # 入力をSynGraph化
