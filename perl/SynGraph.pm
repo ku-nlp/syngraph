@@ -209,7 +209,7 @@ sub make_sg {
 	}
 
 	for my $mrph ($knp_result->mrph) {
-	    if ($mrph->imis =~ /(?:WP上位語|WPRedirect):.+?:(\d+)\-(\d+)/) {
+	    if ($mrph->imis =~ /(?:WikiP上位語|WikiPリダイレクト):.+?:(\d+)\-(\d+)/) {
 		my $start = $1;
 		my $end = $2;
 		push @{$regnode_option->{wikipedia_entry}}, { start => $m2t{$start}, end => $m2t{$end} };
