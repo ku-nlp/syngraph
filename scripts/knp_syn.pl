@@ -16,7 +16,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit');
 
 my $option;
 my $knp_option;
@@ -43,6 +43,7 @@ $option->{no_regist_adjective_stem} = 1 if $opt{no_regist_adjective_stem};
 $option->{attach_wikipedia_info} = 1 if $opt{attach_wikipedia_info};
 $option->{wikipedia_entry_db} = $opt{wikipedia_entry_db} if $opt{wikipedia_entry_db};
 $option->{force_match}{$opt{force_match}} = 1 if $opt{force_match};
+$option->{get_content_word_ids} = 1 if $opt{word_basic_unit};
 
 # 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけないオプション
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
