@@ -267,13 +267,15 @@ sub make_tree {
 		$log = $this->make_basicnode_log($node);
 	    }
 
-	    foreach my $type ('kakari_type', 'level', 'midasi', 'wsd_result') {
+	    foreach my $type ('kakari_type', 'level', 'midasi', 'wsd_result', 'content_word_ids') {
 		$tree_ref->{$sid}[$bp_num]{$type} = $node->{$type} if $node->{$type};
 	    }
 
 	    $tree_ref->{$sid}[$bp_num]{parentbp} = $node->{parent} if $node->{parent};
 
 	    $tree_ref->{$sid}[$bp_num]{fstring} = $node->{fstring} if $option->{store_fstring};
+
+	    $tree_ref->{$sid}[$bp_num]{content_word_ids} = $node->{content_word_ids} if $option->{get_content_word_ids};
 
 	    # SYNGRAPHに登録
             $this->_regnode({ref         => $tree_ref,
@@ -728,6 +730,7 @@ sub _get_keywords {
 
 	my @mrphs = $tag->mrph;
 	my $mrph_num = scalar @mrphs;
+	my @content_word_ids;
 	for (my $i = 0; $i < $mrph_num; $i++) {
 	    my $mrph = $mrphs[$i];
 
@@ -740,6 +743,8 @@ sub _get_keywords {
 
 		my $nodename_str = &get_nodename_str($mrph);
 		$nodename_str{$mrph->id} = $nodename_str;
+
+		push @content_word_ids, $mrph->id if $option->{get_content_word_ids};
 
 		# 数詞の汎化
 		if ($mrph->{hinsi} eq "名詞" && $mrph->{bunrui} eq "数詞" &&
@@ -785,7 +790,7 @@ sub _get_keywords {
 	    if ($mrph->{midasi}){
 		$midasi .= $mrph->{midasi};
 	    }
-        }
+	}
 
 	# 'name' => '最寄り/もより'
 	# 'fuzoku' => 'の'
@@ -817,6 +822,8 @@ sub _get_keywords {
 	$tmp{child}       = $child->{$tag->{id}} if ($child->{$tag->{id}});
 	$tmp{kakari_type} = $kakari_type if ($kakari_type);
 	$tmp{score} = 1;
+	$tmp{content_word_ids} = \@content_word_ids if $option->{get_content_word_ids};
+
 	if ($ambiguity_word) {
 	    $tmp{wsd_result}{word} = $ambiguity_word;
 	    $tmp{wsd_result}{m} = $sense_m;
