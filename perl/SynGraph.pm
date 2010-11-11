@@ -1943,6 +1943,7 @@ sub format_syngraph {
     # 出力生成
     for (my $bp_num = 0; $bp_num < $node_num; $bp_num++) { # 基本句(BP)単位
 	my $res;
+	my %matchbp2wordids;
 	foreach my $node (@{$syngraph->[$bp_num]{nodes}}) { # ノード単位
 
 	    # ノードの対応する基本句番号
@@ -1951,7 +1952,7 @@ sub format_syngraph {
 		$matchbp .= !defined $matchbp ? "$_" : ",$_";
 	    }
 
-	    if (!defined $res->{$matchbp}) {
+	    if (!$option->{word_basic_unit} && !defined $res->{$matchbp}) {
 		# 親
 		my $parent;
 		if ($syn_bp->{$syngraph->[$bp_num]{parentbp}}) {
@@ -1982,8 +1983,18 @@ sub format_syngraph {
 		$res->{$matchbp} .= "\n";
 	    }
 
+	    if ($option->{word_basic_unit} && !defined $matchbp2wordids{$matchbp}) {
+		my @wordids;
+		# 対応するmatchbpのcontent_word_idsをすべて得る
+		for my $bp (split(/,/, $matchbp)) {
+		    push @wordids, @{$syngraph->[$bp]{content_word_ids}};
+		}
+		$matchbp2wordids{$matchbp} = join(',', sort @wordids);
+	    }
+
 	    # !行の出力を格納
-	    $res->{$matchbp} .= &get_nodestr($node, $matchbp, $option);
+	    my $id = $option->{word_basic_unit} ? $matchbp2wordids{$matchbp} : $matchbp;
+	    $res->{$matchbp} .= &get_nodestr($node, $id, $option);
 	}
 	foreach my $matchbp (sort {(split(/,/, $b))[0] <=> (split(/,/, $a))[0]} (keys %{$res})) {
 	    $result->[$bp_num] .= $res->{$matchbp};
