@@ -12,12 +12,12 @@ use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate');
+GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i');
 
 $opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
 $opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
 
-$opt{dfth} = 1000000 unless $opt{dfth};
+$opt{dfth} = 1000000 if !defined $opt{dfth};
 
 &read_dic_isa if $opt{dic};
 &read_wikipedia_isa;
@@ -64,20 +64,38 @@ sub read_wikipedia_isa {
 }
 
 if ($opt{cndbfile}) {
+    my @del_string;
     for my $string (keys %data) {
 	my $midasi = $string =~ /\// ? (split('/', $string))[0] : $string;
 	my $df = $cn2df{"$midasi@"};
 
-	if ($df > $opt{dfth}) {
-	    for my $child (keys %{$data{$string}{children}}) {
-		delete $data{$child}{parent}{$string};
-	    }
+	if ($opt{dfth} && $df > $opt{dfth}) {
 
-	    for my $parent (keys %{$data{$string}{parent}}) {
-		delete $data{$parent}{children}{$string};
+	    # 最上位だけを削除対象とする
+	    if ($opt{cut_only_top_level} && defined $data{$string}{parent}) {
+		# 子供がこの個数以下なら削除しない
+		if ($opt{cut_top_level_child_num_min}) {
+		    if (scalar keys %{$data{$string}{children}} >= $opt{cut_top_level_child_num_min}) {
+			next;
+		    }
+		}
+		else {
+		    next;
+		}
 	    }
-	    delete $data{$string};
+	    push @del_string, $string;
 	}
+    }
+
+    for my $string (@del_string) {
+	for my $child (keys %{$data{$string}{children}}) {
+	    delete $data{$child}{parent}{$string};
+	}
+
+	for my $parent (keys %{$data{$string}{parent}}) {
+	    delete $data{$parent}{children}{$string};
+	}
+	delete $data{$string};
     }
 
     for my $string (keys %data) {
