@@ -44,6 +44,7 @@ $option->{attach_wikipedia_info} = 1 if $opt{attach_wikipedia_info};
 $option->{wikipedia_entry_db} = $opt{wikipedia_entry_db} if $opt{wikipedia_entry_db};
 $option->{force_match}{$opt{force_match}} = 1 if $opt{force_match};
 $option->{get_content_word_ids} = 1 if $opt{word_basic_unit};
+$option->{word_basic_unit} = 1 if $opt{word_basic_unit};
 
 # 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけないオプション
 $regnode_option->{hypocut_attachnode} = $opt{hypocut_attachnode} if $opt{hypocut_attachnode};
