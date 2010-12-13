@@ -10,9 +10,10 @@ use encoding 'euc-jp';
 binmode STDERR, ':encoding(euc-jp)';
 use Getopt::Long;
 use Juman;
+use JumanLib;
 
 my (%opt);
-GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i', 'wikipedia_file_separator_is_space');
+GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i', 'wikipedia_file_separator_is_space', 'no_cut_location', 'Noun_koyuu_dic=s');
 
 $opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
 $opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
@@ -21,6 +22,9 @@ $opt{dfth} = 1000000 if !defined $opt{dfth};
 
 &read_dic_isa if $opt{dic};
 &read_wikipedia_isa;
+
+my %location;
+&read_location if $opt{no_cut_location} && $opt{Noun_koyuu_dic};
 
 # 複合名詞データベース
 my %cn2df;
@@ -65,6 +69,25 @@ sub read_wikipedia_isa {
     close F;
 }
 
+sub read_location {
+    open DIC, "<:encoding(euc-jp)", "$opt{Noun_koyuu_dic}" || die;
+    while (<DIC>) {
+	next if /\(連語 /;
+	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
+
+	# 地名:国:略称:日本は除く
+	if ($imis_dic =~ /地名:/ && $imis_dic !~ /:略称:/) {
+	    if ($imis_dic =~ /代表表記:([^\s]+)/) {
+		my $rep = $1;
+		$location{$rep} = 1;
+		my $midasi = (split('/', $rep))[0];
+		$location{$midasi} = 1;
+	    }
+	}
+    }
+    close DIC;
+}
+
 if ($opt{cndbfile}) {
     my @del_string;
     for my $string (keys %data) {
@@ -72,6 +95,11 @@ if ($opt{cndbfile}) {
 	my $df = $cn2df{"$midasi@"};
 
 	if ($opt{dfth} && $df > $opt{dfth}) {
+
+	    # 地名はカットしないオプション
+	    if ($opt{no_cut_location} && defined $location{$string}) {
+		next;
+	    }
 
 	    # 最上位だけを削除対象とする
 	    if ($opt{cut_only_top_level} && defined $data{$string}{parent}) {
