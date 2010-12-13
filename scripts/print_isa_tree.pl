@@ -13,7 +13,7 @@ use Juman;
 use JumanLib;
 
 my (%opt);
-GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i', 'wikipedia_file_separator_is_space', 'no_cut_location', 'Noun_koyuu_dic=s');
+GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i', 'wikipedia_file_separator_is_space', 'no_cut_location', 'Noun_koyuu_dic=s', 'ambiguity_word_no_make_edge', 'ContentWdic=s');
 
 $opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
 $opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
@@ -25,6 +25,9 @@ $opt{dfth} = 1000000 if !defined $opt{dfth};
 
 my %location;
 &read_location if $opt{no_cut_location} && $opt{Noun_koyuu_dic};
+
+my %ambiguity_word;
+&read_ambiguity_word if $opt{ambiguity_word_no_make_edge};
 
 # 複合名詞データベース
 my %cn2df;
@@ -69,6 +72,7 @@ sub read_wikipedia_isa {
     close F;
 }
 
+# JUMAN固有表現の辞書から地名ファイルの読み込み
 sub read_location {
     open DIC, "<:encoding(euc-jp)", "$opt{Noun_koyuu_dic}" || die;
     while (<DIC>) {
@@ -88,6 +92,25 @@ sub read_location {
     close DIC;
 }
 
+# ContentW.dicから多義語の読み込み
+sub read_ambiguity_word {
+    open DIC, "<:encoding(euc-jp)", "$opt{ContentWdic}" || die;
+    while (<DIC>) {
+	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
+
+	if ($imis_dic =~ /多義/) {
+	    print STDERR $imis_dic, "\n";
+	    if ($imis_dic =~ /代表表記:([^\s]+)/) {
+		my $rep = $1;
+		$ambiguity_word{$rep} = 1;
+		my $midasi = (split('/', $rep))[0];
+		$ambiguity_word{$midasi} = 1;
+	    }
+	}
+
+    }
+    close DIC;
+}
 if ($opt{cndbfile}) {
     my @del_string;
     for my $string (keys %data) {
@@ -126,6 +149,21 @@ if ($opt{cndbfile}) {
 	    delete $data{$parent}{children}{$string};
 	}
 	delete $data{$string};
+    }
+
+    # 多義語の親を切る
+    if ($opt{ambiguity_word_no_make_edge}) {
+	for my $string (keys %data) {
+	    if (defined $ambiguity_word{$string}) {
+		delete $data{$string}{parent};
+
+		for my $string2 (keys %data) {
+		    if (defined $data{$string2}{children} && defined $data{$string2}{children}{$string}) {
+			delete $data{$string2}{children}{$string};
+		    }
+		}
+	    }
+	}
     }
 
     for my $string (keys %data) {
