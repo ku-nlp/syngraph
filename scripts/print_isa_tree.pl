@@ -12,7 +12,7 @@ use Getopt::Long;
 use Juman;
 
 my (%opt);
-GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i');
+GetOptions(\%opt, 'isa_dic_file=s', 'isa_wikipedia_file=s', 'max_child_num=i', 'min_hypo_num=i', 'category_child_max_num=i', 'category_sort', 'dic', 'cndbfile=s', 'dfth=i', 'print_frequency', 'print_coordinate', 'cut_only_top_level', 'cut_top_level_child_num_min=i', 'wikipedia_file_separator_is_space');
 
 $opt{isa_dic_file} = '../dic_change/isa.txt' unless $opt{isa_dic_file};
 $opt{isa_wikipedia_file} = '../dic_change/isa_wikipedia.txt' unless $opt{isa_wikipedia_file};
@@ -51,11 +51,13 @@ sub read_dic_isa {
 sub read_wikipedia_isa {
     open F, "<:encoding(euc-jp)", $opt{isa_wikipedia_file} or die;
 
+    my $separator = $opt{wikipedia_file_separator_is_space} ? ' ' : "\t"; 
+
     # µþÀ®ÄÅÅÄ¾Â±Ø ±Ø/¤¨¤­ 10921
     while (<F>) {
 	chomp;
 
-	my ($hyponym, $hypernym, $num) = split("\t", $_);
+	my ($hyponym, $hypernym, $num) = split($separator, $_);
 	$data{$hypernym}{children}{$hyponym} = 1;
 	$data{$hyponym}{parent}{$hypernym} = 1;
     }
