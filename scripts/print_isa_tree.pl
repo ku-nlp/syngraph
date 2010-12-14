@@ -99,7 +99,6 @@ sub read_ambiguity_word {
 	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
 
 	if ($imis_dic =~ /多義/) {
-	    print STDERR $imis_dic, "\n";
 	    if ($imis_dic =~ /代表表記:([^\s]+)/) {
 		my $rep = $1;
 		$ambiguity_word{$rep} = 1;
@@ -111,6 +110,30 @@ sub read_ambiguity_word {
     }
     close DIC;
 }
+
+# 子供と親が同じものをきる
+my %del_string_child_parent_same;
+for my $string (keys %data) {
+    for my $child (keys %{$data{$string}{children}}) {
+	if (defined $data{$string}{parent}{$child}) {
+	    $del_string_child_parent_same{$string} = 1;
+	    $del_string_child_parent_same{$child} = 1;
+	}
+    } 
+}
+my @del_string_child_parent_same = keys %del_string_child_parent_same;
+&del_string(\@del_string_child_parent_same);
+&delete_needless_key;
+
+# 子供をすべて得る
+if ($opt{cut_top_level_child_num_min}) {
+    for my $string (keys %data) {
+	my @words = &get_subtree_words($string);
+
+	$data{$string}{children_all_num} = scalar @words - 1; # 自分をひく
+    }
+}
+
 if ($opt{cndbfile}) {
     my @del_string;
     for my $string (keys %data) {
@@ -126,30 +149,21 @@ if ($opt{cndbfile}) {
 
 	    # 最上位だけを削除対象とする
 	    if ($opt{cut_only_top_level} && defined $data{$string}{parent}) {
+		next;
+	    }
+	    else {
 		# 子供がこの個数以下なら削除しない
 		if ($opt{cut_top_level_child_num_min}) {
-		    if (scalar keys %{$data{$string}{children}} >= $opt{cut_top_level_child_num_min}) {
+		    if ($data{$string}{children_all_num} <= $opt{cut_top_level_child_num_min}) {
 			next;
 		    }
-		}
-		else {
-		    next;
 		}
 	    }
 	    push @del_string, $string;
 	}
     }
 
-    for my $string (@del_string) {
-	for my $child (keys %{$data{$string}{children}}) {
-	    delete $data{$child}{parent}{$string};
-	}
-
-	for my $parent (keys %{$data{$string}{parent}}) {
-	    delete $data{$parent}{children}{$string};
-	}
-	delete $data{$string};
-    }
+    &del_string(\@del_string);
 
     # 多義語の親を切る
     if ($opt{ambiguity_word_no_make_edge}) {
@@ -166,17 +180,7 @@ if ($opt{cndbfile}) {
 	}
     }
 
-    for my $string (keys %data) {
-	# parentがいなくなったものはキーparentを削除
-	if (defined $data{$string}{parent} && scalar keys %{$data{$string}{parent}} == 0) {
-	    delete $data{$string}{parent};
-	}
-
-	# childrenも同様
-	if (defined $data{$string}{children} && scalar keys %{$data{$string}{children}} == 0) {
-	    delete $data{$string}{children};
-	}
-    }
+    &delete_needless_key;
 }
 
 if ($opt{category_sort}) {
@@ -218,7 +222,7 @@ if ($opt{print_coordinate}) {
 			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
 	next if defined $data{$string}{parent} || $data{$string}{child_num} == 0;
 
-	my @words = &get_words($string);
+	my @words = &get_subtree_words($string);
 	my %words;
 	for my $word (@words) {
 	    $words{$word} = 1
@@ -276,6 +280,37 @@ if ($opt{cndbfile}) {
     untie %cn2df;
 }
 
+# 木から取り除く
+sub del_string {
+    my ($del_string) = @_;
+
+    for my $string (@$del_string) {
+	for my $child (keys %{$data{$string}{children}}) {
+	    delete $data{$child}{parent}{$string};
+	}
+
+	for my $parent (keys %{$data{$string}{parent}}) {
+	    delete $data{$parent}{children}{$string};
+	}
+	delete $data{$string};
+    }
+}
+
+# 不要なkeyを削除
+sub delete_needless_key {
+    for my $string (keys %data) {
+	# parentがいなくなったものはキーparentを削除
+	if (defined $data{$string}{parent} && scalar keys %{$data{$string}{parent}} == 0) {
+	    delete $data{$string}{parent};
+	}
+
+	# childrenも同様
+	if (defined $data{$string}{children} && scalar keys %{$data{$string}{children}} == 0) {
+	    delete $data{$string}{children};
+	}
+    }
+}
+
 sub display {
     my ($string, $mark) = @_;
 
@@ -322,7 +357,8 @@ sub display {
     }
 }
 
-sub get_words {
+# 自分以下の語を得る
+sub get_subtree_words {
     my ($string, $mark) = @_;
 
     my @marks = split(//,$mark);
@@ -339,7 +375,7 @@ sub get_words {
 	my $print_child_num = 0;
 	foreach my $child (@children) {
 	    if ($child ne $last_child) {
-		push @words, &get_words($child, $mark . '0');
+		push @words, &get_subtree_words($child, $mark . '0');
 		$print_child_num++;
 	    }
 
@@ -347,7 +383,7 @@ sub get_words {
 		return;
 	    }
 	}
-	push @words, &get_words($last_child, $mark . '1') if (defined($last_child));
+	push @words, &get_subtree_words($last_child, $mark . '1') if (defined($last_child));
     }
 
     return @words;
