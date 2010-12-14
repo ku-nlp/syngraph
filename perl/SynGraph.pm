@@ -1978,8 +1978,12 @@ sub format_syngraph {
 		}
 
 		# !!行の出力を格納
-		$res->{$matchbp} = "!! $matchbp $parent$syngraph->[$bp_num]{kakari_type} <見出し:$syngraph->[$bp_num]{midasi}>";
-		$res->{$matchbp} .= "<格解析結果:$node->{case}格>" if ($node->{case});
+		$res->{$matchbp} = "!! $matchbp $parent$syngraph->[$bp_num]{kakari_type}";
+		$res->{$matchbp} .= " <見出し:$syngraph->[$bp_num]{midasi}>" if $syngraph->[$bp_num]{midasi};
+		if ($node->{case}) {
+		    $res->{$matchbp} .= ' ' if !$syngraph->[$bp_num]{midasi};
+		    $res->{$matchbp} .= "<格解析結果:$node->{case}格>";
+		}
 		$res->{$matchbp} .= "\n";
 	    }
 
