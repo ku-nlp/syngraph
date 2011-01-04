@@ -291,17 +291,17 @@ if ($opt{similar_phrase}) {
     while (<P>) {
 	chomp;
 
-	my ($phrase1, $phrase2) = split;
-	$phrase1 = &SynGraph::toupper($phrase1);
-	$phrase2 = &SynGraph::toupper($phrase2);
+	my @phrases = split;
 
-	my $synid = 's' . $syn_number . ':' . $phrase1;
+	my $phrase1 = $phrases[0];
+	my $synid = 's' . $syn_number . ':' . &SynGraph::toupper($phrase1);
 	$syn_number++;
 
-	my $tmp_phrase1 = $phrase1 . '[同義句]';
-	my $tmp_phrase2 = $phrase2 . '[同義句]';
-	push (@{$syn_group{$synid}}, $tmp_phrase1);
-	push (@{$syn_group{$synid}}, $tmp_phrase2);
+	for my $phrase (@phrases) {
+	    my $tmp_phrase = &SynGraph::toupper($phrase) . '[同義句]';
+
+	    push (@{$syn_group{$synid}}, $tmp_phrase);
+	}
     }
     close P;
 }
