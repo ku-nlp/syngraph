@@ -371,7 +371,7 @@ sub make_bp {
 		    my $headbp = @{$this->{syndatacache}{$mid}} - 1;
 
 		    # Wikipediaエントリに対してはtreeマッチングではなく、まずflatマッチングをする(マッチしなければあきらめる)
-		    if ($mid =~ /\[Wikipedia\]$/) {
+		    if ($mid =~ /\[(?:Wikipedia|Web)\]$/) {
 			my $match_rough_flat_flag = $this->syngraph_matching_rough_flat($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
 			next if $match_rough_flat_flag == 0;
 		    }
