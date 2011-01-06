@@ -734,56 +734,63 @@ sub _get_keywords {
 	for (my $i = 0; $i < $mrph_num; $i++) {
 	    my $mrph = $mrphs[$i];
 
-            next if ($mrph->{hinsi} eq '特殊' and $mrph->{bunrui} ne '記号');
+	    my $hinsi = $mrph->hinsi;
+	    my $bunrui = $mrph->bunrui;
+	    
+            next if $hinsi eq '特殊' and $bunrui ne '記号';
+
+	    my $fstring = $mrph->{fstring};
+	    my $mrph_id = $mrph->id;
+	    my $genkei = $mrph->genkei;
 
             # 意味有
-            if ($mrph->{fstring} =~ /<準?内容語>/ ||
+            if ($fstring =~ /<準?内容語>/ ||
 		# -copulaのとき、判定詞には<意味有>がないので、特別処理
-		($mrph->{fstring} =~ /<後処理\-基本句始>/ && $mrph->hinsi eq "判定詞")) {
+		($fstring =~ /<後処理\-基本句始>/ && $hinsi eq '判定詞')) {
 
 		my $nodename_str = &get_nodename_str($mrph);
-		$nodename_str{$mrph->id} = $nodename_str;
+		$nodename_str{$mrph_id} = $nodename_str;
 
-		push @content_word_ids, $mrph->id if $option->{get_content_word_ids};
+		push @content_word_ids, $mrph_id if $option->{get_content_word_ids};
 
 		# 数詞の汎化
-		if ($mrph->{hinsi} eq "名詞" && $mrph->{bunrui} eq "数詞" &&
-		    $mrph->{genkei} !~ /^(何|幾|数|なん|いく|すう)$/) {
-		    $nodename .= !$nodename ? "$nodename_str" : "+$nodename_str";
-		    $nodename_num .= !$nodename_num ? "<num>" : "+<num>";
+		if ($bunrui eq '数詞' && $hinsi eq '名詞' &&
+		    $genkei !~ /^(何|幾|数|なん|いく|すう)$/) {
+		    $nodename .= !$nodename ? $nodename_str : "+$nodename_str";
+		    $nodename_num .= !$nodename_num ? '<num>' : '+<num>';
 		} else {
-		    $nodename .= !$nodename ? "$nodename_str" : "+$nodename_str";
-		    $nodename_num .= !$nodename_num ? "$nodename_str" : "+$nodename_str";
+		    $nodename .= !$nodename ? $nodename_str : "+$nodename_str";
+		    $nodename_num .= !$nodename_num ? $nodename_str : "+$nodename_str";
 		}
 
 		my @alt = &get_alt($mrph, $tag, $nodename_str, $option);
 
 		if (scalar @alt > 0) {
-		    push @{$alt{$mrph->id}}, @alt;
+		    push @{$alt{$mrph_id}}, @alt;
 		}
 
 		# 準内容語にマーク(カウンタは除く)
-		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<準内容語>/ && $mrphs[$i]->fstring !~ /<カウンタ>/) {
-		    $semi_contentword{$mrph->id} = 1;
+		if ($option->{regist_exclude_semi_contentword} && $fstring =~ /<準内容語>/ && $mrphs[$i]->fstring !~ /<カウンタ>/) {
+		    $semi_contentword{$mrph_id} = 1;
 		}
 # 		if ($option->{regist_exclude_semi_contentword} && $mrphs[$i]->fstring =~ /<内容語>/ &&
 # 		    defined $mrphs[$i + 1] && $mrphs[$i + 1]->fstring =~ /<準内容語>/ && $mrphs[$i + 1]->fstring !~ /<カウンタ>/) {
 #		    push @{$alt{$mrph->id}}, { name => &get_nodename_str($mrph), score => $penalty->{semicontentword} };
             }
-            elsif ($mrph->{hinsi} eq '接頭辞') {
+            elsif ($hinsi eq '接頭辞') {
 		# 接頭辞は無視
 	    }
-	    elsif (($mrph->{hinsi} eq '接尾辞' and $mrph->{genkei} eq 'ない') or
-                   ($mrph->{hinsi} eq '助動詞' and $mrph->{genkei} eq 'ぬ')) {
+	    elsif (($hinsi eq '接尾辞' and $genkei eq 'ない') or
+                   ($hinsi eq '助動詞' and $genkei eq 'ぬ')) {
 		# ない、ぬは否定表現
 	    }
 	    else {
                 # 代表表記
-                if ($mrph->{fstring} =~ /<代表表記:([^\s\/\">]+)/) {
+                if ($fstring =~ /<代表表記:([^\s\/\">]+)/) {
                     $fuzoku .= $1;
                 }
                 else {
-                    $fuzoku .= $mrph->{genkei};
+                    $fuzoku .= $genkei;
                 }
             }
 
