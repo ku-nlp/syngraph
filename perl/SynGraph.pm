@@ -219,7 +219,8 @@ sub make_sg {
 
     # 各BPにSYNノードを付けていってSYNGRAPHを作る
     if (!$option->{no_syn_id} && $ref->{$sid}) {
-	for (my $bp_num = 0; $bp_num < @{$ref->{$sid}}; $bp_num++) {
+	my $bp_num_max = scalar @{$ref->{$sid}};
+	for (my $bp_num = 0; $bp_num < $bp_num_max; $bp_num++) {
 	    $this->make_bp($ref, $sid, $bp_num, $regnode_option, $option); 
 	}
     }
@@ -307,8 +308,11 @@ sub make_bp {
 
     my $synid1 = (split(/,/, $sid))[0];
 
+    my $ref_sid = $ref->{$sid};
+    my $ref_bp = $ref->{$sid}[$bp];
+
     # 各SYNノードをチェック
-    foreach my $node (@{$ref->{$sid}[$bp]{nodes}}) {
+    foreach my $node (@{$ref_bp->{nodes}}) {
         next if ($node->{weight} == 0);
 
 	my $node_id = $node->{id};
@@ -332,15 +336,15 @@ sub make_bp {
 	# 多義性解消結果がある
 	# 解消された語義以外を保存しておく
 	my ($wsd_result_flag, %not_registered_synid);
-	if (defined $ref->{$sid}[$bp]{wsd_result}) {
+	if (defined $ref_bp->{wsd_result}) {
 	    $wsd_result_flag = 1;
 
 	    # あいのうた 2%s45800:あいのうた|5%s113946:あいのうた
-	    my $value = decode('utf8', $this->{imi_list_db}{$ref->{$sid}[$bp]{wsd_result}{word}});
+	    my $value = decode('utf8', $this->{imi_list_db}{$ref_bp->{wsd_result}{word}});
 	    for my $key (split('\|', $value)) {
 		my ($sense_id, $synid) = split('%', $key);
 
-		if ($ref->{$sid}[$bp]{wsd_result}{m} ne $sense_id) {
+		if ($ref_bp->{wsd_result}{m} ne $sense_id) {
 		    $not_registered_synid{$synid} = 1;
 		}
 	    }
@@ -368,21 +372,22 @@ sub make_bp {
 		    }
 		    defined $synnode_check{$mid} ? next : ($synnode_check{$mid} = 1);
 
-		    my $headbp = @{$this->{syndatacache}{$mid}} - 1;
+		    my $syndata_target_mid = $this->{syndatacache}{$mid};
+
+		    my $headbp = @{$syndata_target_mid} - 1;
 
 		    # Wikipediaエントリに対してはtreeマッチングではなく、まずflatマッチングをする(マッチしなければあきらめる)
 		    if ($mid =~ /\[(?:Wikipedia|Web)\]$/) {
-			my $match_rough_flat_flag = $this->syngraph_matching_rough_flat($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+			my $match_rough_flat_flag = $this->syngraph_matching_rough_flat($ref_sid, $bp, $syndata_target_mid, $headbp);
 			next if $match_rough_flat_flag == 0;
 		    }
-
 		    # 付属表現（=格）が一致するかだけ調べる
-		    if ($mid =~ /\[同義句\]$/) {
+		    elsif ($mid =~ /\[同義句\]$/) {
 			my $graph2_fuzoku = $this->{syndatacache}{$mid}[0]{nodes}[0]{fuzoku};
 
 			my $match_flag = 0;
-			for my $child_bp (keys %{$ref->{$sid}[$bp]{nodes}[0]{childbp}}) {
-			    my $graph1_fuzoku = $ref->{$sid}[$child_bp]{nodes}[0]{fuzoku};
+			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
+			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
 			    # 「は」はマッチするとする
 			    if (defined $graph1_fuzoku && 
 				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq $graph2_fuzoku)) {
@@ -393,12 +398,12 @@ sub make_bp {
 		    }
 
 		    # synidがマッチするか調べる(付属語・素性などは考慮しない)
-		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp);
+		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref_sid, $bp, $syndata_target_mid, $headbp);
 		    next if $result_rough == 0;
 
 		    # 付属語・素性などを考慮してSynGraphマッチング
 		    # マッチする場合は新たに付与するnodeを得る
-		    my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref->{$sid}, $bp, $this->{syndatacache}{$mid}, $headbp, $match_verbose, $option);
+		    my ($result, $newnode) = $this->syngraph_matching_and_get_newnode('syn', $ref_sid, $bp, $syndata_target_mid, $headbp, $match_verbose, $option);
 		    next if ($result == 0);
 
 		    # Wikipediaエントリに包含される場合
@@ -434,7 +439,7 @@ sub make_bp {
 		    # NODEのLOG
 		    my $log;
 		    if ($option->{log}) {
-			$log = $this->make_synnode_log($ref->{$sid}, $this->{syndatacache}{$mid}, $mid, $match_verbose);
+			$log = $this->make_synnode_log($ref_sid, $syndata_target_mid, $mid, $match_verbose);
 		    }
 
 		    print STDERR "!! $mid\n" if $option->{print_mid};
@@ -1283,6 +1288,7 @@ sub syngraph_matching_rough {
     # BP内でマッチするノードを探す
     my $node_index1;
     my $node1_num = scalar @{$graph_1->[$nodebp_1]{nodes}};
+    my $node2_num = scalar @{$graph_2->[$nodebp_2]{nodes}};
     for ($node_index1 = 0; $node_index1 < $node1_num; $node_index1++) {
 	my $node_1 = $graph_1->[$nodebp_1]{nodes}[$node_index1];
 
@@ -1290,7 +1296,6 @@ sub syngraph_matching_rough {
         next if ($node_1->{score} < $matchnode_score);
 
 	my $node_index2;
-	my $node2_num = scalar @{$graph_2->[$nodebp_2]{nodes}};
 	for ($node_index2 = 0; $node_index2 < $node2_num; $node_index2++) {
 	    my $node_2 = $graph_2->[$nodebp_2]{nodes}[$node_index2];
 
@@ -1373,14 +1378,14 @@ sub syngraph_matching_rough {
 	# graph_1に子があれば
 	if ($matchnode_1->{childbp}) {
 	    my @childbp_1 = keys %{$matchnode_1->{childbp}};
-	    my %child_1_check;
-	    
+    
 	    # graph_1の子の数よりgraph_2の子の数の方が多い場合はマッチ失敗
 	    if (@childbp_1 < @childbp_2) {
 		$match_verbose{$nodebp_2}{unmatch_reason} = 'child_less';
 		return (0, \%match_verbose);
 	    }
-	    
+
+	    my %child_1_check;
 	    # graph_2の各子供にマッチするgraph_1の子供を見つける
 	    foreach my $child_2 (@childbp_2) {
 		my $match_flag = 0;
@@ -1462,7 +1467,6 @@ sub syngraph_matching_and_get_newnode {
 
     my $result = 0;
 
-    my $num;
     foreach my $matchkey (keys %{$match_verbose}) {
 
 	# マッチしたノード情報のありか
