@@ -312,7 +312,10 @@ sub make_bp {
     my $ref_bp = $ref->{$sid}[$bp];
 
     # 各SYNノードをチェック
+    my $node_index = -1;
     foreach my $node (@{$ref_bp->{nodes}}) {
+	$node_index++;
+
         next if ($node->{weight} == 0);
 
 	my $node_id = $node->{id};
@@ -398,7 +401,7 @@ sub make_bp {
 		    }
 
 		    # synidがマッチするか調べる(付属語・素性などは考慮しない)
-		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref_sid, $bp, $syndata_target_mid, $headbp);
+		    my ($result_rough, $match_verbose) = $this->syngraph_matching_rough($ref_sid, $bp, $syndata_target_mid, $headbp, undef, undef, $node_index);
 		    next if $result_rough == 0;
 
 		    # 付属語・素性などを考慮してSynGraphマッチング
@@ -1199,13 +1202,13 @@ sub _regnode {
 	    # 反義語があれば登録（ただし、上位語の反義語や、反義語の反義語は登録しない。）
 	    if ($this->{synantonymcache}{$id} and $antonym != 1 and $relation != 1) {
 		foreach my $aid (split(/\|/, $this->{synantonymcache}{$id})) {
-		    
+
 		    # NODEのLOG
 		    my $log;
 		    if ($regnode_option->{log}) {
 			$log = $this->make_relnode_log($newid, $aid, $this->{log_antonym}, $midasi, 'antonym');
 		    }
-		    
+
 		    $this->_regnode({ref            => $ref,
 				     sid            => $sid,
 				     bp             => $bp,
@@ -1272,7 +1275,7 @@ sub get_child_num_min {
 # (graph_1の部分とgraph_2の全体)
 #
 sub syngraph_matching_rough {
-    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option) = @_;
+    my ($this, $graph_1, $nodebp_1, $graph_2, $nodebp_2, $body_hash, $matching_option, $node_index) = @_;
     
     my $matchnode_score = 0;
     my $matchnode_1;
@@ -1290,6 +1293,7 @@ sub syngraph_matching_rough {
     my $node1_num = scalar @{$graph_1->[$nodebp_1]{nodes}};
     my $node2_num = scalar @{$graph_2->[$nodebp_2]{nodes}};
     for ($node_index1 = 0; $node_index1 < $node1_num; $node_index1++) {
+	next if defined $node_index && $node_index ne $node_index1; # node_1側でnode_indexがある場合はそれだけを対象にして全探索しない
 	my $node_1 = $graph_1->[$nodebp_1]{nodes}[$node_index1];
 
 	# スコアが低いものは調べない。
