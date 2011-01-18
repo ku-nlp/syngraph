@@ -59,8 +59,7 @@ elsif ($option->{cgi}) {
 }
 else {
     # i686 or x86_64
-    my $uname = `uname -m`;
-    chomp $uname;
+    my $uname = (POSIX::uname())[4];
     $syndbdir = "../syndb/$uname";
 }
 
