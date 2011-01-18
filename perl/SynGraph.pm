@@ -889,7 +889,7 @@ sub _get_keywords {
 	}
 
 	# 準内容語を除いたものを登録
-	if ($option->{regist_exclude_semi_contentword} && defined %semi_contentword) {
+	if ($option->{regist_exclude_semi_contentword} && %semi_contentword) {
 	    if ($altnum < $alt_num_max) {
 		my @alt_string = &get_alt_string(\%nodename_str, \%alt, \%semi_contentword);
 
@@ -922,7 +922,7 @@ sub get_alt_string {
     my @alt_string;
     for my $mrphid (sort keys %{$nodename_str}) {
 	# 準内容語を除く
-	if (defined $semi_contentword) {
+	if (%$semi_contentword) {
 	    next if defined $semi_contentword->{$mrphid};
 	}
 
