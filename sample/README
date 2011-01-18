@@ -1,0 +1,9 @@
+
+# 前準備: KNPの解析
+
+echo '駅に一番近い温泉旅館' | juman | knp -tab > sample.knp
+
+# KNPの解析結果にSynGraph情報の埋め込み
+
+cd scripts
+cat ../sample/sample.knp | perl -I../perl knp_syn.pl > ../sample/sample.knp.syn
