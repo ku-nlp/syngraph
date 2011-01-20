@@ -922,7 +922,7 @@ sub get_alt_string {
     my @alt_string;
     for my $mrphid (sort keys %{$nodename_str}) {
 	# 準内容語を除く
-	if (%$semi_contentword) {
+	if ($semi_contentword) {
 	    next if defined $semi_contentword->{$mrphid};
 	}
 
