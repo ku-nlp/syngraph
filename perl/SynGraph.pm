@@ -1033,7 +1033,7 @@ sub get_alt {
 	# 代表表記
 	if ($1 =~ /同義:([^\s\">]+)/){
 	    my $rep_synonym = $1;
-	    $rep_synonym =~ s/(?:動詞|形容詞)://; # とりあえず動詞、形容詞
+	    $rep_synonym =~ s/(?:動詞|形容詞|名詞)://;
 	    push @alt, $rep_synonym;
 	}
     }
