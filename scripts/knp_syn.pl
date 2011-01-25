@@ -11,12 +11,15 @@ use Encode;
 use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf');
+
+my $encoding = $opt{encoding} ? ":encoding($opt{encoding})" : ':encoding(euc-jp)'; # default encoding is euc-jp
+$encoding .= ':crlf' if $opt{crlf};
+binmode STDIN, $encoding;
+binmode STDOUT, $encoding;
+binmode STDERR, $encoding;
+binmode DB::OUT, $encoding;
 
 my $option;
 my $knp_option;
