@@ -14,8 +14,7 @@ BEGIN {
     $SynGraphBaseDir = dirname($INC{'Configure.pm'}) . '/..';
 }
 
-my $uname = `uname -m`;
-chomp $uname;
+my $uname = (POSIX::uname())[4];
 
 our $JumanCommand = '/home/shibata/tool-dic-analyze/bin/juman';
 our $JumanRcfile = '/home/shibata/tool-dic-analyze/etc/jumanrc';
