@@ -15,14 +15,14 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 use Dumpvalue;
-use Constant;
+use Configure;
 use CalcSimilarityByCF;
 
 my %opt; GetOptions(\%opt, 'aimai=s', 'synonym_web_news=s', 'synonym_out=s', 'isa_out=s', 'debug');
 
 my $cscf = new CalcSimilarityByCF( { skip_th => 1 });
 
-$cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
+$cscf->TieMIDBfile($Configure::CalcsimCNMidbfile);
 
 my %data;
 my @line_data;

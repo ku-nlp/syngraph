@@ -10,7 +10,7 @@ use strict;
 use encoding 'euc-jp';
 use Getopt::Long;
 use JumanLib;
-use Constant;
+use Configure;
 use CalcSimilarityByCF;
 binmode STDERR, ':encoding(euc-jp)';
 
@@ -26,7 +26,7 @@ unless ( -e $opt{jumandicdir} ) {
 
 my $cscf = new CalcSimilarityByCF({ method => 'SimpsonJaccard' });
 
-$cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
+$cscf->TieMIDBfile($Configure::CalcsimCNMidbfile);
 
 my $TH_DISTRIBUTIONAL_SIMILARITY = 0.3;
 

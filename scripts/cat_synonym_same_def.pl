@@ -6,7 +6,7 @@ use strict;
 use Getopt::Long;
 use Dumpvalue;
 use KNP;
-use Constant;
+use Configure;
 use utf8;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
@@ -16,8 +16,8 @@ binmode DB::OUT, ':encoding(euc-jp)';
 my %opt; GetOptions(\%opt, 'synonym_dic=s', 'same_definition=s', 'synonym_filter_log=s');
 
 my $knp = new KNP( -Option => '-tab -dpnd',
-		   -JumanCommand => $Constant::JumanCommand,
-		   -JumanRcfile => $Constant::JumanRcfile);
+		   -JumanCommand => $Configure::JumanCommand,
+		   -JumanRcfile => $Configure::JumanRcfile);
 
 open(SYN, '<:encoding(euc-jp)', $opt{synonym_dic}) or die;
 while (<SYN>) {

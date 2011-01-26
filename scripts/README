@@ -16,7 +16,7 @@
 * Usage
 	perl knp_syn.pl -s 一番近い駅
 
- - ../perl/Constant.pmでJuman, KNPなどのコマンドを指定する
+ - ../perl/Configure.pmでJuman, KNPなどのコマンドを指定する
 
 * 結果
 

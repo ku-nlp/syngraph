@@ -9,7 +9,7 @@ use Getopt::Long;
 use KNP;
 use utf8;
 use SynGraph;
-use Constant;
+use Configure;
 binmode STDIN, ':encoding(euc-jp)';
 binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
@@ -32,8 +32,8 @@ my $juman;
 
 if ($opt{dicfile}) {
     require Juman;
-    $juman = new Juman(-Command => $Constant::JumanCommand,
-		       -Rcfile => $Constant::JumanRcfile);
+    $juman = new Juman(-Command => $Configure::JumanCommand,
+		       -Rcfile => $Configure::JumanRcfile);
 }
 
 if ($opt{editdistance}) {
@@ -50,7 +50,7 @@ if ($opt{distributional_similarity}) {
 
     $cscf = new CalcSimilarityByCF({ method => 'Simpson' });
 
-    $cscf->TieMIDBfile($Constant::CalcsimCNMidbfile);
+    $cscf->TieMIDBfile($Configure::CalcsimCNMidbfile);
 }
 
 my $knp = new KNP(-Option => '-tab -dpnd');

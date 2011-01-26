@@ -11,7 +11,7 @@ use BerkeleyDB;
 use Storable qw(freeze thaw);
 use MLDBM qw(BerkeleyDB::Hash Storable);
 use CDB_File;
-use Constant;
+use Config;
 
 #
 # 定数
@@ -72,7 +72,7 @@ sub new {
 
     # version
     my $version;
-    my $version_file = "$Constant::SynGraphBaseDir/VERSION";
+    my $version_file = "$Config::SynGraphBaseDir/VERSION";
     if (-e $version_file) {
 	open F, "< $version_file" or die;
 	$version = <F>;
@@ -2291,12 +2291,12 @@ sub sid2word {
 sub read_synonym_pair {
     my ($syngroup_words) = @_;
 
-    my $dicdir = $Constant::SynGraphBaseDir . '/dic/rsk_iwanami';
-    my $dicmiddledir = $Constant::SynGraphBaseDir . '/dic_middle';
+    my $dicdir = $Config::SynGraphBaseDir . '/dic/rsk_iwanami';
+    my $dicmiddledir = $Config::SynGraphBaseDir . '/dic_middle';
 
     my (%FREQ, %FREQ_REP);
-    &SynGraph::tie_cdb($Constant::CN_DF_DB, \%FREQ);
-    &SynGraph::tie_cdb($Constant::DF_REP_DB, \%FREQ_REP);
+    &SynGraph::tie_cdb($Config::CN_DF_DB, \%FREQ);
+    &SynGraph::tie_cdb($Config::DF_REP_DB, \%FREQ_REP);
 
     my %allword;
     my %alldata;
@@ -2506,7 +2506,7 @@ sub read_synonym_pair {
     }
 
     my %WORD2FREQ;
-    &tie_cdb($Constant::SYNONYM_WORD2FREQ_DB, \%WORD2FREQ);
+    &tie_cdb($Config::SYNONYM_WORD2FREQ_DB, \%WORD2FREQ);
 
     # rankをひく
     for my $word (keys %allword) {

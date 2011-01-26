@@ -14,7 +14,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 use KNP;
-use Constant;
+use Configure;
 
 my %opt;
 GetOptions(\%opt, 'dic=s', 'wikipedia=s', 'compound_noun_isa', 'exclude_head_same', 'debug');
@@ -24,8 +24,8 @@ my $LENGTH_MAX = 10;
 my $HYPO_NUM_MAX = 5;
 
 my $knp = new KNP( -Option => '-tab -dpnd',
-		   -JumanCommand => $Constant::JumanCommand,
-		   -JumanRcfile => $Constant::JumanRcfile);
+		   -JumanCommand => $Configure::JumanCommand,
+		   -JumanRcfile => $Configure::JumanRcfile);
 
 my %DIC;
 

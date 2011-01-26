@@ -12,12 +12,12 @@ use Encode;
 use FileHandle;
 use SynGraph;
 use Getopt::Long;
-use Constant;
+use Configure;
 
 my (%opt);
 GetOptions(\%opt, 'synonymout=s', 'isaout=s', 'antonymout=s', 'definitionout=s', 'isa=s', 'synonym=s', 'antonym=s', 'definition=s', 'debug');
 
-my $edit_db = $Constant::SynGraphBaseDir . '/db/synonym_db_for_edit_keyrep_new.db';
+my $edit_db = $Configure::SynGraphBaseDir . '/db/synonym_db_for_edit_keyrep_new.db';
 
 my @types = ('synonym', 'isa', 'antonym', 'definition');
 

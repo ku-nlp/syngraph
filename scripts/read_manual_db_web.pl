@@ -8,12 +8,12 @@ use Encode;
 use SynGraph;
 use Getopt::Long;
 
-use Constant;
+use Configure;
 
 my (%opt);
 GetOptions(\%opt);
 
-my $edit_db = $Constant::SynGraphBaseDir . '/db/synonym_web_key2status.db';
+my $edit_db = $Configure::SynGraphBaseDir . '/db/synonym_web_key2status.db';
 
 my %KEY2STATUS;
 &SynGraph::tie_mldbm($edit_db, \%KEY2STATUS);

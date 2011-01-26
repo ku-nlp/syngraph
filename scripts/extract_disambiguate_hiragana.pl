@@ -13,7 +13,7 @@ binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 use Getopt::Long;
 use JumanLib;
-use Constant;
+use Configure;
 
 my (%opt);
 GetOptions(\%opt, 'jumandicdir=s', 'help', 'makedb=s', 'debug');

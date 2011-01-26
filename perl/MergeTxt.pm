@@ -16,10 +16,10 @@ sub new {
 
     my $knp_option;
     $knp_option->{no_case} = 1;
-    $knp_option->{knpcommand} = $Constant::KnpCommand;
-    $knp_option->{knprc} = $Constant::KnpRcfile;
-    $knp_option->{jumancommand} = $Constant::JumanCommand;
-    $knp_option->{jumanrc} = $Constant::JumanRcfile;
+    $knp_option->{knpcommand} = $Configure::KnpCommand;
+    $knp_option->{knprc} = $Configure::KnpRcfile;
+    $knp_option->{jumancommand} = $Configure::JumanCommand;
+    $knp_option->{jumanrc} = $Configure::JumanRcfile;
 
     $this = {
 	log_merge      => {},
