@@ -1,4 +1,4 @@
-package Constant;
+package Configure;
 
 # $Id$
 
@@ -11,7 +11,7 @@ use File::Basename;
 our $SynGraphBaseDir;
 
 BEGIN {
-    $SynGraphBaseDir = dirname($INC{'Constant.pm'}) . '/..';
+    $SynGraphBaseDir = dirname($INC{'Configure.pm'}) . '/..';
 }
 
 my $uname = `uname -m`;
