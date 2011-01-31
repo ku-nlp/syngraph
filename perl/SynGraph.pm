@@ -322,15 +322,10 @@ sub make_bp {
 
 	# キャッシュしておく
  	if (!defined $this->{synheadcache}{$node_id}) {
-	    if ($this->{mode} eq 'repeat') { # コンパイル時
-		$this->{synheadcache}{$node_id} = $this->{synhead}{$node_id};
-	    }
-	    else {
-		foreach my $mid_childnum (split(/\|/, $this->GetValue($this->{synhead}{$node_id}))) {
-		    my ($mid, $childnum) = split('%', $mid_childnum);
-
-		    push @{$this->{synheadcache}{$node_id}{$childnum}}, $mid;
-		}
+	    foreach my $mid_childnum (split(/\|/, $this->GetValue($this->{synhead}{$node_id}))) {
+		my ($mid, $childnum) = split('%', $mid_childnum);
+		my $synid = (split(/,/, $mid))[0];
+		push @{$this->{synheadcache}{$node_id}{$childnum}}, { mid => $mid, synid => $synid };
 	    }
 	}
 
@@ -358,10 +353,10 @@ sub make_bp {
 
 		last if $child_num < $childnum;
 
-		for my $mid (@{$this->{synheadcache}{$node_id}{$childnum}}) { 
+		for my $mid_hash (@{$this->{synheadcache}{$node_id}{$childnum}}) {
 
 		    # SYNIDが同じものは調べない
-		    my $synid2 = (split(/,/, $mid))[0];
+		    my $synid2 = $mid_hash->{synid};
 		    next if ($synid1 eq $synid2);
 
 		    # 多義性解消結果
@@ -369,6 +364,7 @@ sub make_bp {
 			next;
 		    }
 
+		    my $mid = $mid_hash->{mid};
 		    # キャッシュしておく
 		    if (!defined $this->{syndatacache}{$mid}) {
 			$this->{syndatacache}{$mid} = $this->{syndata}{$mid};
@@ -1140,11 +1136,18 @@ sub _regnode {
 	if ($regnode_option->{relation} and ($regnode_option->{relation_recursive} || (!$regnode_option->{relation_recursive} && $relation != 1)) and $antonym != 1 and !$not_synnode){
 
 	    # キャッシュしておく
-	    $this->{synparentcache}{$id} = $this->GetValue($this->{synparent}{$id}) if (!defined $this->{synparentcache}{$id});
+	    if (!defined $this->{synparentcache}{$id}) {
+		foreach my $pid_num (split(/\|/, $this->GetValue($this->{synparent}{$id}))) {
+		    my ($pid, $number) = split(/,/, $pid_num);
+
+		    push @{$this->{synparentcache}{$id}}, { pid => $pid, number => $number };
+		}
+	    }
 
 	    if ($this->{synparentcache}{$id}) {
-		foreach my $pid_num (split(/\|/, $this->{synparentcache}{$id})) {
-		    my ($pid, $number) = split(/,/, $pid_num);
+		foreach my $pid_num_hash (@{$this->{synparentcache}{$id}}) {
+		    my $pid = $pid_num_hash->{pid};
+		    my $number = $pid_num_hash->{number};
 
 		    # 下位語数が $regnode_option->{hypocut_attachnode} より大きければ、SYNノードをはりつけない
 		    next if ($regnode_option->{hypocut_attachnode} and $regnode_option->{hypocut_attachnode} < $number);
