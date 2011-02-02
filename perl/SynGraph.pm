@@ -322,10 +322,15 @@ sub make_bp {
 
 	# キャッシュしておく
  	if (!defined $this->{synheadcache}{$node_id}) {
-	    foreach my $mid_childnum (split(/\|/, $this->GetValue($this->{synhead}{$node_id}))) {
-		my ($mid, $childnum) = split('%', $mid_childnum);
-		my $synid = (split(/,/, $mid))[0];
-		push @{$this->{synheadcache}{$node_id}{$childnum}}, { mid => $mid, synid => $synid };
+	    if ($this->{mode} eq 'repeat') { # コンパイル時
+		$this->{synheadcache}{$node_id} = $this->{synhead}{$node_id};
+	    }
+	    else {
+		foreach my $mid_childnum (split(/\|/, $this->GetValue($this->{synhead}{$node_id}))) {
+		    my ($mid, $childnum) = split('%', $mid_childnum);
+		    my $synid = (split(/,/, $mid))[0];
+		    push @{$this->{synheadcache}{$node_id}{$childnum}}, { mid => $mid, synid => $synid };
+		}
 	    }
 	}
 
@@ -1239,9 +1244,10 @@ sub _regnode {
             $newid->{id} and
             $bp == @{$ref->{$sid}} - 1) {
 
-	    my $child_num_min = &SynGraph::get_child_num_min($this->{syndata}->{$sid});	    
-	    unless (grep($sid eq $_, @{$this->{synhead}{$newid->{id}}{$child_num_min}})) {
-		push @{$this->{synhead}{$newid->{id}}{$child_num_min}}, $sid;
+	    my $child_num_min = &SynGraph::get_child_num_min($this->{syndata}->{$sid});
+	    unless (grep($sid eq $_->{mid}, @{$this->{synhead}{$newid->{id}}{$child_num_min}})) {
+		my $synid = (split(/,/, $sid))[0];
+		push @{$this->{synhead}{$newid->{id}}{$child_num_min}}, { mid => $sid, synid => $synid };
 
 		$this->{regnode} = $sid;
 	    }
@@ -2976,7 +2982,7 @@ sub store_cdb {
 	    my @values;
 	    for my $child_num (keys %{$value}) {
 		for my $sid (@{$value->{$child_num}}) {
-		    my $str = $sid . '%' . $child_num;
+		    my $str = $sid->{mid} . '%' . $child_num;
 		    push @values, $str;
 		}
 	    }
