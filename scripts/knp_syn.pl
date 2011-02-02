@@ -8,6 +8,7 @@ use strict;
 use Dumpvalue;
 use utf8;
 use Encode;
+use POSIX;
 use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
