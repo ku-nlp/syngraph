@@ -53,8 +53,11 @@ while (my $knp_result = $sgh->read_parsed_data) {
             if ($node->{id}) {
 		# 文末の基本句の子供数の最小値を得る
 		my $child_num_min = &SynGraph::get_child_num_min($sgh->{syndata}->{$sid});
-		push @{$sgh->{synhead}{$node->{id}}{$child_num_min}}, $sid unless grep($sid eq $_, @{$sgh->{synhead}{$node->{id}}{$child_num_min}});;
-            }
+		unless (grep($sid eq $_->{mid}, @{$sgh->{synhead}{$node->{id}}{$child_num_min}})) {
+		    my $synid = (split(/,/, $sid))[0];
+		    push @{$sgh->{synhead}{$node->{id}}{$child_num_min}}, { mid => $sid, synid => $synid };
+		}
+	    }
         }
     }
 }
