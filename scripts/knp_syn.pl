@@ -13,7 +13,7 @@ use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf');
+my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf', 'wsd', 'wsd_data_dir=s');
 
 my $encoding = $opt{encoding} ? ":encoding($opt{encoding})" : ':encoding(euc-jp)'; # default encoding is euc-jp
 $encoding .= ':crlf' if $opt{crlf};
@@ -67,6 +67,22 @@ else {
     $syndbdir = "../syndb/$uname";
 }
 
+my ($WSD, %wsd_opt);
+if ($opt{wsd}) {
+    $opt{wsd_data_dir} = '../data' unless $opt{wsd_data_dir};
+
+    $wsd_opt{window_size}         = 20;
+    $wsd_opt{tagigo_db_file}      = "$opt{wsd_data_dir}/tagigo.db";
+    $wsd_opt{basic_word_file}     = "$opt{wsd_data_dir}/basic_words_10000";
+    $wsd_opt{stop_word_list}      = "$opt{wsd_data_dir}/stword/stop_words"; 
+    $wsd_opt{cooc_file}           = "$opt{wsd_data_dir}/coocdb.bin";
+    $wsd_opt{gogi_prob_file}      = "$opt{wsd_data_dir}/data_wiki/word-prob-list.txt";
+    $wsd_opt{weight_of_gogi_prob} = 0.3;
+
+    require WSD2;
+    $WSD = new WSD2(\%wsd_opt);
+}
+
 my $sgh = new SynGraph($syndbdir, $knp_option, $option);
 
 if ($opt{sentence}) {
@@ -83,14 +99,26 @@ if ($opt{sentence}) {
     }
 }
 else {
-    my ($sid, $knp_buf);
+    my ($sid, $pre_aid, $aid, $knp_buf, @results);
     while (<>) {
 	$knp_buf .= $_;
 
 	if (/^EOS$/) {
 	    my $result = new KNP::Result($knp_buf);
 	    $result->set_id($sid) if (defined $sid);
-	    if ($opt{print_hypernym}) {
+	    if ($opt{wsd}) {
+		# 記事IDが変わったら多義性解消をする
+		if ($pre_aid && $aid ne $pre_aid) {
+		    $WSD->run(\@results, \%wsd_opt);
+		    for my $result (@results) {
+			print $sgh->OutputSynFormat($result, $regnode_option, $option);
+		    }
+		    @results = ();
+		}
+		push @results, $result;
+		$pre_aid = $aid;
+	    }
+	    elsif ($opt{print_hypernym}) {
 		print $sgh->GetHypernym($result, $regnode_option, $option), "\n";
 	    }
 	    else {
@@ -103,6 +131,16 @@ else {
 	    $sid =~ s/\s+/ /;
 	    $sid =~ s/^\s//;
 	    $sid =~ s/\s$//;
+	    if ($sid =~ /^(.+)-\d+$/) {
+		$aid = $1;
+	    }
+	}
+    }
+
+    if ($opt{wsd}) {
+	$WSD->run(\@results, \%wsd_opt);
+	for my $result (@results) {
+	    print $sgh->OutputSynFormat($result, $regnode_option, $option);
 	}
     }
 }
