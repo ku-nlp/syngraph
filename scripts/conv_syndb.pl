@@ -12,7 +12,7 @@ binmode STDOUT, ':encoding(euc-jp)';
 binmode STDERR, ':encoding(euc-jp)';
 binmode DB::OUT, ':encoding(euc-jp)';
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'synonym_med=s', 'definition=s', 'definition_med=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'synonym_med=s', 'synonym_ingo=s', 'definition=s', 'definition_med=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -82,6 +82,7 @@ foreach my $file_type (@def_file) {
 #
 my @file = ('synonym_dic', 'synonym_web_news');
 push @file, 'synonym_med' if $opt{synonym_med};
+push @file, 'synonym_ingo' if $opt{synonym_ingo};
 
 foreach my $file_type (@file) {
     my $file_tag;
@@ -94,17 +95,21 @@ foreach my $file_type (@file) {
     elsif ($file_type eq 'synonym_med') {
 	$file_tag = '[Med]';
     }
+    elsif ($file_type eq 'synonym_ingo') {
+	$file_tag = '[Ingo]';
+    }
     if ($opt{$file_type}) {
 	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
 	while (<SYN>) {
 	    chomp;
-	    $_ = &SynGraph::h2z($_) if $file_type eq 'synonym_med';
+	    $_ = &SynGraph::h2z($_) if $file_type eq 'synonym_med' || $file_type eq 'synonym_ingo';
+	    $_ = &SynGraph::toupper($_) if $file_type eq 'synonym_ingo';
 
 	    my $delimiter = ($file_type eq 'synonym_web_news' && $opt{wikipedia}) ? '\t' : '\s';
 	    my @syn_list = split(/$delimiter/, $_);
 	    
 	    # 数が多いのは使わない
-	    next if (@syn_list > 40);
+	    next if $file_type ne 'synonym_ingo' && (@syn_list > 40);
 	    
 	    # SYNIDの獲得
 	    my $synid = 's' . $syn_number . ':' . (split(/:/, $syn_list[0]))[0];
@@ -349,6 +354,34 @@ foreach my $synid (keys %relation_parent) {
     }
 }
 
+if ($option{log}) {
+    # 下位語
+    foreach my $synid (keys %relation_child) {
+	my @children;
+	for my $child (split('\|', $relation_child{$synid})) {
+
+	    my $child_new;
+	    # 更新する
+	    if (defined $one_word_sid{$child}) {
+		$child_new = $one_word_sid{$child};
+	    }
+	    else {
+		$child_new = $child;
+	    }
+	    push @children, $child_new;
+	}
+	my $newstring = join('|', @children);
+
+	if (defined $one_word_sid{$synid}) {
+	    $relation_child{$one_word_sid{$synid}} = $newstring;
+	    delete $relation_child{$synid};
+	}
+	else {
+	    $relation_child{$synid} = $newstring;
+	}
+    }
+}
+
 # 反義語
 foreach my $synid (keys %antonym) {
     my @antonyms;
@@ -384,7 +417,7 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句|Med)\]$//g;
+	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句|Med|Ingo)\]$//g;
 
 	    # 定義文の重複を除く
 	    if ($tag eq '定義文') {
