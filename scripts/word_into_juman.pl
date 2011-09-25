@@ -90,7 +90,6 @@ sub print_result_all {
 	unless ($@) {
 	    print "$comment JUMAN:$juman_version\n";
 	    print $all;
-	    print "EOS\n";
 	}
     }
 }
