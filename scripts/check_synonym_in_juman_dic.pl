@@ -32,7 +32,7 @@ my $TH_DISTRIBUTIONAL_SIMILARITY = 0.3;
 
 # Jumanの辞書の読み込み
 for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
-    open DIC, "<:encoding(euc-jp)", $dicfile || die;
+    open DIC, "<:encoding(utf-8)", $dicfile || die;
     print STDERR "OK $dicfile\n" if $opt{debug};
 
     while (<DIC>) {
