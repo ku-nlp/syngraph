@@ -18,6 +18,8 @@ SYNONYM_FILTERED = $(DICDIR)/synonym.txt.filtered
 ISA_TXT = $(DICDIR)/isa.txt
 ISA_FILTERED = $(DICDIR)/isa.txt.filtered
 
+all: $(SYNONYM_FILTERED) $(ISA_FILTERED)
+
 $(SYNONYM_FILTERED): splitsyn $(SYNONYM_TXT)
 	perl generate_tasks_calc_sim.pl -exedate $(DATE) -syngraphdir $(ABS_SYNGRAPHDIR) > $(TASKSFILTERSYN)
 	./calc-similarity-synonym-gxp3.sh -t $(TASKSFILTERSYN) -e $(DATE) -s $(ABS_SYNGRAPHDIR) -d $(ABS_DICDIR)
