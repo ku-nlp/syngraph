@@ -6,8 +6,11 @@
 # perl -I../perl read_manual_db.pl -isa ../dic/rsk_iwanami/isa.txt.filtered -debug -synonym ../dic/rsk_iwanami/synonym.txt.filtered -isa ../dic/rsk_iwanami/isa.txt.filtered -antonym ../dic/rsk_iwanami/antonym.txt -definition ../dic/rsk_iwanami/definition.txt
 
 use strict;
-use encoding 'euc-jp';
-binmode STDERR, ':encoding(euc-jp)';
+use utf8;
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Encode;
 use FileHandle;
 use SynGraph;
@@ -36,23 +39,23 @@ unless ($opt{debug}) {
     for my $type (@types) {
 	my $filename = $opt{"${type}out"};
 	$FILE{$type} = new FileHandle("> $filename");
-	binmode $FILE{$type}, ':encoding(euc-jp)';
+	binmode $FILE{$type}, ':encoding(utf-8)';
     }
 }
 
 my %data;
 my %manual_editted;
 for my $rep (keys %SYNDB) {
-    #  ‘Ω∏§µ§Ï§∆§§§ §§§‚§Œ§œ•—•π
+    # Á∑®ÈõÜ„Åï„Çå„Å¶„ÅÑ„Å™„ÅÑ„ÇÇ„ÅÆ„ÅØ„Éë„Çπ
     next if !defined $SYNDB{$rep}{username};
 
-    print STDERR "°˙$rep\n" if $opt{debug};
+    print STDERR "‚òÖ$rep\n" if $opt{debug};
 
     my $id; 
     if (defined $SYNDB{$rep}{elements}) {
 	for my $element (@{$SYNDB{$rep}{elements}}) {
 	    if ($element->{type} ne 'nouse') {
-		# origtype§¨definition
+		# origtype„Åådefinition
 		my $type = $element->{origtype} eq 'definition' ? 'definition' : $element->{type};
 		push @{$data{$type}{"$element->{word}:$element->{id}"}}, $element->{definition};
 		# $FILE{$element->{type}}->print("$element->{word}:$element->{id} $element->{definition}\n");
@@ -61,9 +64,9 @@ for my $rep (keys %SYNDB) {
 	}
     }
 
-    # $id§¨∂ı§«ambiguity§¨undef§ §È1:1/1:1§»§ﬂ§ §π
+    # $id„ÅåÁ©∫„Åßambiguity„Ååundef„Å™„Çâ1:1/1:1„Å®„Åø„Å™„Åô
     if (!defined $id && !defined $SYNDB{$rep}{ambiguity}) {
-	print STDERR "°˘id -> 1/1:1/1\n" if $opt{debug};
+	print STDERR "‚òÜid -> 1/1:1/1\n" if $opt{debug};
 	$id = '1/1:1/1';
     }
 
@@ -80,7 +83,7 @@ for my $rep (keys %SYNDB) {
     if (defined $SYNDB{$rep}{add}) {
 	foreach my $type (keys %{$SYNDB{$rep}{add}}) {
 	    my $string = $SYNDB{$rep}{add}{$type};
-	    # •Ê°º•∂°ºÃæ§ÚºË§ÍΩ¸§Ø
+	    # „É¶„Éº„Ç∂„ÉºÂêç„ÇíÂèñ„ÇäÈô§„Åè
 	    $string =~ s/\((?:kuro|kawahara|shinzato|shibata|nikaido|ishikawa)\)//g;
 
 	    for my $word (split(/\s/, $string)) {
@@ -98,7 +101,7 @@ for my $rep (keys %SYNDB) {
 		    $newword_komidashi_id = $1;
 		}
 
-		# ¬øµ¡∏Ï§Œ∞∑§§
+		# Â§öÁæ©Ë™û„ÅÆÊâ±„ÅÑ
 		next if $komidasi_num > 5 || ($komidasi_num == 5 && $newword_komidashi_id > 1) || ($komidasi_num == 4 && $newword_komidashi_id > 2);
 
 		if ($id eq '1/1:1/1') {
@@ -119,7 +122,7 @@ for my $rep (keys %SYNDB) {
 		}
 
 		if ($newword_id_all) {
-		    print STDERR "°˘Add $word to $rep:$newword_id_all\n" if $opt{debug};
+		    print STDERR "‚òÜAdd $word to $rep:$newword_id_all\n" if $opt{debug};
 		    push @{$data{$type}{"$rep:$newword_id_all"}}, $word;
 		}
 		else {
@@ -138,7 +141,7 @@ for my $type (@types) {
     my %out;
     for my $midasi (sort keys %{$data{$type}}) {
 	my $out_string;
-	# æÂ∞Ã∏Ï§ŒæÏπÁ§œ≤º∞Ã∏ÏøÙ§Ú…’Õø
+	# ‰∏ä‰ΩçË™û„ÅÆÂ†¥Âêà„ÅØ‰∏ã‰ΩçË™ûÊï∞„Çí‰ªò‰∏é
 	if ($type eq 'isa') {
 	    my $num = defined $hypernym{$data{$type}{$midasi}[0]} ? $hypernym{$data{$type}{$midasi}[0]} : 1;
 	    $out_string = "$midasi $data{$type}{$midasi}[0] $num\n";
@@ -159,9 +162,9 @@ for my $type (@types) {
 	}
     }
 
-    # øÕºÍ§«Ω§¿µ§µ§Ï§∆§§§ §§§‚§Œ
+    # ‰∫∫Êâã„Åß‰øÆÊ≠£„Åï„Çå„Å¶„ÅÑ„Å™„ÅÑ„ÇÇ„ÅÆ
     for my $entry (keys %{$data_before{$type}}) {
-	# •≥•√•◊/§≥§√§◊:1/1:1/1
+	# „Ç≥„ÉÉ„Éó/„Åì„Å£„Å∑:1/1:1/1
 	my ($rep, $id) = split(':', $entry, 2);
 
 	if (!defined $manual_editted{$rep}) {
@@ -193,10 +196,10 @@ for my $type (@types) {
 	}
     }
 
-    # sort§∑§∆Ω–Œœ
+    # sort„Åó„Å¶Âá∫Âäõ
     unless ($opt{debug}) {
 	for my $midasi (sort keys %out) {
-	    # »øµ¡∏Ï§¿§±∆√ ÃΩËÕ˝
+	    # ÂèçÁæ©Ë™û„Å†„ÅëÁâπÂà•Âá¶ÁêÜ
 	    if ($type eq 'antonym') {
 		for my $string (@{$out{$midasi}}) {
 		    $FILE{$type}->print($string);
@@ -213,11 +216,11 @@ for my $type (@types) {
 sub read_synonym {
     my ($file) = @_;
 
-    open F, "<:encoding(euc-jp)", $file or die;
+    open F, "<:encoding(utf-8)", $file or die;
     while (<F>) {
 	chomp;
 
-	# ∞¶§π§Î/§¢§§§π§Î:1/1:2/3 π•§≠§¿/§π§≠§¿ π•§‡/§≥§Œ§‡
+	# ÊÑõ„Åô„Çã/„ÅÇ„ÅÑ„Åô„Çã:1/1:2/3 Â•Ω„Åç„Å†/„Åô„Åç„Å† Â•Ω„ÇÄ/„Åì„ÅÆ„ÇÄ
 	my ($entry, @synonyms) = split;
 
 	$data_before{synonym}{$entry} = \@synonyms;
@@ -228,7 +231,7 @@ sub read_synonym {
 sub read_isa {
     my ($file) = @_;
 
-    open F, "<:encoding(euc-jp)", $file or die;
+    open F, "<:encoding(utf-8)", $file or die;
     while (<F>) {
 	chomp;
 
@@ -242,7 +245,7 @@ sub read_isa {
 sub read_antonym {
     my ($file) = @_;
 
-    open F, "<:encoding(euc-jp)", $file or die;
+    open F, "<:encoding(utf-8)", $file or die;
     while (<F>) {
 	chomp;
 
@@ -255,7 +258,7 @@ sub read_antonym {
 sub read_definition {
     my ($file) = @_;
 
-    open F, "<:encoding(euc-jp)", $file or die;
+    open F, "<:encoding(utf-8)", $file or die;
     while (<F>) {
 	chomp;
 

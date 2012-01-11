@@ -9,10 +9,10 @@ use Getopt::Long;
 use Dumpvalue;
 use KNP;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'dic=s', 'web=s', 'log_merge=s');
 
@@ -21,7 +21,7 @@ my $knp = new KNP(-Option => '-tab -dpnd');
 my %syngroup;
 my %wordbelong;
 my $groupnum;
-open(DIC, '<:encoding(euc-jp)', $opt{dic}) or die;
+open(DIC, '<:encoding(utf-8)', $opt{dic}) or die;
 while (<DIC>) {
     chomp;
     my @list = split;
@@ -43,8 +43,8 @@ while (<DIC>) {
 }
 close(DIC);
 
-open(WEB, '<:encoding(euc-jp)', $opt{web}) or die;
-open(LM, '>:encoding(euc-jp)', $opt{log_merge}) or die;
+open(WEB, '<:encoding(utf-8)', $opt{web}) or die;
+open(LM, '>:encoding(utf-8)', $opt{log_merge}) or die;
 while (<WEB>) {
     chomp;
     my @list = split;

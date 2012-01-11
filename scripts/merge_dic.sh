@@ -55,26 +55,26 @@ export PERL5LIB=$SRC_DIR:$PERL5LIB
 # 全部削除する
 for f in definition.txt synonym_dic.txt isa.txt antonym.txt log_merge.txt; do
     if [ -e $SIM_C_DIR/$f ] ; then
-	rm -v $SIM_C_DIR/$f
+	rm -fv $SIM_C_DIR/$f
     fi
 done
 
 if [ $wikipedia -eq 1 ]; then
     for f in synonym_web_news_aimai.txt isa_wikipedia.txt; do
 	if [ -e $SIM_C_DIR/$f ] ; then
-	    rm -v $SIM_C_DIR/$f
+	    rm -fv $SIM_C_DIR/$f
 	fi
     done
 else
     for f in synonym_web_news.txt; do
 	if [ -e $SIM_C_DIR/$f ] ; then
-	    rm -v $SIM_C_DIR/$f
+	    rm -fv $SIM_C_DIR/$f
 	fi
     done
 fi
 
 if [ -e $SYNDB_DIR/log_dic.cdb ] ; then
-    rm -v $SYNDB_DIR/log_dic.cdb
+    rm -fv $SYNDB_DIR/log_dic.cdb
 fi
 
 

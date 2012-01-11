@@ -1,16 +1,16 @@
 #!/usr/bin/env perl
 
 # $Id$
-# antonym.txt¤òÀ°Íı¤¹¤ë¥¹¥¯¥ê¥×¥È
+# antonym.txtã‚’æ•´ç†ã™ã‚‹ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
 
 use strict;
 use Getopt::Long;
 use MergeTxt;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my $MergeTxt = new MergeTxt;
 
@@ -22,30 +22,30 @@ while (<>) {
     
     my @list = split;
 
-    # ½ÅÊ£check
+    # é‡è¤‡check
     my $gr_check = {};
     $gr_check = $MergeTxt->merge_check(\@list, $word_index);
 
-    # ¥Ş¡¼¥¸
+    # ãƒãƒ¼ã‚¸
     if (defined $gr_check) {
 	my $log_list = $MergeTxt->merge_group($gr_check, \@list, $ant_pair, $word_index);
 	if (scalar(@{$log_list}) > 0) {
 	    my $log_str = $MergeTxt->make_log('merge', $log_list);
 	    print STDERR "$log_str\n";
 	}
-	else { # ID¤Î°ã¤¤¤Ç¼Â¤Ï¥Ş¡¼¥¸¤Ç¤­¤Ê¤¤
- 	    #¥Ş¡¼¥¸¤Ç¤­¤Ê¤«¤Ã¤¿¤éÅĞÏ¿
+	else { # IDã®é•ã„ã§å®Ÿã¯ãƒãƒ¼ã‚¸ã§ããªã„
+ 	    #ãƒãƒ¼ã‚¸ã§ããªã‹ã£ãŸã‚‰ç™»éŒ²
  	    $MergeTxt->regist_list4merge(\@list, $gr_number, $ant_pair, $word_index);
  	    $gr_number++;
 	}
     }
-    else { #¥Ş¡¼¥¸¤Ç¤­¤Ê¤«¤Ã¤¿¤éÅĞÏ¿
+    else { #ãƒãƒ¼ã‚¸ã§ããªã‹ã£ãŸã‚‰ç™»éŒ²
 	$MergeTxt->regist_list4merge(\@list, $gr_number, $ant_pair, $word_index);
 	$gr_number++;
     }
 }
 
-# ¥Ş¡¼¥¸¤·¤¿synonym_dic½ĞÎÏ
+# ãƒãƒ¼ã‚¸ã—ãŸsynonym_dicå‡ºåŠ›
 foreach my $num (sort {$a <=> $b} keys %{$ant_pair}) {
     my $result_str;
     foreach my $word (@{$ant_pair->{$num}}) {

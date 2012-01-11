@@ -1,14 +1,16 @@
 #!/usr/bin/env perl
 
+# $Id$
+
 # 曖昧性のあるひらがなの代表表記を含む文を抽出する
 
 # usage: echo '蕎麦を食べた' | juman | perl extract_han_includes_disambiguate_hiragana.pl --db ../db/hiragana_disambiguate.cdb 
 
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Encode;
 use Getopt::Long;
 use CDB_File;

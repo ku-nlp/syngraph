@@ -7,14 +7,14 @@ use Encode;
 use Dumpvalue;
 use SynGraph;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 die "Usage: print_hash.pl db_name key\n" if (@ARGV < 1);
 
-map {$_ = &decode('euc-jp', $_)} @ARGV;
+map {$_ = &decode('utf-8', $_)} @ARGV;
 my $db_name = shift @ARGV;
 my @key = @ARGV;
 my %db;

@@ -7,10 +7,10 @@ use Getopt::Long;
 use CDB_File;
 use SynGraph;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'synonym_med=s', 'synonym_ingo=s', 'definition=s', 'definition_med=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s');
 
@@ -42,7 +42,7 @@ my @def_file = ('definition');
 push @def_file, 'definition_med' if $opt{definition_med};
 foreach my $file_type (@def_file) {
     if ($opt{$file_type}) {
-	open(DEF, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	open(DEF, '<:encoding(utf-8)', $opt{$file_type}) or die;
 
 	while (<DEF>) {
 	    chomp;
@@ -99,7 +99,7 @@ foreach my $file_type (@file) {
 	$file_tag = '[Ingo]';
     }
     if ($opt{$file_type}) {
-	open(SYN, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	open(SYN, '<:encoding(utf-8)', $opt{$file_type}) or die;
 	while (<SYN>) {
 	    chomp;
 	    $_ = &SynGraph::h2z($_) if $file_type eq 'synonym_med' || $file_type eq 'synonym_ingo';
@@ -154,12 +154,12 @@ foreach my $file_type (@file) {
 my @file = ('isa', 'isa_wikipedia');
 foreach my $file_type (@file) {
     if ($opt{$file_type}) {
-	open(ISA, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	open(ISA, '<:encoding(utf-8)', $opt{$file_type}) or die;
 	my %rel_synid;
 
 	# 矛盾解消のログ
 	if ($option{log} and $opt{log_merge}) {
-	    open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;
+	    open(LM, '>>:encoding(utf-8)', $opt{log_merge}) or die;
 	}
 
 	while (<ISA>) {
@@ -224,11 +224,11 @@ push @file, 'antonym_med' if $opt{antonym_med};
 
 foreach my $file_type (@ant_file) {
     if ($opt{$file_type}) {
-	open(ANT, '<:encoding(euc-jp)', $opt{$file_type}) or die;
+	open(ANT, '<:encoding(utf-8)', $opt{$file_type}) or die;
 
 	# 矛盾解消のログ
 	if ($option{log} and $opt{log_merge}) {
-	    open(LM, '>>:encoding(euc-jp)', $opt{log_merge}) or die;    
+	    open(LM, '>>:encoding(utf-8)', $opt{log_merge}) or die;    
 	}
 
 	while (<ANT>) {
@@ -292,7 +292,7 @@ foreach my $midasi (keys %definition) {
 }
 
 if ($opt{similar_phrase}) {
-    open(P, '<:encoding(euc-jp)', $opt{similar_phrase}) or die;
+    open(P, '<:encoding(utf-8)', $opt{similar_phrase}) or die;
     while (<P>) {
 	chomp;
 
@@ -409,7 +409,7 @@ foreach my $synid (keys %antonym) {
 # 同義グループをファイルに書き出す
 #
 if ($opt{convert_file}) {
-    open(CF, '>:encoding(euc-jp)', $opt{convert_file}) or die;    
+    open(CF, '>:encoding(utf-8)', $opt{convert_file}) or die;    
 
     foreach my $synid (keys %syn_group) {
 	my %check; # 曖昧性のある語の展開をチェック
@@ -456,7 +456,7 @@ if ($opt{convert_file}) {
 # ログ
 #
 if ($opt{conv_log}) {
-    open(LOG, '>:encoding(euc-jp)', $opt{conv_log}) or die;
+    open(LOG, '>:encoding(utf-8)', $opt{conv_log}) or die;
     foreach (@log_list) {
 	print LOG "$_";
     }

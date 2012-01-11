@@ -6,8 +6,11 @@
 # usage: cat ../dic/rsk_iwanami/definition.txt | perl delete_infrequent_synonymous_phrase.pl -th 0 -print_count ../dic/rsk_iwanami/definition_count.txt  | sort -k 3 -nr
 
 use strict;
-use encoding 'euc-jp';
-binmode STDERR, ':encoding(euc-jp)';
+use utf8;
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 
 my %opt;
@@ -17,14 +20,14 @@ $opt{th} = 100 unless $opt{th};
 
 my %data;
 
-#  237585 !! s776:À÷¤á¤ë/¤½¤á¤ë,»Å»ö¤ò»Ï¤á¤ë[ÄêµÁÊ¸]
-open(F, '<:encoding(euc-jp)', $ARGV[0]) or die;
+#  237585 !! s776:æŸ“ã‚ã‚‹/ãã‚ã‚‹,ä»•äº‹ã‚’å§‹ã‚ã‚‹[å®šç¾©æ–‡]
+open(F, '<:encoding(utf-8)', $ARGV[0]) or die;
 while (<F>) {
     chomp;
 
     my ($count, undef, $string) = split;
 
-    if ($string =~/(.+?),(.+?)\[ÄêµÁÊ¸\]/) {
+    if ($string =~/(.+?),(.+?)\[å®šç¾©æ–‡\]/) {
 	my $synid = $1;
 	my $phrase = $2;
 
@@ -40,9 +43,9 @@ while (<STDIN>) {
 
     my ($string1, $string2) = split(' ', $line, 2);
 
-    $string2 =~ s/¡£$//;
-    $string2 =~ s/¤³¤È$//;
-    $string2 =~ s/½ê$//;
+    $string2 =~ s/ã€‚$//;
+    $string2 =~ s/ã“ã¨$//;
+    $string2 =~ s/æ‰€$//;
 
     if (defined $data{$string2}) {
 	next if $data{$string2} < $opt{th};

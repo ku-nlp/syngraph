@@ -7,10 +7,10 @@ use Dumpvalue;
 use Getopt::Long;
 use utf8;
 use SynGraph;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %wordid;
 
@@ -18,7 +18,7 @@ my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 's
 
 # 多義でない語を記録
 my %monosemy;
-open (FILE, '<:encoding(euc-jp)', $opt{komidasi_num}) || die;
+open (FILE, '<:encoding(utf-8)', $opt{komidasi_num}) || die;
 while (<FILE>) {
     chomp;
     my ($rep, $komidasi_num) = split;
@@ -27,11 +27,11 @@ while (<FILE>) {
 close(FILE);
 
 # ログ
-open (LOG, '>:encoding(euc-jp)', $opt{log}) or die;
+open (LOG, '>:encoding(utf-8)', $opt{log}) or die;
 
 # synonym
-open (FILE, '<:encoding(euc-jp)', $opt{synonym}) || die;
-open (CHANGE, '>:encoding(euc-jp)', $opt{synonym_change}) or die;
+open (FILE, '<:encoding(utf-8)', $opt{synonym}) || die;
+open (CHANGE, '>:encoding(utf-8)', $opt{synonym_change}) or die;
 while (<FILE>) {
     chomp;
     my $orig_list = $_;
@@ -66,9 +66,9 @@ close(CHANGE);
 
 # isa, antonym, definition
 foreach my $Filetype ('isa', 'antonym', 'definition') {
-    open (FILE, '<:encoding(euc-jp)', $opt{$Filetype}) || die;
+    open (FILE, '<:encoding(utf-8)', $opt{$Filetype}) || die;
     my $open_file = $Filetype . '_change';
-    open (CHANGE, '>:encoding(euc-jp)', $opt{$open_file}) or die;
+    open (CHANGE, '>:encoding(utf-8)', $opt{$open_file}) or die;
     while (<FILE>) {
 	chomp;
 	my $orig_list = $_;

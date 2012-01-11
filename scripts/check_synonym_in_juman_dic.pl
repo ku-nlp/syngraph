@@ -2,17 +2,20 @@
 
 # $Id$
 
-# Juman¤Î¼­½ñ¤Ë¤¢¤ë¥¨¥ó¥È¥ê¤òºï½ü¤¹¤ë
+# Jumanã®è¾æ›¸ã«ã‚ã‚‹ã‚¨ãƒ³ãƒˆãƒªã‚’å‰Šé™¤ã™ã‚‹
 
 # usage: perl check_synonym_in_juman_dic.pl --jumandicdir /home/shibata/download/juman/dic < www.txt
 
 use strict;
-use encoding 'euc-jp';
+use utf8;
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 use JumanLib;
 use Configure;
 use CalcSimilarityByCF;
-binmode STDERR, ':encoding(euc-jp)';
 
 my (%opt);
 GetOptions(\%opt, 'jumandicdir=s', 'help', 'debug');
@@ -30,7 +33,7 @@ $cscf->TieMIDBfile($Configure::CalcsimCNMidbfile);
 
 my $TH_DISTRIBUTIONAL_SIMILARITY = 0.3;
 
-# Juman¤Î¼­½ñ¤ÎÆÉ¤ß¹ş¤ß
+# Jumanã®è¾æ›¸ã®èª­ã¿è¾¼ã¿
 for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
     open DIC, "<:encoding(utf-8)", $dicfile || die;
     print STDERR "OK $dicfile\n" if $opt{debug};
@@ -38,7 +41,7 @@ for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
     while (<DIC>) {
 
 	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
-	next unless $imis_dic; # °ÕÌ£¾ğÊó¤¬¤Ê¤¤¤Ê¤é¥¹¥­¥Ã¥×
+	next unless $imis_dic; # æ„å‘³æƒ…å ±ãŒãªã„ãªã‚‰ã‚¹ã‚­ãƒƒãƒ—
 
 	my @midasi = split(/ /, $midashi_dic);
 
@@ -56,15 +59,15 @@ while (<>) {
     chomp;
     my ($word1, $word2) = split("\t", $_);
 
-    # Î¾ÊıÅĞÏ¿¤µ¤ì¤Æ¤¤¤ë -> ºï½ü
+    # ä¸¡æ–¹ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹ -> å‰Šé™¤
     if (defined $MIDASI{$word1} && defined $MIDASI{$word2}) {
-	print STDERR "¡ù$word1 $word2\n";
+	print STDERR "â˜†$word1 $word2\n";
 	next;
     }
-    # ÊÒÊı¤¬ÅĞÏ¿¤µ¤ì¤Æ¤¤¤ë -> Ê¬ÉÛÎà»÷ÅÙ¤¬¹â¤±¤ì¤ĞºÎÍÑ
+    # ç‰‡æ–¹ãŒç™»éŒ²ã•ã‚Œã¦ã„ã‚‹ -> åˆ†å¸ƒé¡ä¼¼åº¦ãŒé«˜ã‘ã‚Œã°æ¡ç”¨
     elsif (defined $MIDASI{$word1} || defined $MIDASI{$word2}) {
 	my $score = $cscf->CalcSimilarity($word1, $word2, { normalized_repname => 'compound', mifilter => 1 });
-	print STDERR "¡ú$word1 $word2 $score";
+	print STDERR "â˜…$word1 $word2 $score";
 
 	if ($score < $TH_DISTRIBUTIONAL_SIMILARITY) {
 	    print STDERR " discarded\n";

@@ -8,10 +8,10 @@ use strict;
 use Getopt::Long;
 use KNP;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Dumpvalue;
 
 my %opt; GetOptions(\%opt, 'isa_wikipedia=s', 'isa_location=s', 'isa_out=s', 'synonym_out=s', 'debug');
@@ -44,14 +44,14 @@ while (<>) {
     }
 }
 
-open (F, ">:encoding(euc-jp)", $opt{isa_out}) or die;
+open (F, ">:encoding(utf-8)", $opt{isa_out}) or die;
 # 下位語数でソート
 for my $word (sort { $isa_wikipedia_hypernym_num{$isa_wikipedia{$b}} <=> $isa_wikipedia_hypernym_num{$isa_wikipedia{$a}} || $isa_wikipedia{$a} cmp $isa_wikipedia{$b}} keys %isa_wikipedia) {
     print F "$word\t$isa_wikipedia{$word}\t$isa_wikipedia_hypernym_num{$isa_wikipedia{$word}}\n";
 }
 close F;
 
-open (F, ">:encoding(euc-jp)", $opt{synonym_out}) or die;
+open (F, ">:encoding(utf-8)", $opt{synonym_out}) or die;
 for my $line (@synonym) {
     print F $line, "\n";
 }
@@ -60,7 +60,7 @@ close F;
 sub read_isa_file {
     my ($file) = @_;
 
-    open (F, "<:encoding(euc-jp)", $file) or die;
+    open (F, "<:encoding(utf-8)", $file) or die;
     while (<F>) {
 	chomp;
 

@@ -9,10 +9,10 @@
 use strict;
 use Getopt::Long;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use KNP;
 use Configure;
 
@@ -30,7 +30,7 @@ my $knp = new KNP( -Option => '-tab -dpnd',
 my %DIC;
 
 # 辞書データの読み込み
-open(DIC, '<:encoding(euc-jp)', $opt{dic}) or die;
+open(DIC, '<:encoding(utf-8)', $opt{dic}) or die;
 while (<DIC>) {
     chomp;
 
@@ -48,7 +48,7 @@ my %midasi2rep;
 # Wikipediaデータの読み込み
 # まず上位語のみ
 my %hypernym_data;
-open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
+open(W, '<:encoding(utf-8)', $opt{wikipedia}) or die;
 while (<W>) {
     chomp;
 
@@ -85,7 +85,7 @@ if ($opt{compound_noun_isa}) {
 
 my %outdata;
 # Wikipediaデータの読み込み
-open(W, '<:encoding(euc-jp)', $opt{wikipedia}) or die;
+open(W, '<:encoding(utf-8)', $opt{wikipedia}) or die;
 while (<W>) {
     chomp;
 

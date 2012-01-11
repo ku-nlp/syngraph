@@ -11,17 +11,17 @@ use Encode;
 use lib qw(../perl);
 use CalcSimWithSynGraph;
 use Getopt::Long;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'debug', 'match_print', 'no_case', 'postprocess', 'store_fstring','relation', 'antonym', 'hypocut_attachnode=s', 'coordinate_matching', 'hypocut_matching=s', 'orchid', 'relation_recursive');
 
 my ($zenbun, $query);
 if ($ARGV[0] && $ARGV[1]) {
-    $zenbun = decode('euc-jp', $ARGV[0]);
-    $query = decode('euc-jp', $ARGV[1]);
+    $zenbun = decode('utf-8', $ARGV[0]);
+    $query = decode('utf-8', $ARGV[1]);
 }
 
 # my ($zenbun, $query) = ('一番近い駅', '最寄りの駅');

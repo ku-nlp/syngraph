@@ -5,8 +5,8 @@
 # usage: perl -I../perl test-sid2word.pl 
 
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
 use strict;
 use SynGraph;
 use Dumpvalue;
@@ -16,7 +16,7 @@ use Encode;
 my %opt;
 GetOptions(\%opt, 'synid=s', 'constructor', 'orig', 'debug');
 
-$opt{synid} = decode('euc-jp', $opt{synid});
+$opt{synid} = decode('utf-8', $opt{synid});
 
 my $syndb_cdb = '../syndb/cgi/syndb.cdb';
 

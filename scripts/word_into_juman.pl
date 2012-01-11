@@ -11,10 +11,10 @@ use Encode;
 use Dumpvalue;
 use Juman;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-#binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'Command=s', 'Rcfile=s', 'test');
 my %option;
@@ -34,19 +34,9 @@ while (<>) { # 代表表記
     chomp;
 
     if ($_ =~ /^\#/) { # 「#」行はそのまま出す。
-#	print encode('euc-jp', "$_\n");
 	$comment = $_;
-	$comment = eval{encode('euc-jp', $comment, Encode::FB_CROAK)};
-	# EUCにマップできない
-	if ($@) {
-	    $skip_flag = 0;
-	}
     }
     else {
-	if ($skip_flag) {
-	    $skip_flag = 0;
-	    next;
-	}
 	my $word = $_;
 	my $result;
 	if ($word =~ /^(.+?)\/.+?$/) { # $wordが代表表記
@@ -61,7 +51,7 @@ while (<>) { # 代表表記
 			if ($word eq $1) { # $wordにあたる解析行
 			    $r_str =~ s/^@ //g;
 			    print "$comment JUMAN:$juman_version\n";
-			    print encode('euc-jp', "$r_str\n");
+			    print "$r_str\n";
 			    $flag = 1;
 			}
 		    }
@@ -84,14 +74,8 @@ while (<>) { # 代表表記
 sub print_result_all {
     my ($all) = @_;
 
-    unless ($@) {
-	$all = eval{encode('euc-jp', $all, Encode::FB_CROAK)};
-
-	unless ($@) {
-	    print "$comment JUMAN:$juman_version\n";
-	    print $all;
-	}
-    }
+    print "$comment JUMAN:$juman_version\n";
+    print $all;
 }
 
 sub get_juman_version {

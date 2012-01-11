@@ -9,10 +9,10 @@ use Encode;
 use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'synid=s', 'number=s', 'print_syngraph', 'orchid');
 
@@ -27,7 +27,7 @@ $sgh->tie_forsyndbcheck("$syndbdir/syndb.cdb", "$syndbdir/synnumber.cdb", "$synd
 
 my $synid;
 if ($opt{synid}) {
-    $synid = decode('euc-jp', $opt{synid});
+    $synid = decode('utf-8', $opt{synid});
 }
 elsif ($opt{number}) {
     $synid = $sgh->GetValue($sgh->{synnumber}{$opt{number}});

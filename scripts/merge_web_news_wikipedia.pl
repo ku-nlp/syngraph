@@ -10,10 +10,10 @@ use strict;
 use Getopt::Long;
 use KNP;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Dumpvalue;
 use Configure;
 use CalcSimilarityByCF;
@@ -28,7 +28,7 @@ my %data;
 my @line_data;
 my %merged_line;
 my $line_num = 0;
-open (F, "<:encoding(euc-jp)", $opt{synonym_web_news}) or die;
+open (F, "<:encoding(utf-8)", $opt{synonym_web_news}) or die;
 while (<F>) {
     chomp;
 
@@ -46,7 +46,7 @@ while (<F>) {
 close F;
 
 my %aimai_data;
-open (F, "<:encoding(euc-jp)", $opt{aimai}) or die;
+open (F, "<:encoding(utf-8)", $opt{aimai}) or die;
 # アドリアン:1/12	アドリアン・ナスターセ	synonym
 while (<F>) {
     chomp;

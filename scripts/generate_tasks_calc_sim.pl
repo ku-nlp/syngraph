@@ -20,7 +20,7 @@ my $script = $cwd . '/calc-similarity-synonym.sh';
 foreach my $file (glob $glob_pat) {
     my $base = basename($file,'.orig');
 
-    print "$base $script";
+    print "$script";
     print ' -i' if $opt{isa};
     print " -e $opt{exedate}" if $opt{exedate};
     print " -s $opt{syngraphdir}" if $opt{syngraphdir};

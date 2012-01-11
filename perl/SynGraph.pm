@@ -114,7 +114,7 @@ sub new {
 	cgi => $option->{cgi},
 	version => $version
     };
-    
+
     bless $this;
 
     if (defined $syndbdir and $syndbdir ne '') { # by NICT
@@ -2250,7 +2250,7 @@ sub open_parsed_file {
     
     my $fh = new IO::File($filename, 'r');
     if (defined $fh) {
-        binmode $fh, ':encoding(euc-jp)';
+        binmode $fh, ':encoding(utf-8)';
         $this->{filehandle} = $fh;
         return 1;
     } else {
@@ -2312,7 +2312,7 @@ sub read_synonym_pair {
     my %link;
     my %filtered;
 
-    open S, "<:encoding(euc-jp)", "$dicdir/synonym.txt.filtered.manual" or die;
+    open S, "<:encoding(utf-8)", "$dicdir/synonym.txt.filtered.manual" or die;
     while (<S>) {
 	chomp;
 
@@ -2343,7 +2343,7 @@ sub read_synonym_pair {
     close S;
 
     my %discard_same_definition_entry;
-    open F, "<:encoding(euc-jp)", "$dicmiddledir/cat_synonym_same_def.log" or die;
+    open F, "<:encoding(utf-8)", "$dicmiddledir/cat_synonym_same_def.log" or die;
     while (<F>) {
 	chomp;
 
@@ -2357,7 +2357,7 @@ sub read_synonym_pair {
     close F;
 
     my $definition;
-    open SD, "<:encoding(euc-jp)", "$dicdir/same_definition.txt.manual" or die;
+    open SD, "<:encoding(utf-8)", "$dicdir/same_definition.txt.manual" or die;
     while (<SD>) {
 	chomp;
 
@@ -2413,7 +2413,7 @@ sub read_synonym_pair {
     }
     close SD;
 
-    open D, "<:encoding(euc-jp)", "$dicdir/definition.txt.manual.infrequent_deleted" or die;
+    open D, "<:encoding(utf-8)", "$dicdir/definition.txt.manual.infrequent_deleted" or die;
     while (<D>) {
 	chomp;
 
@@ -2470,7 +2470,7 @@ sub read_synonym_pair {
 	}
     }
 
-    open L, "<:encoding(euc-jp)", "$dicdir/synonym-filter.log" or die;
+    open L, "<:encoding(utf-8)", "$dicdir/synonym-filter.log" or die;
     # ☆マスタード/ますたーど:1/1:1/1 洋がらし 0.000 discarded
     while (<L>) {
 	chomp;
@@ -2921,10 +2921,10 @@ sub store_db {
     my $db = tie %hash, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_CREATE, -Cachesize => 100000000 or die "Cannot tie '$filename'";
 
     # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_key(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_key(sub{$_ = &encode('utf-8', $_)});
+    $db->filter_fetch_value(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_value(sub{$_ = &encode('utf-8', $_)});
     
     while (my ($key, $value) = each %$hash_ref) {
 	$hash{$key} = $value;
@@ -2956,10 +2956,10 @@ sub tie_db {
     my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die "Cannot tie '$filename'";
 
     # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_value(sub{$_ = &encode('euc-jp', $_)});
+    $db->filter_fetch_key(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_key(sub{$_ = &encode('utf-8', $_)});
+    $db->filter_fetch_value(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_value(sub{$_ = &encode('utf-8', $_)});
 }
 
 
@@ -3078,10 +3078,10 @@ sub create_mldbm {
     my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_CREATE or die "Cannot tie '$filename'";
 
     # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{});
-    $db->filter_store_value(sub{});
+    $db->filter_fetch_key(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_key(sub{$_ = &encode('utf-8', $_)});
+    $db->filter_fetch_value(sub {$_ = &decode('utf-8', $_)});
+    $db->filter_store_value(sub {$_ = &encode('utf-8', $_)});
 }
 
 
@@ -3094,10 +3094,10 @@ sub tie_mldbm {
     my $db = tie %$hash_ref, 'MLDBM', -Filename => $filename, -Flags => DB_RDONLY or die "Cannot tie '$filename'";
 
     # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('euc-jp', $_)});
-    $db->filter_store_key(sub{$_ = &encode('euc-jp', $_)});
-    $db->filter_fetch_value(sub{});
-    $db->filter_store_value(sub{});
+    $db->filter_fetch_key(sub{$_ = &decode('utf-8', $_)});
+    $db->filter_store_key(sub{$_ = &encode('utf-8', $_)});
+    $db->filter_fetch_value(sub {$_ = &decode('utf-8', $_)});
+    $db->filter_store_value(sub {$_ = &encode('utf-8', $_)});
 }
 
 

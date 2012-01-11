@@ -10,10 +10,10 @@ use Getopt::Long;
 use Encode;
 use Dumpvalue;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 # 参照するテキスト
 my %opt; GetOptions(\%opt, 'add_log=s');
@@ -21,15 +21,15 @@ my %opt; GetOptions(\%opt, 'add_log=s');
 # 入力
 my ($input1, $input2);
 if ($ARGV[0] && $ARGV[1]) {
-    $input1 = decode('euc-jp', $ARGV[0]);
-    $input2 = decode('euc-jp', $ARGV[1]);
+    $input1 = decode('utf-8', $ARGV[0]);
+    $input2 = decode('utf-8', $ARGV[1]);
 }
 
 my %word_synlog;
 my @syn_listlist;
 my $number;
 if ($opt{add_log}) {
-    open(ALOG, '<:encoding(euc-jp)', $opt{add_log}) or die;
+    open(ALOG, '<:encoding(utf-8)', $opt{add_log}) or die;
     while (<ALOG>) {
         chomp;
 	

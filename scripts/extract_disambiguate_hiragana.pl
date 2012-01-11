@@ -7,10 +7,10 @@
 # usage: perl -I../perl extract_disambiguate_hiragana.pl -jumandicdir /home/shibata/download/juman/dic/ -makedb ../db/hiragana_disambiguate.cdb
 
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 use JumanLib;
 use Configure;
@@ -34,7 +34,7 @@ my %midasi2repname;
 
 # Jumanの辞書の読み込み
 for my $dicfile (glob("$opt{jumandicdir}/*.dic")) {
-    open DIC, "<:encoding(euc-jp)", $dicfile || die;
+    open DIC, "<:encoding(utf-8)", $dicfile || die;
     print STDERR "OK $dicfile\n" if $opt{debug};
 
     while (<DIC>) {

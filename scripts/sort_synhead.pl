@@ -3,11 +3,13 @@
 # $Id$
 
 use strict;
+use utf8;
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 use SynGraph;
-use encoding 'euc-jp';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
 
 my %opt; GetOptions(\%opt, 'syndbdir=s');
 my $sgh = new SynGraph;

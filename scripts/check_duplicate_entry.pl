@@ -10,10 +10,10 @@ use KNP;
 use utf8;
 use SynGraph;
 use Configure;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 # merge: A=B, B=C, C=A のマージ
 my %opt; GetOptions(\%opt, 'rnsame', 'merge', 'editdistance', 'read_multiple_entries', 'distributional_similarity', 'dicfile=s', 'debug');
@@ -145,7 +145,7 @@ sub read_input_multiple_entries {
     while (<>) {
 	chomp;
 
-#	$_ = Encode::decode('euc-jp', $_);
+#	$_ = Encode::decode('utf-8', $_);
 	my (@words) = split;
 
 	for (my $i = 0; $i < @words; $i++) {
@@ -161,7 +161,7 @@ sub read_input_multiple_entries {
 
 sub read_dicfile {
 
-    open (F, "<:encoding(euc-jp)", $opt{dicfile}) || die;
+    open (F, "<:encoding(utf-8)", $opt{dicfile}) || die;
     while (<F>){
 	chomp;
 	my $line = $_;

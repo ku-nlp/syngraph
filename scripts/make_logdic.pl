@@ -5,10 +5,10 @@ use Dumpvalue;
 use Getopt::Long;
 use SynGraph;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'synonym=s', 'definition=s', 'isa=s', 'antonym=s', 'syndbdir=s');
 
@@ -20,7 +20,7 @@ my %log_dic;
 my @FILE_NAME = ('definition', 'synonym', 'isa', 'antonym');
 
 foreach my $file (@FILE_NAME) {
-    open (FILE, '<:encoding(euc-jp)', $opt{$file}) || die;
+    open (FILE, '<:encoding(utf-8)', $opt{$file}) || die;
     while (<FILE>) {
 	chomp;
 	my $sent = $_;

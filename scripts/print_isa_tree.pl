@@ -6,8 +6,10 @@
 # usage: perl print_isa_tree.pl -dic -category_sort -cndbfile ~shibata/cns.100M.cls.df1000.cdb -print_coordinate
 
 use strict;
-use encoding 'euc-jp';
-binmode STDERR, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 use Juman;
 use JumanLib;
@@ -29,7 +31,7 @@ my %location;
 my %ambiguity_word;
 &read_ambiguity_word if $opt{ambiguity_word_no_make_edge};
 
-# Ê£¹çÌ¾»ì¥Ç¡¼¥¿¥Ù¡¼¥¹
+# è¤‡åˆåè©ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹
 my %cn2df;
 if ($opt{cndbfile}) {
     require CDB_File;
@@ -38,12 +40,12 @@ if ($opt{cndbfile}) {
 
 my %data;
 sub read_dic_isa {
-    open F, "<:encoding(euc-jp)", $opt{isa_dic_file} or die;
+    open F, "<:encoding(utf-8)", $opt{isa_dic_file} or die;
 
     while (<F>) {
 	chomp;
 
-	# ¤¢¤¯¤É¤¤/¤¢¤¯¤É¤¤:1/1:1/2 ´¶¤¸¤¬¤¹¤ë 11
+	# ã‚ãã©ã„/ã‚ãã©ã„:1/1:1/2 æ„Ÿã˜ãŒã™ã‚‹ 11
 	my ($hyponym, $hypernym, $num) = split(' ', $_);
 	$hyponym = (split(':', $hyponym))[0];
 	$hypernym = (split(':', $hypernym))[0];
@@ -56,11 +58,11 @@ sub read_dic_isa {
 }
 
 sub read_wikipedia_isa {
-    open F, "<:encoding(euc-jp)", $opt{isa_wikipedia_file} or die;
+    open F, "<:encoding(utf-8)", $opt{isa_wikipedia_file} or die;
 
     my $separator = $opt{wikipedia_file_separator_is_space} ? ' ' : "\t"; 
 
-    # µşÀ®ÄÅÅÄ¾Â±Ø ±Ø/¤¨¤­ 10921
+    # äº¬æˆæ´¥ç”°æ²¼é§… é§…/ãˆã 10921
     while (<F>) {
 	chomp;
 
@@ -72,16 +74,16 @@ sub read_wikipedia_isa {
     close F;
 }
 
-# JUMAN¸ÇÍ­É½¸½¤Î¼­½ñ¤«¤éÃÏÌ¾¥Õ¥¡¥¤¥ë¤ÎÆÉ¤ß¹ş¤ß
+# JUMANå›ºæœ‰è¡¨ç¾ã®è¾æ›¸ã‹ã‚‰åœ°åãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿
 sub read_location {
-    open DIC, "<:encoding(euc-jp)", "$opt{Noun_koyuu_dic}" || die;
+    open DIC, "<:encoding(utf-8)", "$opt{Noun_koyuu_dic}" || die;
     while (<DIC>) {
-	next if /\(Ï¢¸ì /;
+	next if /\(é€£èª /;
 	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
 
-	# ÃÏÌ¾:¹ñ:Î¬¾Î:ÆüËÜ¤Ï½ü¤¯
-	if ($imis_dic =~ /ÃÏÌ¾:/ && $imis_dic !~ /:Î¬¾Î:/) {
-	    if ($imis_dic =~ /ÂåÉ½É½µ­:([^\s]+)/) {
+	# åœ°å:å›½:ç•¥ç§°:æ—¥æœ¬ã¯é™¤ã
+	if ($imis_dic =~ /åœ°å:/ && $imis_dic !~ /:ç•¥ç§°:/) {
+	    if ($imis_dic =~ /ä»£è¡¨è¡¨è¨˜:([^\s]+)/) {
 		my $rep = $1;
 		$location{$rep} = 1;
 		my $midasi = (split('/', $rep))[0];
@@ -92,14 +94,14 @@ sub read_location {
     close DIC;
 }
 
-# ContentW.dic¤«¤éÂ¿µÁ¸ì¤ÎÆÉ¤ß¹ş¤ß
+# ContentW.dicã‹ã‚‰å¤šç¾©èªã®èª­ã¿è¾¼ã¿
 sub read_ambiguity_word {
-    open DIC, "<:encoding(euc-jp)", "$opt{ContentWdic}" || die;
+    open DIC, "<:encoding(utf-8)", "$opt{ContentWdic}" || die;
     while (<DIC>) {
 	my ($top_midashi_dic, $midashi_dic, $yomi_dic, $hinshi_dic, $hinshi_bunrui_dic, $conj_dic, $imis_dic) = read_juman($_);
 
-	if ($imis_dic =~ /Â¿µÁ/) {
-	    if ($imis_dic =~ /ÂåÉ½É½µ­:([^\s]+)/) {
+	if ($imis_dic =~ /å¤šç¾©/) {
+	    if ($imis_dic =~ /ä»£è¡¨è¡¨è¨˜:([^\s]+)/) {
 		my $rep = $1;
 		$ambiguity_word{$rep} = 1;
 		my $midasi = (split('/', $rep))[0];
@@ -111,7 +113,7 @@ sub read_ambiguity_word {
     close DIC;
 }
 
-# »Ò¶¡¤È¿Æ¤¬Æ±¤¸¤â¤Î¤ò¤­¤ë
+# å­ä¾›ã¨è¦ªãŒåŒã˜ã‚‚ã®ã‚’ãã‚‹
 my %del_string_child_parent_same;
 for my $string (keys %data) {
     for my $child (keys %{$data{$string}{children}}) {
@@ -125,12 +127,12 @@ my @del_string_child_parent_same = keys %del_string_child_parent_same;
 &del_string(\@del_string_child_parent_same);
 &delete_needless_key;
 
-# »Ò¶¡¤ò¤¹¤Ù¤ÆÆÀ¤ë
+# å­ä¾›ã‚’ã™ã¹ã¦å¾—ã‚‹
 if ($opt{cut_top_level_child_num_min}) {
     for my $string (keys %data) {
 	my @words = &get_subtree_words($string);
 
-	$data{$string}{children_all_num} = scalar @words - 1; # ¼«Ê¬¤ò¤Ò¤¯
+	$data{$string}{children_all_num} = scalar @words - 1; # è‡ªåˆ†ã‚’ã²ã
     }
 }
 
@@ -142,17 +144,17 @@ if ($opt{cndbfile}) {
 
 	if ($opt{dfth} && $df > $opt{dfth}) {
 
-	    # ÃÏÌ¾¤Ï¥«¥Ã¥È¤·¤Ê¤¤¥ª¥×¥·¥ç¥ó
+	    # åœ°åã¯ã‚«ãƒƒãƒˆã—ãªã„ã‚ªãƒ—ã‚·ãƒ§ãƒ³
 	    if ($opt{no_cut_location} && defined $location{$string}) {
 		next;
 	    }
 
-	    # ºÇ¾å°Ì¤À¤±¤òºï½üÂĞ¾İ¤È¤¹¤ë
+	    # æœ€ä¸Šä½ã ã‘ã‚’å‰Šé™¤å¯¾è±¡ã¨ã™ã‚‹
 	    if ($opt{cut_only_top_level} && defined $data{$string}{parent}) {
 		next;
 	    }
 	    else {
-		# »Ò¶¡¤¬¤³¤Î¸Ä¿ô°Ê²¼¤Ê¤éºï½ü¤·¤Ê¤¤
+		# å­ä¾›ãŒã“ã®å€‹æ•°ä»¥ä¸‹ãªã‚‰å‰Šé™¤ã—ãªã„
 		if ($opt{cut_top_level_child_num_min}) {
 		    if ($data{$string}{children_all_num} <= $opt{cut_top_level_child_num_min}) {
 			next;
@@ -165,7 +167,7 @@ if ($opt{cndbfile}) {
 
     &del_string(\@del_string);
 
-    # Â¿µÁ¸ì¤Î¿Æ¤òÀÚ¤ë
+    # å¤šç¾©èªã®è¦ªã‚’åˆ‡ã‚‹
     if ($opt{ambiguity_word_no_make_edge}) {
 	for my $string (keys %data) {
 	    if (defined $ambiguity_word{$string}) {
@@ -196,7 +198,7 @@ if ($opt{category_sort}) {
 
 	&regist_category($last_mrph, \%category);
 
-	# Æ±·Á
+	# åŒå½¢
 	for my $doukei ($last_mrph->doukei) {
 	    &regist_category($doukei, \%category);
 	}
@@ -205,14 +207,14 @@ if ($opt{category_sort}) {
 	if (scalar keys %category > 0) {
 	    $cat = join(';', sort keys %category);
 	} else {
-	    $cat = 'Ìµ';
+	    $cat = 'ç„¡';
 	}
 
 	$data{$string}{category} = $cat;
     }
 }
 
-# »Ò¶¡¤Î¿ô¤òµ­Ï¿
+# å­ä¾›ã®æ•°ã‚’è¨˜éŒ²
 for my $string (keys %data) {
     $data{$string}{child_num} = defined $data{$string}{children} ? scalar keys %{$data{$string}{children}} : 0;
 }
@@ -228,11 +230,11 @@ if ($opt{print_coordinate}) {
 	    $words{$word} = 1
 	}
 	for my $word (sort keys %words) {
-	    next if $word eq $string; # ºÇ¾å°Ì¤Î¸ì
+	    next if $word eq $string; # æœ€ä¸Šä½ã®èª
 
-	    # ¿Æ¤ò½ç¤ËÆÀ¤ë
+	    # è¦ªã‚’é †ã«å¾—ã‚‹
 	    my @parents = &get_parents($word, \%words);
-	    # »Ò¤ò¤¹¤Ù¤ÆÆÀ¤ë
+	    # å­ã‚’ã™ã¹ã¦å¾—ã‚‹
 	    my @children = &get_children($word, \%words);
 
 	    my %ng_coordinate;
@@ -257,9 +259,9 @@ else {
 			   : $data{$b}{child_num} <=> $data{$a}{child_num} } keys %data) {
 	next if defined $data{$string}{parent} || $data{$string}{child_num} == 0;
 
-	print "¡ú $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
+	print "â˜… $data{$string}{category}\n\n" if $data{$string}{category} ne $pre_category;
 
-	# ºÇ¾å°Ì
+	# æœ€ä¸Šä½
 	if (!defined $data{$string}{parent} && $opt{min_hypo_num} && $data{$string}{child_num} < $opt{min_hypo_num}) {
 	    next;
 	}
@@ -280,7 +282,7 @@ if ($opt{cndbfile}) {
     untie %cn2df;
 }
 
-# ÌÚ¤«¤é¼è¤ê½ü¤¯
+# æœ¨ã‹ã‚‰å–ã‚Šé™¤ã
 sub del_string {
     my ($del_string) = @_;
 
@@ -296,15 +298,15 @@ sub del_string {
     }
 }
 
-# ÉÔÍ×¤Êkey¤òºï½ü
+# ä¸è¦ãªkeyã‚’å‰Šé™¤
 sub delete_needless_key {
     for my $string (keys %data) {
-	# parent¤¬¤¤¤Ê¤¯¤Ê¤Ã¤¿¤â¤Î¤Ï¥­¡¼parent¤òºï½ü
+	# parentãŒã„ãªããªã£ãŸã‚‚ã®ã¯ã‚­ãƒ¼parentã‚’å‰Šé™¤
 	if (defined $data{$string}{parent} && scalar keys %{$data{$string}{parent}} == 0) {
 	    delete $data{$string}{parent};
 	}
 
-	# children¤âÆ±ÍÍ
+	# childrenã‚‚åŒæ§˜
 	if (defined $data{$string}{children} && scalar keys %{$data{$string}{children}} == 0) {
 	    delete $data{$string}{children};
 	}
@@ -357,7 +359,7 @@ sub display {
     }
 }
 
-# ¼«Ê¬°Ê²¼¤Î¸ì¤òÆÀ¤ë
+# è‡ªåˆ†ä»¥ä¸‹ã®èªã‚’å¾—ã‚‹
 sub get_subtree_words {
     my ($string, $mark) = @_;
 
@@ -389,7 +391,7 @@ sub get_subtree_words {
     return @words;
 }
 
-# ¼«Ê¬¤Î¿Æ¤òÆÀ¤ë
+# è‡ªåˆ†ã®è¦ªã‚’å¾—ã‚‹
 sub get_parents {
     my ($string, $all_words) = @_;
 
@@ -398,7 +400,7 @@ sub get_parents {
     if (defined $data{$string}{parent}) {
 	for my $parent (sort keys %{$data{$string}{parent}}) {
 
-	    next if !defined $all_words->{$parent}; # ÂĞ¾İ¤Î¥Ä¥ê¡¼Ãæ¤Î¸ì¤Ç¤Ê¤±¤ì¤Ğnext
+	    next if !defined $all_words->{$parent}; # å¯¾è±¡ã®ãƒ„ãƒªãƒ¼ä¸­ã®èªã§ãªã‘ã‚Œã°next
 	    push @parents, $parent;
 
 	    my @parent_parents = &get_parents($parent, $all_words);
@@ -409,7 +411,7 @@ sub get_parents {
     return @parents;
 }
 
-# ¼«Ê¬¤Î»Ò¶¡¤òÆÀ¤ë
+# è‡ªåˆ†ã®å­ä¾›ã‚’å¾—ã‚‹
 sub get_children {
     my ($string, $all_words) = @_;
 
@@ -417,7 +419,7 @@ sub get_children {
 
     if (defined $data{$string}{children}) {
 	for my $child (sort keys %{$data{$string}{children}}) {
-	    next if !defined $all_words->{$child}; # ÂĞ¾İ¤Î¥Ä¥ê¡¼Ãæ¤Î¸ì¤Ç¤Ê¤±¤ì¤Ğnext
+	    next if !defined $all_words->{$child}; # å¯¾è±¡ã®ãƒ„ãƒªãƒ¼ä¸­ã®èªã§ãªã‘ã‚Œã°next
 	    push @children, $child;
 	    my @child_children = &get_children($child, $all_words);
 	    push @children, @child_children if scalar @child_children > 0;
@@ -432,25 +434,25 @@ sub print_mark {
 
     foreach my $item (@$marks) {
 	if ($item eq "1") {
-	    print "¡¡¡¡";
+	    print "ã€€ã€€";
 	} else {
-	    print "¨¢¡¡";
+	    print "â”‚ã€€";
 	}
     }
     if (defined($lastm)) {
 	if ($lastm eq "1") {
-	    print "¨¦¨¡";
+	    print "â””â”€";
 	} else {
-	    print "¨§¨¡";
+	    print "â”œâ”€";
 	}
     }
 }
 
-# ¥«¥Æ¥´¥ê¾ğÊó¤òÅĞÏ¿
+# ã‚«ãƒ†ã‚´ãƒªæƒ…å ±ã‚’ç™»éŒ²
 sub regist_category {
     my ($mrph, $category) = @_;
 
-    if ($mrph->imis =~ /¥«¥Æ¥´¥ê:([^\"\s]+)/) {
+    if ($mrph->imis =~ /ã‚«ãƒ†ã‚´ãƒª:([^\"\s]+)/) {
 	my $string = $1;
 	for my $cat (split(/;/, $string)) {
 	    $category->{$cat} = 1;

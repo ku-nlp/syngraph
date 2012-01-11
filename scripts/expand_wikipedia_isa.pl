@@ -1,18 +1,22 @@
 #!/usr/bin/env perl
 
-# Wikipedia¤«¤éÃê½Ğ¤·¤¿¾å°Ì¸ì¤òÆ±µÁ´Ø·¸¤ò»È¤Ã¤Æ³ÈÄ¥¤¹¤ë
+# Wikipediaã‹ã‚‰æŠ½å‡ºã—ãŸä¸Šä½èªã‚’åŒç¾©é–¢ä¿‚ã‚’ä½¿ã£ã¦æ‹¡å¼µã™ã‚‹
 
 # usage: perl expand_wikipedia_isa.pl -synonymfile ../dic_change/synonym_web_news.txt < ../dic/wikipedia/isa.txt
 
 use strict;
-use encoding 'euc-jp';
+use utf8;
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 use Getopt::Long;
 
 my (%opt);
 GetOptions(\%opt, 'synonymfile=s');
 
 my (%line2synonyms, %synonyms);
-open(F, '<:encoding(euc-jp)', $opt{synonymfile}) or die;
+open(F, '<:encoding(utf-8)', $opt{synonymfile}) or die;
 
 my $line_num = 0;
 while (<F>) {
@@ -37,7 +41,7 @@ while (<>) {
     print "$hyponym $hypernym $num\n";
 
     if (defined $synonyms{$hyponym}) {
-	# Â¿µÁ¤Î¾ì¹ç¤Ïnext
+	# å¤šç¾©ã®å ´åˆã¯next
 	next if scalar @{$synonyms{$hyponym}} > 1;
 
 	for my $new_hyponym (@{$line2synonyms{$synonyms{$hyponym}[0]}}) {

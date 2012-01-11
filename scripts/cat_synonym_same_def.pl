@@ -8,10 +8,10 @@ use Dumpvalue;
 use KNP;
 use Configure;
 use utf8;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
-binmode STDERR, ':encoding(euc-jp)';
-binmode DB::OUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
+binmode STDERR, ':encoding(utf-8)';
+binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'synonym_dic=s', 'same_definition=s', 'synonym_filter_log=s');
 
@@ -19,14 +19,14 @@ my $knp = new KNP( -Option => '-tab -dpnd',
 		   -JumanCommand => $Configure::JumanCommand,
 		   -JumanRcfile => $Configure::JumanRcfile);
 
-open(SYN, '<:encoding(euc-jp)', $opt{synonym_dic}) or die;
+open(SYN, '<:encoding(utf-8)', $opt{synonym_dic}) or die;
 while (<SYN>) {
     print $_;
 }
 close(SYN);
 
 my %discarded;
-open(FILTERLOG, '<:encoding(euc-jp)', $opt{synonym_filter_log}) or die;
+open(FILTERLOG, '<:encoding(utf-8)', $opt{synonym_filter_log}) or die;
 while (<FILTERLOG>) {
     next unless /discarded$/;
 
@@ -39,7 +39,7 @@ while (<FILTERLOG>) {
 close(FILTERLOG);
 
 my ($def);
-open(SDEF, '<:encoding(euc-jp)', $opt{same_definition}) or die;
+open(SDEF, '<:encoding(utf-8)', $opt{same_definition}) or die;
 while (<SDEF>) {
     next if $_ eq "\n";
     if (/^★(.+?)$/) {
