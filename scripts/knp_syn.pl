@@ -12,14 +12,10 @@ use POSIX;
 use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
-binmode STDIN, ':encoding(utf-8)';
-binmode STDOUT, ':encoding(utf-8)';
-binmode STDERR, ':encoding(utf-8)';
-binmode DB::OUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf', 'wsd', 'wsd_data_dir=s');
 
-my $encoding = $opt{encoding} ? ":encoding($opt{encoding})" : ':encoding(euc-jp)'; # default encoding is euc-jp
+my $encoding = $opt{encoding} ? ":encoding($opt{encoding})" : ':encoding(utf-8)'; # default encoding is utf-8
 $encoding .= ':crlf' if $opt{crlf};
 binmode STDIN, $encoding;
 binmode STDOUT, $encoding;
