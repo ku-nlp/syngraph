@@ -7,7 +7,7 @@ package Configure;
 use strict;
 use utf8;
 use File::Basename;
-use POSIX;
+use POSIX qw (uname);
 
 our $SynGraphBaseDir;
 
