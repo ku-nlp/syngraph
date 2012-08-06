@@ -87,7 +87,7 @@ exe="perl -I$PERL_DIR -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdi
 echo $exe
 eval $exe
 
-exe="perl -I$PERL_DIR -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt > $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt.jumanremoved 2> $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.jumanremoved.log"
+exe="perl -I$PERL_DIR -I$KAWAHARAPMDIR check_synonym_in_juman_dic.pl -jumandicdir $JUMANDICDIR < $SIM_DIR_Wikipedia/redirect_synonym_frequent.txt > $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.txt.jumanremoved 2> $SIM_DIR_Wikipedia/redirect_synonym_share_character_frequent.jumanremoved.log"
 echo $exe
 eval $exe
 
