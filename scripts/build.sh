@@ -5,11 +5,14 @@
 # ソースディレクトリ
 SRC_DIR='.'
 
+SYNGRAPHDEVEL_DIR=/home/shibata/work/SynGraphDevel.wikipedia
+
 # 同義表現データマージ後ディレクトリ
-SIM_C_DIR=../dic_change
+SIM_C_DIR=$SYNGRAPHDEVEL_DIR/dic_change
+DIC_DIR=$SYNGRAPHDEVEL_DIR/dic
 
 # 同義表現データベース
-SYNDB_DIR=../syndb/i686
+SYNDB_DIR=$SYNGRAPHDEVEL_DIR/syndb/i686
 
 # JUMAN
 JUMAN=juman
@@ -34,10 +37,10 @@ wikipedia=0
 while getopts ohlj:r:ndwi: OPT
 do
   case $OPT in
-      o)  SYNDB_DIR=../syndb/x86_64
+      o)  SYNDB_DIR=$SYNGRAPHDEVEL_DIR/syndb/x86_64
           ;;
       l)  log=1
-	  SYNDB_DIR=../syndb/cgi
+	  SYNDB_DIR=$SYNGRAPHDEVEL_DIR/syndb/cgi
           ;;
       j)  JUMAN=$OPTARG
           ;;
@@ -70,6 +73,10 @@ PERL_DIR=../perl
 export PATH=$SRC_DIR:$PATH
 export PERL5LIB=$SRC_DIR:$PERL5LIB
 
+if [ ! -d $SYNDB_DIR ]; then
+    mkdir -p $SYNDB_DIR
+fi
+
 # 全部削除する
 for f in synparent.cdb synantonym.cdb synnumber.cdb syndb.cdb synchild.cdb log_antonym.cdb log_isa.cdb synhead.cdb syndb.convert syndb.parse syndata.mldbm syndb.jmn; do
     if [ -e $SYNDB_DIR/$f ] ; then
@@ -87,7 +94,7 @@ if [ $wikipedia -eq 1 ]; then
     if [ $log -eq 1 ]; then
 	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR --log_merge=$SIM_C_DIR/log_merge2.txt --option=log -wikipedia ${=conv_syndb_args}"
     else
-	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR -wikipedia -similar_phrase ../dic/rsk_iwanami/automatic_similar_phrase.txt ${=conv_syndb_args}"
+	exe="perl -I$PERL_DIR conv_syndb.pl --synonym_dic=$SIM_C_DIR/synonym_dic.txt --synonym_web_news=$SIM_C_DIR/synonym_web_news_aimai.txt --definition=$SIM_C_DIR/definition.txt --isa=$SIM_C_DIR/isa.txt --isa_wikipedia=$SIM_C_DIR/isa_wikipedia.txt --antonym=$SIM_C_DIR/antonym.txt --convert_file=$SYNDB_DIR/syndb.convert --syndbdir=$SYNDB_DIR -wikipedia -similar_phrase $DIC_DIR/rsk_iwanami/automatic_similar_phrase.txt ${=conv_syndb_args}"
     fi
 else
     if [ $log -eq 1 ]; then
@@ -100,7 +107,7 @@ echo $exe
 eval $exe
 
 # Juman & KNP
-SYNDBPARSE=../syndb/x86_64/syndb.parse
+SYNDBPARSE=$SYNGRAPHDEVEL_DIR/syndb/x86_64/syndb.parse
 if [ $noparse -eq 1 -a -e $SYNDBPARSE ]; then
     exe="cp $SYNDBPARSE $SYNDB_DIR/"
 else

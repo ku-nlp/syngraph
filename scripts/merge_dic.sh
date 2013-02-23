@@ -5,19 +5,21 @@
 # ソースディレクトリ
 SRC_DIR='.'
 
+SYNGRAPHDEVEL_DIR=/home/shibata/work/SynGraphDevel.wikipedia
+
 # 同義表現データディレクトリ
-SIM_DIR_Dic=../dic/rsk_iwanami
-SIM_DIR_Web=../dic/web_news
-SIM_DIR_Wikipedia=../dic/wikipedia
+SIM_DIR_Dic=$SYNGRAPHDEVEL_DIR/dic/rsk_iwanami
+SIM_DIR_Web=$SYNGRAPHDEVEL_DIR/dic/web_news
+SIM_DIR_Wikipedia=$SYNGRAPHDEVEL_DIR/dic/wikipedia
 
 # 同義表現データマージ途中のディレクトリ
-SIM_M_DIR=../dic_middle
+SIM_M_DIR=$SYNGRAPHDEVEL_DIR/dic_middle
 
 # 同義表現データマージ後のディレクトリ
-SIM_C_DIR=../dic_change
+SIM_C_DIR=$SYNGRAPHDEVEL_DIR/dic_change
 
 # 同義表現データベース
-SYNDB_DIR=../syndb/cgi
+SYNDB_DIR=$SYNGRAPHDEVEL_DIR/syndb/cgi
 
 # Juman辞書
 JUMANDICDIR=/home/shibata/download/juman/dic
@@ -71,6 +73,10 @@ else
 	    rm -fv $SIM_C_DIR/$f
 	fi
     done
+fi
+
+if [ ! -d $SYNDB_DIR ]; then
+    mkdir -p $SYNDB_DIR
 fi
 
 if [ -e $SYNDB_DIR/log_dic.cdb ] ; then
