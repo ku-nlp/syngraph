@@ -2951,15 +2951,16 @@ sub retrieve_db {
 # BerkeleyDBをtie
 #
 sub tie_db {
-    my ($filename, $hash_ref) = @_;
+    my ($filename, $hash_ref, $encoding) = @_;
 
     my $db = tie %$hash_ref, 'BerkeleyDB::Hash', -Filename => $filename, -Flags => DB_RDONLY, -Cachesize => 100000000 or die "Cannot tie '$filename'";
 
+    $encoding = 'utf-8' unless $encoding;
     # filter setting
-    $db->filter_fetch_key(sub{$_ = &decode('utf-8', $_)});
-    $db->filter_store_key(sub{$_ = &encode('utf-8', $_)});
-    $db->filter_fetch_value(sub{$_ = &decode('utf-8', $_)});
-    $db->filter_store_value(sub{$_ = &encode('utf-8', $_)});
+    $db->filter_fetch_key(sub{$_ = &decode($encoding, $_)});
+    $db->filter_store_key(sub{$_ = &encode($encoding, $_)});
+    $db->filter_fetch_value(sub{$_ = &decode($encoding, $_)});
+    $db->filter_store_value(sub{$_ = &encode($encoding, $_)});
 }
 
 
