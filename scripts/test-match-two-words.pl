@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
 
-# $Id$
-
 # 二つの表現の同義・上位下位関係を判定するテストプログラム
 
 use strict;
@@ -10,13 +8,13 @@ use SynGraph;
 use KNP;
 use Getopt::Long;
 use Encode;
-binmode STDIN, ':encoding(euc-jp)';
-binmode STDOUT, ':encoding(euc-jp)';
+binmode STDIN, ':encoding(utf-8)';
+binmode STDOUT, ':encoding(utf-8)';
 
 my %opt; GetOptions(\%opt, 'dbdir=s', 'relation');
 
-my $word0 = decode('euc-jp', $ARGV[0]);
-my $word1 = decode('euc-jp', $ARGV[1]);
+my $word0 = decode('utf-8', $ARGV[0]);
+my $word1 = decode('utf-8', $ARGV[1]);
 
 my $dbdir;
 if ($opt{dbdir}) {
