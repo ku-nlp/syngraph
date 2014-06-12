@@ -1597,6 +1597,9 @@ sub OutputSynFormat {
     my $syngraph = {};
     my $syngraph_string;
 
+    # 後方互換
+    $regnode_option->{relation} = 1 if $regnode_option->{isa};
+
     # Wikipediaの情報を付与
     if ($option->{attach_wikipedia_info}) {
 	require Trie;
