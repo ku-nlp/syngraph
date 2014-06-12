@@ -2130,7 +2130,7 @@ sub RetrieveSids {
 }
 
 # 二つの表現がマッチするかどうか
-sub MatchingTwoWords {
+sub MatchingTwoExpressions {
     my ($this, $result0, $result1) = @_;
 
     my %index;
@@ -2162,11 +2162,14 @@ sub MatchingTwoWords {
 sub make_index {
     my ($result, $id, $index) = @_;
 
+    my $tagnum = scalar $result->tag;
     for my $tag ($result->tag) {
 	for my $synnodes ($tag->synnodes) {
 	    for my $synnode ($synnodes->synnode) {
 		my $synid = $synnode->synid;
 		my $score = $synnode->score;
+		my @tagids = $synnode->tagids;
+		next if scalar @tagids != $tagnum; # すべての基本句をカバーするもののみを対象にする
 		my $type;
 		if ($score >= 0.99) {
 		    $type = 'syn';
