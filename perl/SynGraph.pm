@@ -1,7 +1,5 @@
 package SynGraph;
 
-# $Id$
-
 use utf8;
 use strict;
 use Encode;
@@ -1719,17 +1717,6 @@ sub make_basicnode_log {
     if ($rep ne $node->{midasi}) {
 	$log = "log : $node->{midasi} = $rep\n";
 	$log .= "extract : $node->{midasi} => $rep";
-#		    my %tag = ('kanou' => '可能', 'sonnkei' => '尊敬', 'ukemi' => '受身', 'shieki' => '使役', 'negation' => '否定');
-#		    foreach my $type ('case', keys %tag) {
-#			if ($node->{$type}) {
-#			    if ($type eq 'case') {
-#				$log .= "<$node->{case}格>";
-#			    }
-#			    else {
-#				$log .= "<$tag{$type}>";
-#			    }
-#			}
-#		    }
 	$log .= "\n";
     }
 
