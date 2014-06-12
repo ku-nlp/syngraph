@@ -1,8 +1,6 @@
 #!/usr/bin/env perl
 
-# $Id$
-
-# usage: perl -I../perl test-retrieve-sid.pl -relation 生産する
+# usage: perl -I../perl test-retrieve-sid.pl -isa 生産
 
 use strict;
 use utf8;
@@ -12,7 +10,7 @@ use Encode;
 use Getopt::Long;
 use SynGraph;
 
-my %opt; GetOptions(\%opt, 'dbdir=s', 'relation');
+my %opt; GetOptions(\%opt, 'dbdir=s', 'isa');
 
 my $word0 = decode('utf-8', $ARGV[0]);
 
@@ -33,15 +31,16 @@ my $sgh = new SynGraph($dbdir, $knp_option, $option);
 my $knp_result0 = $sgh->{knp}->parse($word0);
 
 my $regnode_option;
-$regnode_option->{relation} = 1 if $opt{relation};
+$regnode_option->{isa} = 1 if $opt{isa};
 
 my $result = new KNP::Result($sgh->OutputSynFormat($knp_result0, $regnode_option));
 
 my $synids = $sgh->RetrieveSids($result);
 
 for my $type ('syn', 'isa') {
-    print "$type\n";
+    next if !$opt{isa} && $type eq 'isa';
     if (defined $synids->{$type}) {
+	print "$type";
 	print ' ', join(',', @{$synids->{$type}}), "\n";
     }
 }

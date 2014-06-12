@@ -39,7 +39,7 @@ $regnode_option->{relation} = 1 if $opt{relation};
 my $result0 = new KNP::Result($sgh->OutputSynFormat($knp_result0, $regnode_option));
 my $result1 = new KNP::Result($sgh->OutputSynFormat($knp_result1, $regnode_option));
 
-my ($match_type, $parent) = $sgh->MatchingTwoWords($result0, $result1);
+my ($match_type, $parent) = $sgh->MatchingTwoExpressions($result0, $result1);
 if ($match_type eq 'syn') {
     print $match_type, "\n";
 }
