@@ -2136,6 +2136,14 @@ sub MatchingTwoExpressions {
 	}
     }
 
+    # 反義マッチ
+    for my $synid (keys %index) {
+	if (defined $index{$synid}{'0'} && defined $index{$synid}{'1'}) {
+	    if (($index{$synid}{'0'} eq 'syn' && $index{$synid}{'1'} eq 'negation') || $index{$synid}{'0'} eq 'negation' && $index{$synid}{'1'} eq 'syn') {
+		return ('ant');
+	    }
+	}
+    }
     # 上位下位マッチ
     for my $synid (keys %index) {
 	if (defined $index{$synid}{'0'} && defined $index{$synid}{'1'}) {
@@ -2161,11 +2169,16 @@ sub make_index {
 		my @tagids = $synnode->tagids;
 		next if scalar @tagids != $tagnum; # すべての基本句をカバーするもののみを対象にする
 		my $type;
-		if ($score >= 0.99) {
-		    $type = 'syn';
+		if ($synnode->feature =~ /<否定>/) {
+		    $type = 'negation';
 		}
 		else {
-		    $type = 'isa';
+		    if ($score >= 0.99) {
+			$type = 'syn';
+		    }
+		    else {
+			$type = 'isa';
+		    }
 		}
 		$index->{$synid}{$id} = $type;
 	    }
