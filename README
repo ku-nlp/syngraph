@@ -1,115 +1,113 @@
-
 see doc/manual.pdf
 
-[ɬ�פʥץ������]
+[必要なプログラム]
 
-- Juman/KNP (http://nlp.kuee.kyoto-u.ac.jp/nl-resource/)
+- Juman/KNP (http://nlp.ist.i.kyoto-u.ac.jp/index.php?JUMAN, http://nlp.ist.i.kyoto-u.ac.jp/index.php?KNP)
 - TinyCDB (http://www.corpit.ru/mjt/tinycdb.html)
 - BerkeleyDB (http://www.oracle.com/technology/software/products/berkeley-db/index.html)
-- Perl5.8�ʾ�
-- Perl�⥸�塼��
- - CPAN�������������ɲ�ǽ
+- Perl5.8以上
+- Perlモジュール
+ - CPANからダウンロード可能
   - CDB_File
   - BerkeleyDB
   - MLDBM
 
- - �������漼�ǳ�ȯ����Ƥ�����
+ - 黒橋研究室で開発されているもの
   - Juman.pm (juman-6.0/perl)
   - KNP.pm   (knp-3.01/perl)
-  - CalcSimilarityByCF.pm (ʬ������ٷ׻��⥸�塼��) = ���񥳥�ѥ����ɬ��, �桼��������
+  - CalcSimilarityByCF.pm (分布類似度計算モジュール) = 辞書コンパイルに必要, ユーザは不要
 
-[SynGraph��]
+[SynGraph化]
 
 see scripts/README
 
-[�ե�����ꥹ��]
+[ファイルリスト]
 
-README		���Υե�����
+README		このファイル
 
 
-dic/ : Ʊ��ɽ������
+dic/ : 同義表現辞書
 
-  rsk_iwanami/ : RSK��iwanami������μ���з��
+  rsk_iwanami/ : RSK、iwanamiからの知識抽出結果
 
-    README		��Х롼��
-    synonym.txt     	Ʊ�����롼�ץǡ���
-    definition.txt      ���ʸ�ǡ���
-    isa.txt      	��̲��̥ǡ���
-    antonym.txt		ȿ���ǡ���
+    README		抽出ルール
+    synonym.txt     	同義グループデータ
+    definition.txt      定義文データ
+    isa.txt      	上位下位データ
+    antonym.txt		反義データ
 
-  web_news/ : WEB����ʹ����������μ���з��
+  web_news/ : WEB、新聞記事からの知識抽出結果
 
     README		
-    nation.txt		wikipedia�ι�̾�ڡ����������
-    news.txt        	������ʹ�����俷ʹ��ī����ʹ��γ��ɽ���������
-    www.txt 		WWW��γ��ɽ���������(���ߤ����äƤ��ǽ������)
-    all.txt		�嵭�Υե������ޡ����������
+    nation.txt		wikipediaの国名ページがら抽出
+    news.txt        	毎日新聞・読売新聞・朝日新聞中の括弧表現から抽出
+    www.txt 		WWW中の括弧表現から抽出(ゴミが入ってる可能性あり)
+    all.txt		上記のファイルをマージしたもの
 
 
-dic_change/ : �������Ʊ��ɽ������
+dic_change/ : 整形後の同義表現辞書
 
-  synonym_dic.txt      		���񤫤��äƤ���Ʊ�����롼�ץǡ���
-  definition.txt        	���񤫤��äƤ������ʸ�ǡ���
-  isa.txt      			���񤫤��äƤ�����̲��̥ǡ���
-  antonym.txt			���񤫤��äƤ���ȿ���ǡ���
-  synonym_web_news.txt     	Web�ȿ�ʹ����ȤäƤ���Ʊ�����롼�ץǡ���
-  log_merge.txt			�����Υ���(build.sh�ˤ������Τ⤳���˽�)
+  synonym_dic.txt      		辞書から取ってきた同義グループデータ
+  definition.txt        	辞書から取ってきた定義文データ
+  isa.txt      			辞書から取ってきた上位下位データ
+  antonym.txt			辞書から取ってきた反義データ
+  synonym_web_news.txt     	Webと新聞からとってきた同義グループデータ
+  log_merge.txt			整形のログ(build.shにおけるものもここに書く)
 
-perl/ : Perl�⥸�塼��
+perl/ : Perlモジュール
 
-  SynGraph.pm                   SYNGRAPH�򰷤��⥸�塼��
-  Search.pm         		�������뤿��Υ⥸�塼��
-  CalcSimWithSynGraph.pm        SYNGRAPH���Ѥ��ƥޥå��󥰤�Ԥ��⥸�塼��
+  SynGraph.pm                   SYNGRAPHを扱うモジュール
+  Search.pm         		検索するためのモジュール
+  CalcSimWithSynGraph.pm        SYNGRAPHを用いてマッチングを行うモジュール
 
 
-scripts/ : ������ץ�
+scripts/ : スクリプト
 
   README			
-  merge_dic.sh			����ǡ��������Υ�����ץ�
-  build.sh        		����ѥ���(DB����)�Υ�����ץ�
-  make_logdic.pl		������ФΥ�������
-  change_dic.pl			RSK�����ۣ�������б�
-��check_duplicate_eentry.pl 	Web���������
-  conv_syndb.pl  		����ѥ����������
-  compile.pl     		����ѥ���(���ɽ��DB��SYNGRAPH��) 
-  sort_synhead.pl		���ɽ��DB�Υإåɥϥå���򥽡���
-  make_sg.pl     		�����оݤ�SYNGRAPH��
-  merge_db.pl    		����ǥå����ե������ޡ���
-  irex_search.pl 		IREX�θ���
-  print_hash.pl  		�Ƽ�ǡ����١������Ƥ�ɽ��
-  teat.pl     			����ٷ׻��Υƥ��ȥץ������
-��knp_syn.pl			SYNGRAPH���Υƥ��ȥץ������
-��check_syndb.pl		�ǡ����١����Υ����å��ѥץ������
-  search.pl      		����
+  merge_dic.sh			辞書データ整形のスクリプト
+  build.sh        		コンパイル(DB作成)のスクリプト
+  make_logdic.pl		辞書抽出のログ作成
+  change_dic.pl			RSK辞書の曖昧性の対応
+　check_duplicate_eentry.pl 	Web辞書の整形
+  conv_syndb.pl  		コンパイルの前処理
+  compile.pl     		コンパイル(類義表現DBのSYNGRAPH化) 
+  sort_synhead.pl		類義表現DBのヘッドハッシュをソート
+  make_sg.pl     		検索対象のSYNGRAPH化
+  merge_db.pl    		インデックスファイルをマージ
+  irex_search.pl 		IREXの検索
+  print_hash.pl  		各種データベース内容の表示
+  teat.pl     			類似度計算のテストプログラム
+　knp_syn.pl			SYNGRAPH化のテストプログラム
+　check_syndb.pl		データベースのチェック用プログラム
+  search.pl      		検索
 
 
-syndb/ : Ʊ��ɽ���ǡ����١���
+syndb/ : 同義表現データベース
 
-  i686/ : reed�ʤɤ�SYNGRAPH����Ѥ�����˻Ȥ�DB
+  i686/ : reedなどでSYNGRAPHを使用する場合に使うDB
 	
-    synhead.cdb			���ɽ��DB(head����Ʊ�����롼�פ�Ƥ�)
-    syndata.mldbm		���ɽ��DB(Ʊ�����롼�פ�°��SYNGRAPH��Ƥ�)
-    synparent.cdb		��̥ǡ����١���(��̥��롼�פ�Ƥ�)
-    synantonym.cdb		ȿ���ǡ����١���(ȿ�����롼�פ�Ƥ�)
-��  syndb.cdb			Ʊ�����롼�פ���Ȥ���¸
+    synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
+    syndata.mldbm		類義表現DB(同義グループに属すSYNGRAPHを呼ぶ)
+    synparent.cdb		上位データベース(上位グループを呼ぶ)
+    synantonym.cdb		反義データベース(反義グループを呼ぶ)
+　  syndb.cdb			同義グループの中身を保存
 
-  x86_64/ : orchid��SYNGRAPH����Ѥ�����˻Ȥ�DB
+  x86_64/ : orchidでSYNGRAPHを使用する場合に使うDB
     
-    (i686/��Ʊ��)
+    (i686/と同じ)
 
-  cgi/ : CGI�ǻ��Ѥ���DB
-    synhead.cdb			���ɽ��DB(head����Ʊ�����롼�פ�Ƥ�)
-    synparent.cdb		��̥ǡ����١���(��̥��롼�פ�Ƥ�)
-    synantonym.cdb		ȿ���ǡ����١���(ȿ�����롼�פ�Ƥ�)
-    syndata.mldbm		SYNGRAPH����LOG��syndata
-��  syndb.cdb			Ʊ�����롼�פ���Ȥ���¸
-��  synnumber.cdb		�ֹ椫��Ʊ�����롼�פ�Ƥ�
-��  synchild.cdb		���̥ǡ����١���(���̥��롼�פ�Ƥ�)
-    log_dic.cdb			���񤫤�ξ�����Ф�LOG
-��  log_isa.cdb			DB�ξ�̲��̴ط���Ϳ��LOG
-��  log_antonym.cdb		DB��ȿ���ط���Ϳ��LOG
+  cgi/ : CGIで使用するDB
+    synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
+    synparent.cdb		上位データベース(上位グループを呼ぶ)
+    synantonym.cdb		反義データベース(反義グループを呼ぶ)
+    syndata.mldbm		SYNGRAPH化のLOG付syndata
+　  syndb.cdb			同義グループの中身を保存
+　  synnumber.cdb		番号から同義グループを呼ぶ
+　  synchild.cdb		下位データベース(下位グループを呼ぶ)
+    log_dic.cdb			辞書からの情報抽出のLOG
+　  log_isa.cdb			DBの上位下位関係付与のLOG
+　  log_antonym.cdb		DBの反義関係付与のLOG
 
 
-cgi : CGI������
-��index.cgi		SynGraph��DEBUG��CGI�Υ�����
-
+cgi : CGIソース
+　index.cgi		SynGraphのDEBUG用CGIのソース
