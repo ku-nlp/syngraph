@@ -2,12 +2,15 @@
 
 # $Id$
 
-# KNP::Result¤ò»È¤Ã¤ÆSynGrpah²òÀÏ·ë²Ì¤òÆÉ¤ß¹ş¤à¥µ¥ó¥×¥ë¥×¥í¥°¥é¥à
+# KNP::Resultã‚’ä½¿ã£ã¦SynGrpahè§£æçµæœã‚’èª­ã¿è¾¼ã‚€ã‚µãƒ³ãƒ—ãƒ«ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
 
-# usage: perl knp_syn.pl -s ¥Û¥Æ¥ë¤Ë°ìÈÖ¶á¤¤±Ø -relation | perl read-knp-result.pl
+# usage: perl knp_syn.pl -s ãƒ›ãƒ†ãƒ«ã«ä¸€ç•ªè¿‘ã„é§… -relation | perl read-knp-result.pl
 
 use strict;
-use encoding 'euc-jp';
+use utf8;
+binmode STDIN, ':encoding(utf8)';
+binmode STDOUT, ':encoding(utf8)';
+binmode DB::OUT, ':encoding(utf8)';
 use KNP;
 use Getopt::Long;
 use SynGraph;
