@@ -14,16 +14,16 @@ use Getopt::Long;
 use Encode;
 
 my %opt;
-GetOptions(\%opt, 'synid=s', 'constructor', 'orig', 'debug');
+GetOptions(\%opt, 'syndb_cdb=s', 'synid=s', 'constructor', 'orig', 'debug');
 
 $opt{synid} = decode('utf-8', $opt{synid});
 
-my $syndb_cdb = '../syndb/cgi/syndb.cdb';
+$opt{syndb_cdb} = '../syndb/cgi/syndb.cdb' unless $opt{syndb_cdb};
 
 my $syngraph;
 # constructorでsyndb_cdbを渡すオプション
 if ($opt{constructor}) {
-    $syngraph = new SynGraph(undef, undef, { syndbcdb => $syndb_cdb });
+    $syngraph = new SynGraph(undef, undef, { syndbcdb => $opt{syndb_cdb} });
 }
 else {
     $syngraph = new SynGraph;
@@ -31,7 +31,7 @@ else {
 
 my %syndb;
 unless ($opt{constructor}) {
-    SynGraph::tie_cdb($syndb_cdb, \%syndb);
+    SynGraph::tie_cdb($opt{syndb_cdb}, \%syndb);
 }
 
 my @words;
