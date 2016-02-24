@@ -2280,7 +2280,7 @@ sub sid2word {
     my @ret;
     # ごたつく/ごたつく:1/1:1/2[DIC]|ごたごたする[定義文]|取り込む/とりこむ:1/1:3/3[DIC]|混雑する[DIC]
     foreach my $expression (split (/\|/, $group)) {
-	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//) {
+	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句)\]$//) {
 	    my $type = $1;
 
 	    my $orig = $expression;
