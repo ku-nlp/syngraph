@@ -1,8 +1,9 @@
 #!/usr/bin/env perl
 
-# $Id$
-
 # KNPへのSYNGRAPH導入のテスト用プログラム
+
+# usage: perl knp_syn.pl -s 景気が冷え込む -dbdir /somewhere/syndb/x86_64
+# usage: echo '景気が冷え込む' | juman | knp -tab | perl knp_syn.pl -dbdir /somewhere/syndb/x86_64
 
 use strict;
 use Dumpvalue;
