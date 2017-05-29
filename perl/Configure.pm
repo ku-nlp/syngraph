@@ -1,13 +1,10 @@
 package Configure;
 
-# $Id$
-
 # 定数をこのファイルで定義
 
 use strict;
 use utf8;
 use File::Basename;
-use POSIX qw (uname);
 
 our $SynGraphBaseDir;
 
@@ -15,12 +12,10 @@ BEGIN {
     $SynGraphBaseDir = dirname($INC{'Configure.pm'}) . '/..';
 }
 
-my $uname = (POSIX::uname())[4];
-
 our $JumanCommand = '/home/shibata/tool-dic-analyze/bin/juman';
 our $JumanRcfile = '/home/shibata/tool-dic-analyze/etc/jumanrc';
-our $KnpCommand = $uname eq 'x86_64' ? '/home/shibata/tool-x86_64/bin/knp' : '/home/shibata/tool/bin/knp';
-our $KnpRcfile = $uname eq 'x86_64' ? '/home/shibata/.knprc-orchid' : '/home/shibata/.knprc';
+our $KnpCommand = '/home/shibata/tool-x86_64/bin/knp';
+our $KnpRcfile = '/home/shibata/.knprc';
 
 our $JumanShareCommand = '/share/usr/bin/juman';
 our $KnpShareCommand = '/share/usr/bin/knp';
@@ -33,6 +28,7 @@ our $Wikipediadb = $SynGraphBaseDir . '/ExtractSynfromDic/db/wikipedia.db';
 # 分布類似度計算用のデータベース
 our $CalcsimMidbfile = '/home/shibata/work/CalcSimilarityByCF/db/all-mi';
 our $CalcsimCNMidbfile = '/home/shibata/work/CalcSimilarityByCF/db_compound_2_100M_1_de/all-mi';
+our $CalcsimVerbMidbfile = '/vine7/shibata/backup/db_compound_1_100M_1_de_verb/all-mi';
 
 # for calc-similarity-synonym.pl
 our $Oneformatted = '/home/shibata/work/CalcSimilarityByCF/one.formatted/080214.one.formatted';
