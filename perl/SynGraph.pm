@@ -1028,9 +1028,10 @@ sub get_alt {
 
     # 同義<同義:方法/ほうほう>
     # <同義:動詞:断じる/だんじる>
-    while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
+    my $synonym_key = '?:同義|名詞派生|動詞派生|形容詞派生';
+    while ($mrph->{fstring} =~ /(<($synonym_key):.+?>)/g) {
 	# 代表表記
-	if ($1 =~ /同義:([^\s\">]+)/){
+	if ($1 =~ /($synonym_key):([^\s\">]+)/){
 	    my $rep_synonym = $1;
 	    $rep_synonym =~ s/(?:動詞|形容詞|名詞)://;
 	    push @alt, $rep_synonym;
