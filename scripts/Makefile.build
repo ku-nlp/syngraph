@@ -1,0 +1,74 @@
+# SynGraph辞書コンパイル
+# make -f Makefile.build SYNGRAPHDEVEL_DIR=$HOME/work/SynGraphDevel.iwanami.wikipedia JUMAN=/home/shibata/tool-dic-analyze/bin/juman JUMANRCFILE=/home/shibata/tool-dic-analyze/etc/jumanrc WIKIPEDIA=1
+
+# Change this
+WWW2sfdir := $(HOME)/work/WWW2sf
+SYNGRAPHDEVEL_DIR := /home/shibata/work/SynGraphDevel.wikipedia
+
+# 同義表現データマージ後ディレクトリ
+SIM_C_DIR := $(SYNGRAPHDEVEL_DIR)/dic_change
+DIC_DIR := $(SYNGRAPHDEVEL_DIR)/dic
+
+LOG_MERGE_TXT := $(SIM_C_DIR)/log_merge2.txt
+
+# 同義表現データベース
+SYNDB_DIR_BASENAME := x86_64
+SYNDB_DIR := $(SYNGRAPHDEVEL_DIR)/syndb/$(SYNDB_DIR_BASENAME)
+
+SYNDB_CONVERT := $(SYNDB_DIR)/syndb.convert
+SYNDB_JMN := $(SYNDB_DIR)/syndb.jmn
+SYNDB_PARSE := $(SYNDB_DIR)/syndb.parse
+SYNDATA_MLDBM := $(SYNDB_DIR)/syndata.mldbm
+SYN_HEAD := $(SYNDB_DIR)/synhead.cdb
+
+# JUMAN
+JUMAN := juman
+
+# JUMANRC
+JUMANRCFILE :=
+jumanrc :=
+
+PERL_DIR := ../perl
+
+NICE_VALUE := 19
+PERL := nice -n $(NICE_VALUE) perl -I$(PERL_DIR)
+
+CONV_SYNDB_ARGS :=
+COMPILE_ARGS :=
+ifdef LOG
+	CONV_SYNDB_ARGS += --log_merge=$(LOG_MERGE_TXT)
+	COMPILE_ARGS += --option=log
+endif
+ifdef WIKIPEDIA
+	CONV_SYNDB_ARGS += -wikipedia
+endif
+
+WORD_INTO_JUMAN_ARGS := 
+ifdef JUMANRCFILE
+	WORD_INTO_JUMAN_ARGS += -R $(JUMANRCFILE)
+endif
+
+PARSE_COMP_ARGS := -postprocess -tab
+ifdef DPND
+	PARSE_COMP_ARGS += -dpnd
+endif
+
+all: $(SYN_HEAD)
+syndb_convert: $(SYNDB_CONVERT)
+
+$(SYNDB_CONVERT):
+	mkdir -p $(SYNDB_DIR) && $(PERL) conv_syndb.pl --synonym_dic=$(SIM_C_DIR)/synonym_dic.txt --synonym_web_news=$(SIM_C_DIR)/synonym_web_news_aimai.txt --definition=$(SIM_C_DIR)/definition.txt --isa=$(SIM_C_DIR)/isa.txt --isa_wikipedia=$(SIM_C_DIR)/isa_wikipedia.txt --antonym=$(SIM_C_DIR)/antonym.txt --convert_file=$@ --syndbdir=$(SYNDB_DIR) -similar_phrase $(DIC_DIR)/rsk_iwanami/automatic_similar_phrase.txt $(CONV_SYNDB_ARGS)
+
+$(SYNDB_JMN): $(SYNDB_CONVERT)
+	$(PERL) word_into_juman.pl -C $(JUMAN) $(WORD_INTO_JUMAN_ARGS) < $< > $@
+
+$(SYNDB_PARSE): $(SYNDB_JMN)
+	nice -n $(NICE_VALUE) $(WWW2sfdir)/tool/scripts/parse-comp.sh -k "$(PARSE_COMP_ARGS)" $< && mv $(basename $<).knp $@
+
+# コンパイル
+$(SYNDATA_MLDBM): $(SYNDB_PARSE)
+	$(PERL) compile.pl --knp_result=$< --syndbdir=$(SYNDB_DIR) $(COMPILE_ARGS)
+
+# synheadのソート
+$(SYN_HEAD): $(SYNDATA_MLDBM)
+	$(PERL) sort_synhead.pl --syndbdir=$(SYNDB_DIR) && rm -f $@ && mv $(SYNDB_DIR)/synhead_sort.cdb $@
