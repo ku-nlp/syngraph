@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
 
-# $Id$
-
 use strict;
 use Getopt::Long;
 use CDB_File;
@@ -11,8 +9,9 @@ binmode STDIN, ':encoding(utf-8)';
 binmode STDOUT, ':encoding(utf-8)';
 binmode STDERR, ':encoding(utf-8)';
 binmode DB::OUT, ':encoding(utf-8)';
+use File::Basename;
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'synonym_med=s', 'synonym_ingo=s', 'definition=s', 'definition_med=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s', 'dic_user_dir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -35,12 +34,18 @@ my %synnum;                           # 同義グループ番号情報
 my $syn_number = 1;                   # 同義グループ番号
 my %def_delete;
 
+# default
+my %FILE = ( 'def' => [ 'definition' ],
+	     'synonym' => [ 'synonym_dic', 'synonym_web_news' ],
+	     'isa' => [ 'isa', 'isa_wikipedia' ],
+	     'antonym' => [ 'antonym' ] );
+my %USER_DIC_FILENAME;
+&read_dic_user_dir if $opt{dic_user_dir};
+
 #
 # 定義文の読み込み
 #
-my @def_file = ('definition');
-push @def_file, 'definition_med' if $opt{definition_med};
-foreach my $file_type (@def_file) {
+foreach my $file_type (@{$FILE{'def'}}) {
     if ($opt{$file_type}) {
 	open(DEF, '<:encoding(utf-8)', $opt{$file_type}) or die;
 
@@ -80,11 +85,7 @@ foreach my $file_type (@def_file) {
 #
 # 同義語グループの読み込み
 #
-my @file = ('synonym_dic', 'synonym_web_news');
-push @file, 'synonym_med' if $opt{synonym_med};
-push @file, 'synonym_ingo' if $opt{synonym_ingo};
-
-foreach my $file_type (@file) {
+foreach my $file_type (@{$FILE{'synonym'}}) {
     my $file_tag;
     if ($file_type eq 'synonym_dic') {
 	$file_tag = '[DIC]';
@@ -92,20 +93,19 @@ foreach my $file_type (@file) {
     elsif ($file_type eq 'synonym_web_news') {
 	$file_tag = '[Web]';
     }
-    elsif ($file_type eq 'synonym_med') {
-	$file_tag = '[Med]';
+    else {
+	my ($type, $name) = split('_', $file_type);
+	$file_tag = "[$name]";
     }
-    elsif ($file_type eq 'synonym_ingo') {
-	$file_tag = '[Ingo]';
-    }
+    
     if ($opt{$file_type}) {
 	open(SYN, '<:encoding(utf-8)', $opt{$file_type}) or die;
 	while (<SYN>) {
 	    chomp;
-	    $_ = &SynGraph::h2z($_) if $file_type eq 'synonym_med' || $file_type eq 'synonym_ingo';
-	    $_ = &SynGraph::toupper($_) if $file_type eq 'synonym_ingo';
+	    $_ = &SynGraph::h2z($_) if defined $USER_DIC_FILENAME{$file_type};
+	    $_ = &SynGraph::toupper($_) if defined $USER_DIC_FILENAME{$file_type};
 
-	    my $delimiter = ($file_type eq 'synonym_web_news' && $opt{wikipedia}) ? '\t' : '\s';
+	    my $delimiter = (($file_type eq 'synonym_web_news' && $opt{wikipedia}) || defined $USER_DIC_FILENAME{$file_type}) ? '\t' : '\s';
 	    my @syn_list = split(/$delimiter/, $_);
 	    
 	    # 数が多いのは使わない
@@ -151,8 +151,7 @@ foreach my $file_type (@file) {
 # 上位・下位の読み込み
 # (上下関係は全てSYNIDで扱う)
 #
-my @file = ('isa', 'isa_wikipedia');
-foreach my $file_type (@file) {
+foreach my $file_type (@{$FILE{'isa'}}) {
     if ($opt{$file_type}) {
 	open(ISA, '<:encoding(utf-8)', $opt{$file_type}) or die;
 	my %rel_synid;
@@ -166,16 +165,34 @@ foreach my $file_type (@file) {
 	    chomp;
 
 	    my $delimiter = $file_type eq 'isa_wikipedia' ? '\t' : ' ';
-	    my ($child, $parent, $number) = split(/$delimiter/, $_);
+	    my ($child, $parent, $number);
+	    # ユーザ辞書には上位語数がない
+	    if (defined $USER_DIC_FILENAME{$file_type}) {
+		($child, $parent) = split(/\t/, $_);
+		$child = &SynGraph::h2z($child);
+		$parent = &SynGraph::h2z($parent);
+	    }
+	    else {
+		($child, $parent, $number) = split(/$delimiter/, $_);
+	    }
 
 	    next if $opt{isa_max_num} && $file_type eq 'isa' && $number > $opt{isa_max_num};
 
 	    # 文字化け対策
 	    next if $child =~ /\?/ || $parent =~ /\?/;
 
+	    my $tag;
+	    if ($file_type eq 'isa_wikipedia') {
+		$tag = '[Wikipedia]';
+	    }
+	    elsif (defined $USER_DIC_FILENAME{$file_type}) {
+		my ($type, $name) = split('_', $file_type);
+		$tag = "\[$name\]";
+	    }
+
 	    # SYNIDを獲得
-	    my $childsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($child, '[Wikipedia]') :  &get_synid($child);
-	    my $parentsyn_list = $file_type eq 'isa_wikipedia' ? &get_synid($parent, '[Wikipedia]') : &get_synid($parent);
+	    my $childsyn_list = $tag ? &get_synid($child, $tag) :  &get_synid($child);
+	    my $parentsyn_list = $tag ? &get_synid($parent, $tag) : &get_synid($parent);
 	    if (&contradiction_check($parentsyn_list, $childsyn_list)) {
 		if ($option{log} and $opt{log_merge}) {
 		    print LM "X contradiction isa $child, $parent\n";
@@ -219,10 +236,8 @@ foreach my $file_type (@file) {
 #
 # 反義語の読み込み
 #
-my @ant_file = ('antonym');
-push @file, 'antonym_med' if $opt{antonym_med};
 
-foreach my $file_type (@ant_file) {
+foreach my $file_type (@{$FILE{'antonym'}}) {
     if ($opt{$file_type}) {
 	open(ANT, '<:encoding(utf-8)', $opt{$file_type}) or die;
 
@@ -234,9 +249,10 @@ foreach my $file_type (@ant_file) {
 	while (<ANT>) {
 	    chomp;
 
-	    my ($word1, $word2) = split(/ /, $_);
-	    $word1 = &SynGraph::h2z($word1) if $file_type eq 'antonym_med';
-	    $word2 = &SynGraph::h2z($word2) if $file_type eq 'antonym_med';
+	    my $delimiter = defined $USER_DIC_FILENAME{$file_type} ? '\t' : '\s';
+	    my ($word1, $word2) = split(/$delimiter/, $_);
+	    $word1 = &SynGraph::h2z($word1) if defined $USER_DIC_FILENAME{$file_type};
+	    $word2 = &SynGraph::h2z($word2) if defined $USER_DIC_FILENAME{$file_type};
 
 	    # SYNIDを獲得
 	    my $word1syn_list = &get_synid($word1);
@@ -417,7 +433,7 @@ if ($opt{convert_file}) {
 	foreach my $expression (@{$syn_group{$synid}}) {
 
 	    # タグを取る
-	    my $tag = $1 if $expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句|Med|Ingo)\]$//g;
+	    my $tag = $1 if $expression =~ s/\[(.+?)\]$//g;
 
 	    # 定義文の重複を除く
 	    if ($tag eq '定義文') {
@@ -582,4 +598,21 @@ sub contradiction_check {
     }
     
     return 0;
+}
+
+# ユーザ辞書を読む
+sub read_dic_user_dir {
+    for my $file (glob "$opt{dic_user_dir}/*.txt") {
+	# synonym_user, isa_user など 
+	my $basename = basename($file, '.txt');
+	my ($type, $name) = split('_', $basename);
+
+	if (!defined $FILE{$type}) {
+	    print STDERR "unknown type: $type\n";
+	    next;
+	}
+	push @{$FILE{$type}}, $basename;
+	$opt{$basename} = $file;
+	$USER_DIC_FILENAME{$basename} = 1;
+    }
 }

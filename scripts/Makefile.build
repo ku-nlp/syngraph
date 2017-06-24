@@ -42,6 +42,9 @@ endif
 ifdef WIKIPEDIA
 	CONV_SYNDB_ARGS += -wikipedia
 endif
+ifdef DIC_USER_DIR
+	CONV_SYNDB_ARGS += --dic_user_dir $(DIC_USER_DIR)
+endif
 
 WORD_INTO_JUMAN_ARGS := 
 ifdef JUMANRCFILE
