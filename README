@@ -84,17 +84,12 @@ scripts/ : スクリプト
 
 syndb/ : 同義表現データベース
 
-  i686/ : reedなどでSYNGRAPHを使用する場合に使うDB
-	
+  x86_64/ : 通常利用するDB
     synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
     syndata.mldbm		類義表現DB(同義グループに属すSYNGRAPHを呼ぶ)
     synparent.cdb		上位データベース(上位グループを呼ぶ)
     synantonym.cdb		反義データベース(反義グループを呼ぶ)
-　  syndb.cdb			同義グループの中身を保存
-
-  x86_64/ : orchidでSYNGRAPHを使用する場合に使うDB
-    
-    (i686/と同じ)
+　  syndb.cdb			同義グループの中身を保存 
 
   cgi/ : CGIで使用するDB
     synhead.cdb			類義表現DB(headから同義グループを呼ぶ)
