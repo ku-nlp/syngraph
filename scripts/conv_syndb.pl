@@ -11,7 +11,7 @@ binmode STDERR, ':encoding(utf-8)';
 binmode DB::OUT, ':encoding(utf-8)';
 use File::Basename;
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s', 'dic_user_dir=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'syndbdir_cgi=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s', 'dic_user_dir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -157,7 +157,7 @@ foreach my $file_type (@{$FILE{'isa'}}) {
 	my %rel_synid;
 
 	# 矛盾解消のログ
-	if ($option{log} and $opt{log_merge}) {
+	if ($opt{log_merge}) {
 	    open(LM, '>>:encoding(utf-8)', $opt{log_merge}) or die;
 	}
 
@@ -194,7 +194,7 @@ foreach my $file_type (@{$FILE{'isa'}}) {
 	    my $childsyn_list = $tag ? &get_synid($child, $tag) :  &get_synid($child);
 	    my $parentsyn_list = $tag ? &get_synid($parent, $tag) : &get_synid($parent);
 	    if (&contradiction_check($parentsyn_list, $childsyn_list)) {
-		if ($option{log} and $opt{log_merge}) {
+		if ($opt{log_merge}) {
 		    print LM "X contradiction isa $child, $parent\n";
 		}
 		next;
@@ -225,7 +225,7 @@ foreach my $file_type (@{$FILE{'isa'}}) {
 	    }
 	}
 
-	if ($option{log} and $opt{log_merge}) {
+	if ($opt{log_merge}) {
 	    close(LM);
 	}
 
@@ -242,7 +242,7 @@ foreach my $file_type (@{$FILE{'antonym'}}) {
 	open(ANT, '<:encoding(utf-8)', $opt{$file_type}) or die;
 
 	# 矛盾解消のログ
-	if ($option{log} and $opt{log_merge}) {
+	if ($opt{log_merge}) {
 	    open(LM, '>>:encoding(utf-8)', $opt{log_merge}) or die;    
 	}
 
@@ -258,7 +258,7 @@ foreach my $file_type (@{$FILE{'antonym'}}) {
 	    my $word1syn_list = &get_synid($word1);
 	    my $word2syn_list = &get_synid($word2);
 	    if (&contradiction_check($word1syn_list, $word2syn_list)) {
-		if ($option{log} and $opt{log_merge}) {
+		if ($opt{log_merge}) {
 		    print LM "X contradiction isa $word1, $word2\n";
 		}
 		next;
@@ -280,7 +280,7 @@ foreach my $file_type (@{$FILE{'antonym'}}) {
 	    }
 	}
 
-	if ($option{log} and $opt{log_merge}) {
+	if ($opt{log_merge}) {
 	    close(LM);
 	}
 
@@ -492,35 +492,27 @@ if ($opt{conv_log}) {
 #
 # 同義グループの保存（CGI用）
 #
-&SynGraph::store_cdb("$dir/syndb.cdb", \%syndb);
+&SynGraph::store_cdb("$opt{syndbdir_cgi}/syndb.cdb", \%syndb);
 
 #
 # 同義グループ番号の保存（CGI用）
 #
-if ($option{log}) {
-    &SynGraph::store_cdb("$dir/synnumber.cdb", \%synnum);
-}
+&SynGraph::store_cdb("$opt{syndbdir_cgi}/synnumber.cdb", \%synnum);
 
 #
 # 下位・上位関係？の保存（CGI用）
 #
-if ($option{log}) {
-    &SynGraph::store_cdb("$dir/synchild.cdb", \%relation_child);
-}
+&SynGraph::store_cdb("$opt{syndbdir_cgi}/synchild.cdb", \%relation_child);
 
 #
 # 上位下位関係のログ保存（CGI用）
 #
-if ($option{log}) {
-    &SynGraph::store_cdb("$dir/log_isa.cdb", \%log_isa);
-}
+&SynGraph::store_cdb("$opt{syndbdir_cgi}/log_isa.cdb", \%log_isa);
 
 #
 # 反義関係のログ保存（CGI用）
 #
-if ($option{log}) {
-    &SynGraph::store_cdb("$dir/log_antonym.cdb", \%log_antonym);
-}
+&SynGraph::store_cdb("$opt{syndbdir_cgi}/log_antonym.cdb", \%log_antonym);
 
 print STDERR scalar(localtime), "辞書のコンバート終了\n";
 

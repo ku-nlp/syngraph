@@ -14,12 +14,15 @@ LOG_MERGE_TXT := $(SIM_C_DIR)/log_merge2.txt
 # 同義表現データベース
 SYNDB_DIR_BASENAME := x86_64
 SYNDB_DIR := $(SYNGRAPHDEVEL_DIR)/syndb/$(SYNDB_DIR_BASENAME)
+SYNDB_DIR_CGI := $(SYNDB_DIR).cgi
 
 SYNDB_CONVERT := $(SYNDB_DIR)/syndb.convert
 SYNDB_JMN := $(SYNDB_DIR)/syndb.jmn
 SYNDB_PARSE := $(SYNDB_DIR)/syndb.parse
 SYNDATA_MLDBM := $(SYNDB_DIR)/syndata.mldbm
 SYN_HEAD := $(SYNDB_DIR)/synhead.cdb
+SYNDATA_MLDBM_CGI := $(SYNDB_DIR_CGI)/syndata.mldbm
+SYN_HEAD_CGI := $(SYNDB_DIR_CGI)/synhead.cdb
 
 # JUMAN
 JUMAN := juman
@@ -34,11 +37,6 @@ NICE_VALUE := 19
 PERL := nice -n $(NICE_VALUE) perl -I$(PERL_DIR)
 
 CONV_SYNDB_ARGS :=
-COMPILE_ARGS :=
-ifdef LOG
-	CONV_SYNDB_ARGS += --log_merge=$(LOG_MERGE_TXT)
-	COMPILE_ARGS += --option=log
-endif
 ifdef WIKIPEDIA
 	CONV_SYNDB_ARGS += -wikipedia
 endif
@@ -56,11 +54,12 @@ ifdef DPND
 	PARSE_COMP_ARGS += -dpnd
 endif
 
-all: $(SYN_HEAD)
+all: $(SYN_HEAD) $(SYN_HEAD_CGI)
 syndb_convert: $(SYNDB_CONVERT)
 
 $(SYNDB_CONVERT):
-	mkdir -p $(SYNDB_DIR) && $(PERL) conv_syndb.pl --synonym_dic=$(SIM_C_DIR)/synonym_dic.txt --synonym_web_news=$(SIM_C_DIR)/synonym_web_news_aimai.txt --definition=$(SIM_C_DIR)/definition.txt --isa=$(SIM_C_DIR)/isa.txt --isa_wikipedia=$(SIM_C_DIR)/isa_wikipedia.txt --antonym=$(SIM_C_DIR)/antonym.txt --convert_file=$@ --syndbdir=$(SYNDB_DIR) -similar_phrase $(DIC_DIR)/rsk_iwanami/automatic_similar_phrase.txt $(CONV_SYNDB_ARGS)
+	mkdir -p $(SYNDB_DIR) && mkdir -p $(SYNDB_DIR_CGI) && \
+	$(PERL) conv_syndb.pl --synonym_dic=$(SIM_C_DIR)/synonym_dic.txt --synonym_web_news=$(SIM_C_DIR)/synonym_web_news_aimai.txt --definition=$(SIM_C_DIR)/definition.txt --isa=$(SIM_C_DIR)/isa.txt --isa_wikipedia=$(SIM_C_DIR)/isa_wikipedia.txt --antonym=$(SIM_C_DIR)/antonym.txt --convert_file=$@ --syndbdir=$(SYNDB_DIR) -similar_phrase $(DIC_DIR)/rsk_iwanami/automatic_similar_phrase.txt --log_merge=$(LOG_MERGE_TXT) $(CONV_SYNDB_ARGS) --syndbdir_cgi $(SYNDB_DIR_CGI) && ln -s $(SYNDB_DIR)/synantonym.cdb $(SYNDB_DIR_CGI)/synantonym.cdb && ln -s $(SYNDB_DIR)/synparent.cdb $(SYNDB_DIR_CGI)/synparent.cdb
 
 $(SYNDB_JMN): $(SYNDB_CONVERT)
 	$(PERL) word_into_juman.pl -C $(JUMAN) $(WORD_INTO_JUMAN_ARGS) < $< > $@
@@ -70,8 +69,14 @@ $(SYNDB_PARSE): $(SYNDB_JMN)
 
 # コンパイル
 $(SYNDATA_MLDBM): $(SYNDB_PARSE)
-	$(PERL) compile.pl --knp_result=$< --syndbdir=$(SYNDB_DIR) $(COMPILE_ARGS)
+	$(PERL) compile.pl --knp_result=$< --syndbdir=$(SYNDB_DIR)
+
+$(SYNDATA_MLDBM_CGI): $(SYNDB_PARSE)
+	mkdir -p $(SYNDB_DIR_CGI) && $(PERL) compile.pl --knp_result=$< --syndbdir=$(SYNDB_DIR_CGI) --syndb_inputdir=$(SYNDB_DIR) --option=log
 
 # synheadのソート
 $(SYN_HEAD): $(SYNDATA_MLDBM)
 	$(PERL) sort_synhead.pl --syndbdir=$(SYNDB_DIR) && rm -f $@ && mv $(SYNDB_DIR)/synhead_sort.cdb $@
+
+$(SYN_HEAD_CGI): $(SYNDATA_MLDBM_CGI)
+	$(PERL) sort_synhead.pl --syndbdir=$(SYNDB_DIR_CGI) && rm -f $@ && mv $(SYNDB_DIR_CGI)/synhead_sort.cdb $@

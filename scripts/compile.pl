@@ -13,21 +13,22 @@ binmode STDERR, ':encoding(utf-8)';
 binmode DB::OUT, ':encoding(utf-8)';
 
 print STDERR scalar(localtime), "SYNGRAPH化開始\n";
-my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s', 'option=s');
+my %opt; GetOptions(\%opt, 'knp_result=s', 'syndbdir=s', 'syndb_inputdir=s', 'option=s');
 my $sgh = new SynGraph( undef, undef);
 
 # synparent.mldbm、synantonym.mldbmがある場所(そこに出来た類義表現DBも出力する)
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '.';
+my $inputdir = $opt{syndb_inputdir} ? $opt{syndb_inputdir} : $opt{syndbdir} ? $opt{syndbdir} : '.';
 
 # オプション
 my $option ={};
 $option->{$opt{option}}=1 if (defined $opt{option});
 
 # 上位・下位関係の読み込み
-&SynGraph::retrieve_cdb("$dir/synparent.cdb", $sgh->{synparent});
+&SynGraph::retrieve_cdb("$inputdir/synparent.cdb", $sgh->{synparent});
 
 # 反義関係の読み込み
-&SynGraph::retrieve_cdb("$dir/synantonym.cdb", $sgh->{synantonym});
+&SynGraph::retrieve_cdb("$inputdir/synantonym.cdb", $sgh->{synantonym});
 
 # KNP結果ファイルを開く
 $sgh->open_parsed_file($opt{knp_result}) or die;
