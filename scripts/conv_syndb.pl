@@ -11,7 +11,7 @@ binmode STDERR, ':encoding(utf-8)';
 binmode DB::OUT, ':encoding(utf-8)';
 use File::Basename;
 
-my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'syndbdir_cgi=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similar_phrase=s', 'dic_user_dir=s');
+my %opt; GetOptions(\%opt, 'synonym_dic=s', 'synonym_web_news=s', 'definition=s', 'isa=s', 'isa_wikipedia=s', 'antonym=s', 'antonym_med=s', 'convert_file=s', 'syndbdir=s', 'syndbdir_cgi=s', 'log_merge=s', 'option=s', 'conv_log=s', 'wikipedia', 'isa_max_num=i', 'similarphrase=s', 'dic_user_dir=s');
 
 # synparent.mldbm、synantonym.mldbmを置く場所
 my $dir = $opt{syndbdir} ? $opt{syndbdir} : '../syndb/i686';
@@ -38,7 +38,9 @@ my %def_delete;
 my %FILE = ( 'def' => [ 'definition' ],
 	     'synonym' => [ 'synonym_dic', 'synonym_web_news' ],
 	     'isa' => [ 'isa', 'isa_wikipedia' ],
-	     'antonym' => [ 'antonym' ] );
+	     'antonym' => [ 'antonym' ],
+	     'similarphrase' => [ 'similarphrase' ]
+    );
 my %USER_DIC_FILENAME;
 &read_dic_user_dir if $opt{dic_user_dir};
 
@@ -307,24 +309,26 @@ foreach my $midasi (keys %definition) {
     push (@{$syn_hash{$definition{$midasi}}}, $synid);
 }
 
-if ($opt{similar_phrase}) {
-    open(P, '<:encoding(utf-8)', $opt{similar_phrase}) or die;
-    while (<P>) {
-	chomp;
+foreach my $file_type (@{$FILE{'similarphrase'}}) {
+    if ($opt{$file_type}) {
+	open(P, '<:encoding(utf-8)', $opt{similarphrase}) or die;
+	while (<P>) {
+	    chomp;
 
-	my @phrases = split;
+	    my @phrases = split;
 
-	my $phrase1 = $phrases[0];
-	my $synid = 's' . $syn_number . ':' . &SynGraph::toupper($phrase1);
-	$syn_number++;
+	    my $phrase1 = $phrases[0];
+	    my $synid = 's' . $syn_number . ':' . &SynGraph::toupper($phrase1);
+	    $syn_number++;
 
-	for my $phrase (@phrases) {
-	    my $tmp_phrase = &SynGraph::toupper($phrase) . '[同義句]';
+	    for my $phrase (@phrases) {
+		my $tmp_phrase = &SynGraph::toupper($phrase) . '[同義句]';
 
-	    push (@{$syn_group{$synid}}, $tmp_phrase);
+		push (@{$syn_group{$synid}}, $tmp_phrase);
+	    }
 	}
+	close P;
     }
-    close P;
 }
 
 # 属する語が1語しかないグループのSynIDから、「s(数字):」を削除
