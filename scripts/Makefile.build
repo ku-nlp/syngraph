@@ -59,7 +59,10 @@ syndb_convert: $(SYNDB_CONVERT)
 
 $(SYNDB_CONVERT):
 	mkdir -p $(SYNDB_DIR) && mkdir -p $(SYNDB_DIR_CGI) && \
-	$(PERL) conv_syndb.pl --synonym_dic=$(SIM_C_DIR)/synonym_dic.txt --synonym_web_news=$(SIM_C_DIR)/synonym_web_news_aimai.txt --definition=$(SIM_C_DIR)/definition.txt --isa=$(SIM_C_DIR)/isa.txt --isa_wikipedia=$(SIM_C_DIR)/isa_wikipedia.txt --antonym=$(SIM_C_DIR)/antonym.txt --convert_file=$@ --syndbdir=$(SYNDB_DIR) -similar_phrase $(DIC_DIR)/rsk_iwanami/automatic_similar_phrase.txt --log_merge=$(LOG_MERGE_TXT) $(CONV_SYNDB_ARGS) --syndbdir_cgi $(SYNDB_DIR_CGI) && ln -s $(SYNDB_DIR)/synantonym.cdb $(SYNDB_DIR_CGI)/synantonym.cdb && ln -s $(SYNDB_DIR)/synparent.cdb $(SYNDB_DIR_CGI)/synparent.cdb
+	$(PERL) conv_syndb.pl --synonym_dic=$(SIM_C_DIR)/synonym_dic.txt --synonym_web_news=$(SIM_C_DIR)/synonym_web_news_aimai.txt --definition=$(SIM_C_DIR)/definition.txt --isa=$(SIM_C_DIR)/isa.txt --isa_wikipedia=$(SIM_C_DIR)/isa_wikipedia.txt --antonym=$(SIM_C_DIR)/antonym.txt --convert_file=$@ --syndbdir=$(SYNDB_DIR) -similar_phrase $(DIC_DIR)/rsk_iwanami/automatic_similar_phrase.txt --log_merge=$(LOG_MERGE_TXT) $(CONV_SYNDB_ARGS) --syndbdir_cgi $(SYNDB_DIR_CGI) && \
+	ln -s $(SYNDB_DIR)/synantonym.cdb $(SYNDB_DIR_CGI)/synantonym.cdb && \
+	ln -s $(SYNDB_DIR)/synparent.cdb $(SYNDB_DIR_CGI)/synparent.cdb && \
+	ln -s $(SYNDB_DIR_CGI)/syndb.cdb $(SYNDB_DIR)/syndb.cdb 
 
 $(SYNDB_JMN): $(SYNDB_CONVERT)
 	$(PERL) word_into_juman.pl -C $(JUMAN) $(WORD_INTO_JUMAN_ARGS) < $< > $@
