@@ -390,9 +390,9 @@ sub make_bp {
 			my $match_flag = 0;
 			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
 			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
-			    # 「は」はマッチするとする
+			    # 「は」「の」(例:ごみの捨て方)はマッチするとする
 			    if (defined $graph1_fuzoku && 
-				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq $graph2_fuzoku)) {
+				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq 'の' || $graph1_fuzoku eq $graph2_fuzoku)) {
 				$match_flag = 1;
 			    }
 			}
@@ -677,6 +677,12 @@ sub _get_keywords {
         # 子供 child->{親のid}{子のid}
         $child->{$tag->{parent}{id}}{$tag->{id}} = 1 if ($tag->{parent});
 
+	# 「XXの(連用形名詞化|サ変)」の場合にそれらの間に係り受けのエッジがあるものとする(同義句マッチさせるため)
+	# 例：ごみの捨て方, チケットの入手方法
+	if (((length($tag->mrph) == 1 && ($tag->mrph)[0]->fstring =~ /<連用形名詞化>/) || $tag->fstring =~ /<サ変>/)
+	    && $tag->id > 0 && ($knp_result->tag)[$tag->id - 1]->fstring =~ /<係:ノ格>/) {
+	    $child->{$tag->{id}}{$tag->{id} - 1} = 1;
+	}
 	# 親
 	if ($tag->{parent}) {
 	    $parent = $tag->{parent}{id};
