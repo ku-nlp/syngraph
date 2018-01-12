@@ -391,8 +391,9 @@ sub make_bp {
 			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
 			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
 			    # 「は」「の」(例:ごみの捨て方)はマッチするとする
-			    if (defined $graph1_fuzoku && 
-				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq 'の' || $graph1_fuzoku eq $graph2_fuzoku)) {
+			    # 付属語がない場合も(例: 質問受付方法)
+			    if ((defined $graph1_fuzoku && 
+				 ($graph1_fuzoku eq 'は' || $graph1_fuzoku eq 'の' || $graph1_fuzoku eq $graph2_fuzoku)) || !defined $graph1_fuzoku) {
 				$match_flag = 1;
 			    }
 			}
