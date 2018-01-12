@@ -311,7 +311,7 @@ foreach my $midasi (keys %definition) {
 
 foreach my $file_type (@{$FILE{'similarphrase'}}) {
     if ($opt{$file_type}) {
-	open(P, '<:encoding(utf-8)', $opt{similarphrase}) or die;
+	open(P, '<:encoding(utf-8)', $opt{$file_type}) or die;
 	while (<P>) {
 	    chomp;
 
