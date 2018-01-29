@@ -385,8 +385,9 @@ sub make_bp {
 		    }
 		    # 付属表現（=格）が一致するかだけ調べる
 		    elsif ($mid =~ /\[同義句\]$/) {
-			my $graph2_fuzoku = $this->{syndatacache}{$mid}[0]{nodes}[0]{fuzoku};
-
+			# 格は後ろから2番目の基本句で得る
+			my $graph2_bp_num = scalar(@{$this->{syndatacache}{$mid}});
+			my $graph2_fuzoku = $this->{syndatacache}{$mid}[$graph2_bp_num - 2]{nodes}[0]{fuzoku};
 			my $match_flag = 0;
 			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
 			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
