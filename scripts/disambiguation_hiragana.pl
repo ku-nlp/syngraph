@@ -17,7 +17,7 @@ use Configure;
 use KNP;
 
 my (%opt);
-GetOptions(\%opt, 'help', 'debug');
+GetOptions(\%opt, 'help', 'isa', 'debug');
 &usage if $opt{help};
 
 # 曖昧性解消するかどうかを決定する際の閾値
@@ -39,6 +39,12 @@ while (<>) {
 
     my (@words) = split;
 
+    my $hypernym_num;
+    # あざらし/あざらし:1/1:1/1 獣/けもの 18
+    if ($opt{isa}) {
+	$hypernym_num = pop @words;
+    }
+	
     my @data;
 
     my %disambiguate_result;
@@ -54,6 +60,8 @@ while (<>) {
 	}
     }
 
+    # 曖昧性解消の対象
+    my %disambiguated_target;
     foreach my $target_data (@data) {
 	my $target_hyouki = $target_data->{hyouki};
 	my $target_yomi = $target_data->{yomi};
@@ -72,6 +80,7 @@ while (<>) {
 	    next if &get_pos($result) ne '名詞';
 
 	    if (scalar ($result->tag) == 1 && $repname =~ /\?/) {
+		$disambiguated_target{$target_data->{word}} = 1;
 		print STDERR "★$target_hyouki, $repname: $line\n";
 
 		my @cands = split (/\?/, $repname);
@@ -141,18 +150,28 @@ while (<>) {
     }
 
     # 出力
-    if (scalar keys %disambiguate_result) {
+    if (scalar keys %disambiguated_target) {
 	my @data_new;
 	foreach my $data (@data) {
 	    # 曖昧性解消された場合
 	    if (defined $disambiguate_result{$data->{word}}) {
 		push @data_new, $disambiguate_result{$data->{word}};
 	    }
+	    # 捨てる
+	    elsif (defined $disambiguated_target{$data->{word}}) {
+		next;
+	    }
 	    else {
 		push @data_new, $data->{orig};
 	    }
 	}
-	print join (' ', @data_new), "\n";
+	if (scalar @data_new >= 2) { 
+	    print join (' ', @data_new);
+	    if ($opt{isa}) {
+		print ' ', $hypernym_num;
+	    }
+	    print "\n";
+	}
     }
     else {
 	print $line, "\n";
