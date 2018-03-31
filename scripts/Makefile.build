@@ -1,9 +1,15 @@
 # SynGraph辞書コンパイル
 # make -f Makefile.build SYNGRAPHDEVEL_DIR=$HOME/work/SynGraphDevel.iwanami.wikipedia JUMAN=/home/shibata/tool-dic-analyze/bin/juman JUMANRCFILE=/home/shibata/tool-dic-analyze/etc/jumanrc WIKIPEDIA=1
 
+LAST_MAKEFILE = $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+
 # Change this
 WWW2sfdir := $(HOME)/work/WWW2sf
 SYNGRAPHDEVEL_DIR := /home/shibata/work/SynGraphDevel.wikipedia
+
+USERNAME := $(shell whoami)
+TMPDIR_BASE := syngraph
+TMP_DIR := /data/$(USERNAME)/$(TMPDIR_BASE)
 
 # 同義表現データマージ後ディレクトリ
 SIM_C_DIR := $(SYNGRAPHDEVEL_DIR)/dic_change
@@ -18,6 +24,11 @@ SYNDB_DIR_CGI := $(SYNDB_DIR).cgi
 
 SYNDB_CONVERT := $(SYNDB_DIR)/syndb.convert
 SYNDB_JMN := $(SYNDB_DIR)/syndb.jmn
+SPLIT_JMN_DONE := $(SYNDB_DIR)/syndb.jmn.split.done
+SPLIT_JMN_DIR := $(SYNDB_DIR)/syndb.jmn.split
+SPLIT_PARSE_DIR := $(SYNDB_DIR)/syndb.parse.split
+SYNDB_JMNS := $(wildcard $(SPLIT_JMN_DIR)/*.jmn)
+SYNDB_PARSES := $(patsubst $(SPLIT_JMN_DIR)/%.jmn, $(SPLIT_PARSE_DIR)/%.parse, $(SYNDB_JMNS))
 SYNDB_PARSE := $(SYNDB_DIR)/syndb.parse
 SYNDATA_MLDBM := $(SYNDB_DIR)/syndata.mldbm
 SYN_HEAD := $(SYNDB_DIR)/synhead.cdb
@@ -67,8 +78,22 @@ $(SYNDB_CONVERT):
 $(SYNDB_JMN): $(SYNDB_CONVERT)
 	$(PERL) word_into_juman.pl -C $(JUMAN) $(WORD_INTO_JUMAN_ARGS) < $< > $@
 
-$(SYNDB_PARSE): $(SYNDB_JMN)
-	nice -n $(NICE_VALUE) $(WWW2sfdir)/tool/scripts/parse-comp.sh -k "$(PARSE_COMP_ARGS)" $< && mv $(basename $<).knp $@
+$(SPLIT_JMN_DONE): $(SYNDB_JMN)
+	mkdir -p $(SPLIT_JMN_DIR) && $(PERL) split_jmn.pl --out_dir $(SPLIT_JMN_DIR) < $< && sleep 60 && touch $@
+
+syndb_parses: $(SYNDB_PARSES)
+
+$(SYNDB_PARSES): $(SPLIT_PARSE_DIR)/%.parse: $(SPLIT_JMN_DIR)/%.jmn
+	mkdir -p $(SPLIT_PARSE_DIR) && \
+	mkdir -p $(TMP_DIR) && \
+	cp $< $(TMP_DIR)/$(notdir $<) && \
+	nice -n $(NICE_VALUE) $(WWW2sfdir)/tool/scripts/parse-comp.sh -k "$(PARSE_COMP_ARGS)" $(TMP_DIR)/$(notdir $<) && \
+	mv $(TMP_DIR)/$(notdir $(basename $<)).knp $@ && \
+	rm -f $(TMP_DIR)/$(notdir $<)
+
+$(SYNDB_PARSE): $(SPLIT_JMN_DONE)
+	$(MAKE) -f $(LAST_MAKEFILE) syndb_parses
+	find $(SPLIT_PARSE_DIR) -type f -name "*.parse" -exec cat {} \; > $@
 
 # コンパイル
 $(SYNDATA_MLDBM): $(SYNDB_PARSE)
