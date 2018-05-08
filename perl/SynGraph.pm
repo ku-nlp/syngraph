@@ -385,16 +385,14 @@ sub make_bp {
 		    }
 		    # 付属表現（=格）が一致するかだけ調べる
 		    elsif ($mid =~ /\[同義句\]$/) {
-			# 格は後ろから2番目の基本句で得る
-			my $graph2_bp_num = scalar(@{$this->{syndatacache}{$mid}});
-			my $graph2_fuzoku = $this->{syndatacache}{$mid}[$graph2_bp_num - 2]{nodes}[0]{fuzoku};
+			my $graph2_fuzoku = $this->{syndatacache}{$mid}[0]{nodes}[0]{fuzoku};
+
 			my $match_flag = 0;
 			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
 			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
-			    # 「は」「の」(例:ごみの捨て方)はマッチするとする
-			    # 付属語がない場合も(例: 質問受付方法)
-			    if ((defined $graph1_fuzoku && 
-				 ($graph1_fuzoku eq 'は' || $graph1_fuzoku eq 'の' || $graph1_fuzoku eq $graph2_fuzoku)) || !defined $graph1_fuzoku) {
+			    # 「は」はマッチするとする
+			    if (defined $graph1_fuzoku && 
+				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq $graph2_fuzoku)) {
 				$match_flag = 1;
 			    }
 			}
@@ -679,12 +677,6 @@ sub _get_keywords {
         # 子供 child->{親のid}{子のid}
         $child->{$tag->{parent}{id}}{$tag->{id}} = 1 if ($tag->{parent});
 
-	# 「XXの(連用形名詞化|サ変)」の場合にそれらの間に係り受けのエッジがあるものとする(同義句マッチさせるため)
-	# 例：ごみの捨て方, チケットの入手方法
-	if (((length($tag->mrph) == 1 && ($tag->mrph)[0]->fstring =~ /<連用形名詞化>/) || $tag->fstring =~ /<サ変>/)
-	    && $tag->id > 0 && ($knp_result->tag)[$tag->id - 1]->fstring =~ /<係:ノ格>/) {
-	    $child->{$tag->{id}}{$tag->{id} - 1} = 1;
-	}
 	# 親
 	if ($tag->{parent}) {
 	    $parent = $tag->{parent}{id};
@@ -1036,10 +1028,9 @@ sub get_alt {
 
     # 同義<同義:方法/ほうほう>
     # <同義:動詞:断じる/だんじる>
-    my $synonym_key = '?:同義|名詞派生|動詞派生|形容詞派生';
-    while ($mrph->{fstring} =~ /(<($synonym_key):.+?>)/g) {
+    while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
 	# 代表表記
-	if ($1 =~ /($synonym_key):([^\s\">]+)/){
+	if ($1 =~ /同義:([^\s\">]+)/){
 	    my $rep_synonym = $1;
 	    $rep_synonym =~ s/(?:動詞|形容詞|名詞)://;
 	    push @alt, $rep_synonym;
@@ -1611,21 +1602,21 @@ sub OutputSynFormat {
 
     # Wikipediaの情報を付与
     if ($option->{attach_wikipedia_info}) {
-	require Trie;
-	if (!defined $this->{trie}) {
-	    my %opt_trie;
-	    $opt_trie{usejuman} = 1;
+        require Trie;
+        if (!defined $this->{trie}) {
+            my %opt_trie;
+            $opt_trie{usejuman} = 1;
 
-	    $this->{trie} = new Trie(\%opt_trie);
-	    $this->{trie}->RetrieveDB($option->{wikipedia_entry_db});
-	}
+            $this->{trie} = new Trie(\%opt_trie);
+            $this->{trie}->RetrieveDB($option->{wikipedia_entry_db});
+        }
 
-	my @mrphs = $result->mrph;
-	$this->{trie}->DetectString(\@mrphs, undef, { output_juman => 1 });
+        my @mrphs = $result->mrph;
+        $this->{trie}->DetectString(\@mrphs, undef, { output_juman => 1 });
     }
 
     if ($option->{imi_list_db}) {
-	&tie_cdb($option->{imi_list_db}, \%{$this->{imi_list_db}});
+        &tie_cdb($option->{imi_list_db}, \%{$this->{imi_list_db}});
     }
 
     # 入力をSynGraph化
@@ -1641,29 +1632,85 @@ sub OutputSynFormat {
     chomp $ret_string; # 改行をとる
     # version
     if (defined $this->{version}) {
-	$ret_string .= " SynGraph:$this->{version}";
+        $ret_string .= " SynGraph:$this->{version}";
     }
     $ret_string .= "\n";
 
     my $bp = 0;
+    my %ret_case = {};
     foreach my $bnst ($result->bnst) {
-	$ret_string .= '* ';
-	$ret_string .= $bnst->{parent} ? $bnst->{parent}->{id} : -1;
-	$ret_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
+        $ret_string .= '* ';
+        $ret_string .= $bnst->{parent} ? $bnst->{parent}->{id} : -1;
+        $ret_string .= "$bnst->{dpndtype} $bnst->{fstring}\n";
 
-	foreach my $tag ($bnst->tag) {
-	    # knp解析結果を出力
-	    $ret_string .= '+ ';
-	    $ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
-	    $ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
-	    foreach my $mrph ($tag->mrph) {
-		$ret_string .= $mrph->spec;
-	    }
+        if($option->{as_feature}){
+            foreach my $tag ($bnst->tag) {
+                # knp解析結果を出力
+                $ret_string .= '+ ';
+                $ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
+                $ret_string .= "$tag->{dpndtype} $tag->{fstring}";
 
-	    # SYNGRPH情報の付与
-	    $ret_string .= $syngraph_string->[$bp] if defined $syngraph_string->[$bp];
-	    $bp++;
-	}
+                if(defined $syngraph_string->[$bp] ){
+                    my @lines = split( '\n',$syngraph_string->[$bp]);
+                    foreach my $line (@lines){
+                        #$ret_string .= $line."\n";
+                        if($line =~ /^\!\!.*/){
+                            if($line =~/^\!\! (\d+).*<格解析結果:([^>]*)>.*$/){
+                                my $ph_id = $1;
+                                my $case = $2;
+                                #print STDOUT $ph_id." 格解析結果".$case."\n";
+                                $ret_case{$ph_id}=$case;
+                            }
+                        }elsif($line =~ /\!* ((?:\d+,)*\d+)[^<]*<SYNID:(s\d+):([^>]*)>.*$/){
+                            my $ids = $1;
+                            my $sid = $2;
+                            my $neg = "";
+
+                            if($line =~ /<否定>/){
+                                $neg = ":否定"
+                            }
+
+                            if(!($ids =~ /,/)){
+                                $ret_string .= "<SYNID:".$sid .$neg.">";
+                            }else{
+                                my $cases = "";
+                                my @ca = split(/,/,$ids);
+                                foreach my $ph_id (@ca){
+                                    if($ret_case{$ph_id}){
+                                        $cases .= "-".$ret_case{$ph_id};
+                                    }
+                                }
+                                
+                                $ret_string .= "<SYNID:".$sid.$cases.$neg.">";
+                            }
+                        }
+                    }
+                }
+                $ret_string .= "\n";
+
+                foreach my $mrph ($tag->mrph) {
+                    $ret_string .= $mrph->spec;
+                }
+
+                # SYNGRPH情報の付与
+                #$ret_string .= $syngraph_string->[$bp] if defined $syngraph_string->[$bp];
+                $bp++;
+            }
+        }else{
+            foreach my $tag ($bnst->tag) {
+                # knp解析結果を出力
+                $ret_string .= '+ ';
+                $ret_string .= $tag->{parent} ? $tag->{parent}->{id} : -1;
+                $ret_string .= "$tag->{dpndtype} $tag->{fstring}\n";
+                foreach my $mrph ($tag->mrph) {
+                    $ret_string .= $mrph->spec;
+                }
+
+                # SYNGRPH情報の付与
+                $ret_string .= $syngraph_string->[$bp] if defined $syngraph_string->[$bp];
+                $bp++;
+            }
+        }
     }
     $ret_string .= "EOS\n";
 
@@ -2289,7 +2336,7 @@ sub sid2word {
     my @ret;
     # ごたつく/ごたつく:1/1:1/2[DIC]|ごたごたする[定義文]|取り込む/とりこむ:1/1:3/3[DIC]|混雑する[DIC]
     foreach my $expression (split (/\|/, $group)) {
-	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句)\]$//) {
+	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//) {
 	    my $type = $1;
 
 	    my $orig = $expression;

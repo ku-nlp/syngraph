@@ -1,9 +1,8 @@
 #!/usr/bin/env perl
 
-# KNPへのSYNGRAPH導入のテスト用プログラム
+# $Id$
 
-# usage: perl knp_syn.pl -s 景気が冷え込む -dbdir /somewhere/syndb/x86_64
-# usage: echo '景気が冷え込む' | juman | knp -tab | perl knp_syn.pl -dbdir /somewhere/syndb/x86_64
+# KNPへのSYNGRAPH導入のテスト用プログラム
 
 use strict;
 use Dumpvalue;
@@ -14,7 +13,7 @@ use lib qw(../perl);
 use SynGraph;
 use Getopt::Long;
 
-my %opt; GetOptions(\%opt, 'sentence=s', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf', 'wsd', 'wsd_data_dir=s');
+my %opt; GetOptions(\%opt, 'sentence=s', 'parse', 'knp', 'debug', 'detail', 'log', 'cgi', 'postprocess', 'no_case', 'relation', 'antonym', 'hypocut_attachnode=s', 'fstring', 'use_make_ss', 'regist_exclude_semi_contentword', 'db_on_memory', 'dbdir=s', 'print_hypernym', 'no_regist_adjective_stem', 'print_mid', 'no_attach_synnode_in_wikipedia_entry', 'attach_wikipedia_info', 'wikipedia_entry_db=s', 'relation_recursive', 'force_match=s', 'word_basic_unit', 'imi_list_db=s', 'encoding=s', 'crlf', 'wsd', 'wsd_data_dir=s');
 
 my $encoding = $opt{encoding} ? ":encoding($opt{encoding})" : ':encoding(utf-8)'; # default encoding is utf-8
 $encoding .= ':crlf' if $opt{crlf};
@@ -30,6 +29,8 @@ $option->{debug} = 1 if $opt{debug};
 $option->{detail} = 1 if $opt{detail};
 $option->{log} = 1 if $opt{log};
 $option->{cgi} = 1 if $opt{cgi};
+$option->{as_feature} = 1 if $opt{parse};
+$option->{on_knp} = 1 if $opt{knp};
 $option->{store_fstring} = 1 if $opt{fstring};
 $option->{use_make_ss} = 1 if $opt{use_make_ss};
 $option->{db_on_memory} = 1 if $opt{db_on_memory};
@@ -99,7 +100,55 @@ if ($opt{sentence}) {
 	print $sgh->OutputSynFormat($result, $regnode_option, $option);
     }
 }
-else {
+elsif($opt{parse}){
+    while (<>) {
+        if($_ =~ /^\s*$/){
+            next;
+        }
+        my $result = $sgh->{knp}->parse($_);
+
+        # 上位語を出力 (舞浜駅 -> 駅)
+        if ($opt{print_hypernym}) {
+            my $hypernym = $sgh->GetHypernym($result, $regnode_option, $option);
+            print $hypernym, "\n" if $hypernym;
+        }
+        else {
+            print $sgh->OutputSynFormat($result, $regnode_option, $option);
+        }
+    }
+}elsif($opt{knp}){
+    $option->{as_feature} = 1; #素性として出力
+    my ($knp_buf,$aid,$sid);
+    while (<>) {
+        if($_ =~ /^\s*$/){
+            next;
+        }
+        $knp_buf .= $_;
+        
+        if (/^EOS$/) {
+            my $result = new KNP::Result($knp_buf);
+            $result->set_id($sid) if (defined $sid);
+
+            # 上位語を出力 (舞浜駅 -> 駅)
+            if ($opt{print_hypernym}) {
+                my $hypernym = $sgh->GetHypernym($result, $regnode_option, $option);
+                print $hypernym, "\n" if $hypernym;
+            }
+            else {
+                print $sgh->OutputSynFormat($result, $regnode_option, $option);
+            }
+            $knp_buf = "";
+        } elsif (/\# S-ID:([^\s]+) /) {
+            $sid = $1;
+            $sid =~ s/\s+/ /;
+            $sid =~ s/^\s//;
+            $sid =~ s/\s$//;
+            if ($sid =~ /^(.+)-\d+$/) {
+                $aid = $1;
+            }
+        }
+    }
+}else{
     my ($sid, $pre_aid, $aid, $knp_buf, @results);
     while (<>) {
 	$knp_buf .= $_;
