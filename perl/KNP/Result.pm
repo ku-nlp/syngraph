@@ -107,22 +107,25 @@ sub new {
     }
 
     while( defined( $str = shift @$result ) ){
-	if( $str =~ m!$pattern! and @$result == 0 ){
-	    $this->{_eos} = $str;
-	    last;
-	} elsif( $str =~ m!^;;! ){
-	    $error .= $str;
-	} elsif( $str =~ m!^\*! ){
-	    $this->push_bnst( $bclass->new( $str, scalar($this->bnst) ) );
-	} elsif( $str =~ m!^\+! ){
-	    $this->push_tag( $tclass->new( $str, scalar($this->tag) ) );
-	} else {
-	    $this->push_mrph( $mclass->new( $str, scalar($this->mrph) ) );
-	    my $fstring = ( $this->mrph )[-1]->fstring;
-	    while ( $fstring =~ /<(ALT-[^>]+)>/g ){ # ALT
-		( $this->mrph )[-1]->push_doukei( $mclass->new( $1, scalar($this->mrph) ) );
-	    }
-	}
+    if( $str =~ m!$pattern! and @$result == 0 ){
+        $this->{_eos} = $str;
+        last;
+    } elsif( $str =~ m!^;;! ){
+        $error .= $str;
+    } elsif( $str =~ m!^\*! ){
+        $this->push_bnst( $bclass->new( $str, scalar($this->bnst) ) );
+    } elsif( $str =~ m!^\+! ){
+        $this->push_tag( $tclass->new( $str, scalar($this->tag) ) );
+    } else {
+        $this->push_mrph( $mclass->new( $str, scalar($this->mrph) ) );
+
+        if (scalar($this->mrph) > 0) {
+            my $fstring = ( $this->mrph )[-1]->fstring;
+            while ( $fstring =~ /<(ALT-[^>]+)>/g ){ # ALT
+            ( $this->mrph )[-1]->push_doukei( $mclass->new( $1, scalar($this->mrph) ) );
+            }
+        }
+    }
     }
 
     # 係り受け情報を取り出す
