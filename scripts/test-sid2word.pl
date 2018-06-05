@@ -14,33 +14,31 @@ use Getopt::Long;
 use Encode;
 
 my %opt;
-GetOptions(\%opt, 'syndb_cdb=s', 'synid=s', 'constructor', 'orig', 'debug');
+GetOptions(\%opt, 'synid=s', 'constructor', 'dbdir=s', 'orig', 'debug');
 
 $opt{synid} = decode('utf-8', $opt{synid});
 
-$opt{syndb_cdb} = '../syndb/cgi/syndb.cdb' unless $opt{syndb_cdb};
-
-my $syngraph;
-# constructorでsyndb_cdbを渡すオプション
-if ($opt{constructor}) {
-    $syngraph = new SynGraph(undef, undef, { syndbcdb => $opt{syndb_cdb} });
+my $dbdir;
+if ($opt{dbdir}) {
+    $dbdir = $opt{dbdir};
 }
 else {
-    $syngraph = new SynGraph;
+    my $uname = `uname -m`;
+    chomp $uname;
+    $dbdir = "../syndb/$uname";
 }
 
-my %syndb;
-unless ($opt{constructor}) {
-    SynGraph::tie_cdb($opt{syndb_cdb}, \%syndb);
-}
+my ($knp_option, $option);
+$knp_option->{no_case} = 1;
+my $syngraph = new SynGraph($dbdir, $knp_option, $option);
 
 my @words;
-if ($opt{constructor}) {
+#if ($opt{constructor}) {
     @words = $syngraph->sid2word($opt{synid});
-}
-else {
-    @words = $syngraph->sid2word($opt{synid}, \%syndb);
-}
+#}
+#else {
+#    @words = $syngraph->sid2word($opt{synid}, \%syndb);
+#}
 
 if ($opt{debug}) {
     Dumpvalue->new->dumpValue(\@words);
@@ -59,6 +57,6 @@ for my $word (@words) {
 
 print join(',', @out), "\n";
 
-unless ($opt{constructor}) {
-    untie %syndb;
-}
+#unless ($opt{constructor}) {
+#    untie %syndb;
+#}
