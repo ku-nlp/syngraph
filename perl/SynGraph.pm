@@ -385,14 +385,17 @@ sub make_bp {
 		    }
 		    # 付属表現（=格）が一致するかだけ調べる
 		    elsif ($mid =~ /\[同義句\]$/) {
-			my $graph2_fuzoku = $this->{syndatacache}{$mid}[0]{nodes}[0]{fuzoku};
+			# 格は後ろから2番目の基本句で得る
+			my $graph2_bp_num = scalar(@{$this->{syndatacache}{$mid}});
+			my $graph2_fuzoku = $this->{syndatacache}{$mid}[$graph2_bp_num - 2]{nodes}[0]{fuzoku};
 
 			my $match_flag = 0;
 			for my $child_bp (keys %{$ref_bp->{nodes}[0]{childbp}}) {
 			    my $graph1_fuzoku = $ref_sid->[$child_bp]{nodes}[0]{fuzoku};
-			    # 「は」はマッチするとする
-			    if (defined $graph1_fuzoku && 
-				($graph1_fuzoku eq 'は' || $graph1_fuzoku eq $graph2_fuzoku)) {
+			    # 「は」「の」(例:ごみの捨て方)はマッチするとする
+			    # 付属語がない場合も(例: 質問受付方法)
+			    if ((defined $graph1_fuzoku &&
+				  ($graph1_fuzoku eq 'は' || $graph1_fuzoku eq 'の' || $graph1_fuzoku eq $graph2_fuzoku)) || !defined $graph1_fuzoku) {
 				$match_flag = 1;
 			    }
 			}
@@ -677,6 +680,13 @@ sub _get_keywords {
         # 子供 child->{親のid}{子のid}
         $child->{$tag->{parent}{id}}{$tag->{id}} = 1 if ($tag->{parent});
 
+	# 「XXの(連用形名詞化|サ変)」の場合にそれらの間に係り受けのエッジがあるものとする(同義句マッチさせるため)
+	# 例：ごみの捨て方, チケットの入手方法
+	if (((length($tag->mrph) == 1 && ($tag->mrph)[0]->fstring =~ /<連用形名詞化>/) || $tag->fstring =~ /<サ変>/)
+	    && $tag->id > 0 && ($knp_result->tag)[$tag->id - 1]->fstring =~ /<係:ノ格>/) {
+	    $child->{$tag->{id}}{$tag->{id} - 1} = 1;
+	}
+	
 	# 親
 	if ($tag->{parent}) {
 	    $parent = $tag->{parent}{id};
@@ -1028,9 +1038,10 @@ sub get_alt {
 
     # 同義<同義:方法/ほうほう>
     # <同義:動詞:断じる/だんじる>
-    while ($mrph->{fstring} =~ /(<同義.+?>)/g) {
+    my $synonym_key = '?:同義|名詞派生|動詞派生|形容詞派生';
+    while ($mrph->{fstring} =~ /(<($synonym_key):.+?>)/g) {
 	# 代表表記
-	if ($1 =~ /同義:([^\s\">]+)/){
+	if ($1 =~ /($synonym_key):([^\s\">]+)/){
 	    my $rep_synonym = $1;
 	    $rep_synonym =~ s/(?:動詞|形容詞|名詞)://;
 	    push @alt, $rep_synonym;
@@ -2336,7 +2347,7 @@ sub sid2word {
     my @ret;
     # ごたつく/ごたつく:1/1:1/2[DIC]|ごたごたする[定義文]|取り込む/とりこむ:1/1:3/3[DIC]|混雑する[DIC]
     foreach my $expression (split (/\|/, $group)) {
-	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia)\]$//) {
+	if ($expression =~ s/\[(定義文|DIC|Web|Wikipedia|同義句)\]$//) {
 	    my $type = $1;
 
 	    my $orig = $expression;
