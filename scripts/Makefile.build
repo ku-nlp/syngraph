@@ -76,7 +76,7 @@ $(SYNDB_CONVERT):
 	ln -s $(SYNDB_DIR_CGI)/syndb.cdb $(SYNDB_DIR)/syndb.cdb 
 
 $(SYNDB_JMN): $(SYNDB_CONVERT)
-	$(PERL) word_into_juman.pl -C $(JUMAN) $(WORD_INTO_JUMAN_ARGS) < $< > $@
+	$(PERL) word_into_juman.pl -C "$(JUMAN)" $(WORD_INTO_JUMAN_ARGS) < $< > $@
 
 $(SPLIT_JMN_DONE): $(SYNDB_JMN)
 	mkdir -p $(SPLIT_JMN_DIR) && $(PERL) split_jmn.pl --out_dir $(SPLIT_JMN_DIR) < $< && sleep 60 && touch $@
